@@ -13,7 +13,9 @@
       {
         "extensions": ["css$", "scss$"]
       }
-    ]
+    ],
+    "@babel/plugin-proposal-optional-chaining",
+    "@babel/plugin-proposal-nullish-coalescing-operator"
   ],
   "presets": [
     "next/babel"
