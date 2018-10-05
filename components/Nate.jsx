@@ -1,7 +1,7 @@
-import { dew, makeArray, marry, maybe } from "./_tools";
+import { dew, makeArray, forZipped } from "../tools/common";
+import maybe from "../tools/maybe";
 import { nateActionList, bulletActionList } from "./_nateLogic";
-import { bulletPosition } from "./_nateLogic";
-import { directions, facings, aimings, jumps } from "./_nateLogic";
+import { facings, aimings, jumps } from "./_nateLogic";
 
 class Nate extends React.Component {
 
@@ -21,12 +21,12 @@ class Nate extends React.Component {
   nateDiv = maybe.nothing;
 
   /**
-   * The div elements for the bullets.
+   * The div elements for the bullets, first by bullet, then by node.
    *
-   * @type {HTMLDivElement[]}
+   * @type {HTMLDivElement[][]}
    * @memberof Nate
    */
-  bulletDivs = maybe.nothing;
+  bulletNodes = maybe.nothing;
 
   /**
    * The current handle for the queued animation frame; an array of zero or one elements.
@@ -80,26 +80,34 @@ class Nate extends React.Component {
     },
     bullets: makeArray(3, () => ({
       spawned: false,
-      justSpawned: false,
-      origin: { x: 0.0, y: 0.0 },
-      dir: directions.right,
-      distance: 0.0,
-      burst: 0.0
+      initialized: false,
+      timeout: 0.0,
+      burst: 0.0,
+      trajectory: { x: 0.0, y: 0.0 },
+      driftRemaining: 0.0,
+      nodePositions: [
+        { x: 0.0, y: 0.0 },
+        { x: 0.0, y: 0.0 },
+        { x: 0.0, y: 0.0 },
+      ]
     }))
   };
 
   constructor(props) {
     super(props);
-    this.setState = this.setState.bind(this);
-    this.scrollHandler = this.scrollHandler.bind(this);
-    this.mouseMoveHandler = this.mouseMoveHandler.bind(this);
-    this.animationFrame = this.animationFrame.bind(this);
+    this.setState = ::this.setState;
+    this.scrollHandler = ::this.scrollHandler;
+    this.mouseMoveHandler = ::this.mouseMoveHandler;
+    this.animationFrame = ::this.animationFrame;
   }
 
   componentDidMount() {
     this.timeLast = performance.now();
     this.nateDiv = maybe.one(document.createElement("div"));
-    this.bulletDivs = maybe.some(...this.world.bullets.map(() => document.createElement("div")));
+    this.bulletNodes = maybe.some(...this.world.bullets.map(() => {
+        return Object.freeze(makeArray(3, () => document.createElement("div")));
+      })
+    );
 
     this.rafHandle = maybe.one(requestAnimationFrame(this.animationFrame));
     document.addEventListener("mousemove", this.mouseMoveHandler);
@@ -123,7 +131,7 @@ class Nate extends React.Component {
     if (container == null) return;
 
     this.nateDiv.forEach(div => container.appendChild(div));
-    this.bulletDivs.forEach(div => container.appendChild(div));
+    this.bulletNodes.forEach(nodes => nodes.forEach(div => container.appendChild(div)));
   }
 
   /**
@@ -134,7 +142,6 @@ class Nate extends React.Component {
     const cursor = this.world.cursor;
     cursor.absPos.x = e.clientX;
     cursor.absPos.y = e.clientY;
-    cursor.scroll = maybe.nothing;
     cursor.msSinceUpdate = 0;
   }
 
@@ -163,6 +170,7 @@ class Nate extends React.Component {
    */
   doGameUpdate(timeNow) {
     const delta = Math.min(timeNow - this.timeLast, 100.0);
+    //const delta = (1000 / 60) / 10;
     const container = this.containerRef.current;
     if (delta <= 0.0) return;
     if (container == null) return;
@@ -188,11 +196,11 @@ class Nate extends React.Component {
     }
     
     // Update Nate.
-    this.nateDiv.forEach((nateDiv) => {
+    this.nateDiv.forEach(nateDiv => {
       const nate = this.world.nate;
       const listState = { delta, actions: nate.actions, lanes: new Set() };
       this.world.nate.actions = {};
-      nateActionList.forEach((action) => action(nate, this.world, listState));
+      nateActionList.forEach(action => action(nate, this.world, listState));
 
       const { physics: { pos: { x, y } }, anim: { main, shoot } } = nate;
       nateDiv.className = ["nate-sprite", ...main, ...shoot].join(" ");
@@ -200,32 +208,25 @@ class Nate extends React.Component {
     });
 
     // Update bullets.
-    marry(this.world.bullets, this.bulletDivs, (bullet, bulletDiv) => {
+    forZipped(this.world.bullets, this.bulletNodes, (bullet, bulletNodeDivs) => {
       const listState = { delta, lanes: new Set() };
-      bulletActionList.forEach((action) => action(bullet, this.world, listState));
-
-      const { dir, distance, burst } = bullet;
-      const tags = [];
+      bulletActionList.forEach(action => action(bullet, this.world, listState));
 
       if (!bullet.spawned) {
-        bulletDiv.className = "despawned";
+        bulletNodeDivs.forEach(div => div.className = "despawned");
         return;
       }
+      const bursting = bullet.burst > 0.0;
+      const baseClassName = bursting ? "bullet-burst-sprite" : "bullet-sprite";
 
-      const [x, y] = bulletPosition(bullet);
-
-      if (burst <= 0) {
-        tags.push("bullet-sprite");
-        if (dir === directions.up) tags.push("shot-up");
-        else if (dir === directions.down) tags.push("shot-down");
-        else if (dir === directions.left) tags.push("mirror");
-
-        if (distance < 22.0) tags.push("forming");
-      }
-      else tags.push("bullet-burst-sprite");
-
-      bulletDiv.className = tags.join(" ");
-      bulletDiv.setAttribute("style", `left: ${x | 0}px; bottom: ${y | 0}px`);
+      forZipped(bullet.nodePositions, bulletNodeDivs, ({x, y}, div, i) => {
+        if (bursting && i > 0)
+          div.className = "despawned";
+        else {
+          div.className = `${baseClassName} node-${i + 1}`;
+          div.setAttribute("style", `left: ${x}px; bottom: ${y}px`);
+        }
+      });
     });
   }
 

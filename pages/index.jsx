@@ -17,9 +17,9 @@ class IndexPage extends React.Component {
       article: "",
       loading: "is-loading"
     };
-    this.setState = this.setState.bind(this);
-    this.tryStateUpdate = this.tryStateUpdate.bind(this);
-    this.doStateUpdate = this.doStateUpdate.bind(this);
+    this.setState = ::this.setState;
+    this.tryStateUpdate = ::this.tryStateUpdate;
+    this.doStateUpdate = ::this.doStateUpdate;
   }
 
   componentDidMount() {

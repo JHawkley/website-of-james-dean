@@ -1,5 +1,5 @@
 $nate-size: 52px;
-$bullet-size: 35px 9px;
+$bullet-size: 9px;
 $bullet-burst-size: 17px;
 
 @mixin sprite-rendering {
@@ -45,8 +45,8 @@ $bullet-burst-size: 17px;
 }
 
 @keyframes bullet-flight {
-  0% { @include sprite-row(nth($bullet-size, 2), 0); }
-  100% { @include sprite-row(nth($bullet-size, 2), 3); }
+  0% { @include sprite-col($bullet-size, 0); }
+  100% { @include sprite-col($bullet-size, 2); }
 }
 
 @keyframes bullet-burst {
@@ -133,29 +133,19 @@ $bullet-burst-size: 17px;
   }
 
   .bullet-sprite {
-    $half-width: ceil(nth($bullet-size, 1) * 0.5);
-    $half-height: ceil(nth($bullet-size, 2) * 0.5);
-    $offset: 'translate(-#{$half-width}, #{$half-height})';
-
-    @include sprite-rendering;
-    width: nth($bullet-size, 1);
-    height: nth($bullet-size, 2);
-    position: absolute;
-    z-index: 4;
-    background: url('/static/images/nate-game/bullet_sprite.png');
-    @include vendor('transform-origin', '#{$half-width $half-height}');
-    @include vendor('transform', $offset);
-    @include sprite-col(nth($bullet-size, 1), 0);
-    @include vendor('animation', 'bullet-flight 0.375s steps(3) infinite');
+    $half-size: ceil($bullet-size * 0.5);
     
-    &.mirror { @include vendor('transform', '#{$offset} scale(-1.0, 1.0)'); }
-    &.shot-up { @include vendor('transform', '#{$offset} rotate(-90deg)'); }
-    &.shot-down { @include vendor('transform', '#{$offset} rotate(90deg)'); }
+    @include sprite-rendering;
+    width: $bullet-size;
+    height: $bullet-size;
+    position: absolute;
+    background: url('/static/images/nate-game/bullet_sprite.png');
+    @include vendor('transform', 'translate(-#{$half-size}, #{$half-size})');
+    @include vendor('animation', 'bullet-flight 0.2s steps(2) infinite');
 
-    &.forming {
-      @include vendor('animation', 'none');
-      @include sprite-row(nth($bullet-size, 2), 2);
-    }
+    &.node-1 { z-index: 7; }
+    &.node-2 { z-index: 6; @include sprite-row($bullet-size, 1); }
+    &.node-3 { z-index: 5; @include sprite-row($bullet-size, 2); }
   }
   
   .bullet-burst-sprite {
