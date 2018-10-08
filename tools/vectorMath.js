@@ -1,8 +1,9 @@
 import { dew } from "./common";
 import { tolerantCompare as q } from "./numbers";
 
-const { sqrt, atan2, sin, cos, abs } = Math;
+const { sqrt, atan2, sin, cos, abs, PI } = Math;
 const { floor: _floor, ceil: _ceil, round: _round } = Math;
+const PI2 = PI * 2;
 
 export function set(op) {
   this.x = op.x;
@@ -111,7 +112,9 @@ export function sign(op) {
 }
 
 export function angleBetween(op) {
-  return atan2(this.y, this.x) - atan2(op.y, op.x);
+  const angle = atan2(op.y, op.x) - atan2(this.y, this.x);
+  if (angle > PI) return PI2 - angle;
+  return -angle;
 }
 
 export function equals(other) {
