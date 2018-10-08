@@ -21,7 +21,7 @@ function normalizeAngle_Rad(input) {
  * @export
  * @param {number} this This number.
  * @param {number} other The other number.
- * @returns A boolean indicating rough equality.
+ * @returns {boolean} A boolean indicating rough equality.
  */
 export function tolerantCompare(other) {
   return abs(this - other) < e;
@@ -34,7 +34,7 @@ export function tolerantCompare(other) {
  * @param {number} this This number.
  * @param {number} start The low end of the range.
  * @param {number} end The high end of the range.
- * @returns The result of the interpolation.
+ * @returns {number} The result of the interpolation.
  */
 export function lerp(start, end) {
   return start + (end - start) * this;
@@ -50,7 +50,7 @@ export function lerp(start, end) {
  * @param {number} inEnd The end of the input range.
  * @param {number} outStart The start of the output range.
  * @param {number} outEnd The end of the output range.
- * @returns The number, remapped.
+ * @returns {number} The number, remapped.
  */
 export function map(inStart, inEnd, outStart, outEnd) {
   return outStart + (outEnd - outStart) * ((this - inStart) / (inEnd - inStart));
@@ -77,7 +77,7 @@ export function clamp(start, end) {
  *
  * @export
  * @param {number} this This number.
- * @returns Either `1` if greater-than-or-equal to zero or `-1` otherwise.
+ * @returns {1 | -1} Either `1` if greater-than-or-equal to zero or `-1` otherwise.
  */
 export function sign() {
   return this >= 0 ? 1 : -1;
@@ -88,7 +88,7 @@ export function sign() {
  *
  * @export
  * @param {number} this This number, representing an angle in radians.
- * @returns The number converted to degrees.
+ * @returns {number} The number converted to degrees.
  */
 export function toDegrees() {
   return this * (180 / PI);
@@ -99,7 +99,7 @@ export function toDegrees() {
  *
  * @export
  * @param {number} this This number, representing an angle in degrees.
- * @returns The number converted to radians.
+ * @returns {number} The number converted to radians.
  */
 export function toRadians() {
   return this * (PI / 180);
@@ -110,9 +110,9 @@ export function toRadians() {
  * that they lie between the range of `0..360`.  The comparison is done in a tolerant way.
  *
  * @export
- * @param {*} this This number, representing an angle in degrees.
- * @param {*} other Another number, representing an angle in degrees.
- * @returns Whether the numbers represent roughly the same angle.
+ * @param {number} this This number, representing an angle in degrees.
+ * @param {number} other Another number, representing an angle in degrees.
+ * @returns {boolean} Whether the numbers represent roughly the same angle.
  */
 export function compareAngleDegrees(other) {
   let self = this;
@@ -128,9 +128,9 @@ export function compareAngleDegrees(other) {
  * that they lie between the range of `0..(PI*2)`.  The comparison is done in a tolerant way.
  *
  * @export
- * @param {*} this This number, representing an angle in radians.
- * @param {*} other Another number, representing an angle in radians.
- * @returns Whether the numbers represent roughly the same angle.
+ * @param {number} this This number, representing an angle in radians.
+ * @param {number} other Another number, representing an angle in radians.
+ * @returns {boolean} Whether the numbers represent roughly the same angle.
  */
 export function compareAngleRadians(other) {
   let self = this;

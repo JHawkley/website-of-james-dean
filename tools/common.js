@@ -2,11 +2,12 @@ import { map } from "./numbers";
 const { random } = Math;
 
 /**
- * Executes the given function and returns its result.  Intended to emulate CoffeeScript's `do` keyword.
+ * Executes the given function and returns its result.  A helper for immediately-invoked function expressions.
  * 
  * @export
  * @template T
- * @param {() => T} fn
+ * @param {() => T} fn The function to immediately invoke.
+ * @returns {T} The result of the function.
  */
 export function dew(fn) {
   return fn();
@@ -18,8 +19,8 @@ export function dew(fn) {
  * 
  * @export
  * @template T
- * @param {Number} count The number of elements to create.
- * @param {(index: Number) => T} fn The initializer function.
+ * @param {number} count The number of elements to create.
+ * @param {(index: number) => T} fn The initializer function.
  * @returns {T[]} An array.
  */
 export function makeArray(count, fn) {
@@ -48,8 +49,9 @@ export function forZipped(a, b, fn) {
  * to the given function as arguments.
  *
  * @export
- * @param {*} arr The array to run through.
- * @param {*} fn The function to apply for each pair.
+ * @template T
+ * @param {T[]} arr The array to run through.
+ * @param {(first: T, second: T) => void} fn The function to apply for each pair.
  */
 export function forPair(arr, fn) {
   const lim = arr.length - 1;
@@ -60,8 +62,9 @@ export function forPair(arr, fn) {
  * Creates a shallow copy of this simple object.
  *
  * @export
- * @param {*} this The object to copy.
- * @returns A shallow copy of the own-properties of the bound object, if possible; otherwise the identity.
+ * @template T
+ * @param {T} this The object to copy.
+ * @returns {T} A shallow copy of the own-properties of the bound object, if possible; otherwise the identity.
  */
 export function copyOwn() {
   'use strict'; // Allows binding to `null`.
@@ -81,16 +84,16 @@ export function copyOwn() {
  * Produces a random number between `min` and `max`.
  *
  * @export
- * @param {*} min The minimum of the range.
- * @param {*} max The maximum of the range.
- * @returns A random number.
+ * @param {number} min The minimum of the range.
+ * @param {number} max The maximum of the range.
+ * @returns {number} A random number.
  */
 export function randomBetween(min, max) {
   return random()::map(0.0, 1.0, min, max);
 }
 
 /**
- * Selective executes a function based on whether `object` is defined.
+ * Selectively executes a function based on whether `object` is defined.
  *
  * @export
  * @template T,U
