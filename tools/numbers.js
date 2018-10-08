@@ -1,4 +1,4 @@
-const { PI, abs } = Math;
+const { PI, abs, min, max } = Math;
 
 const PI2 = PI * 2;
 const e = 0.00000001;
@@ -54,6 +54,22 @@ export function lerp(start, end) {
  */
 export function map(inStart, inEnd, outStart, outEnd) {
   return outStart + (outEnd - outStart) * ((this - inStart) / (inEnd - inStart));
+}
+
+/**
+ * Clamps this number between the range between `start` and `end`.  If only `start` is provided, then it will
+ * clamp between 0.0 and `start`.
+ *
+ * @export
+ * @param {number} this This number.
+ * @param {number} start The start of the range.
+ * @param {number} [end] The end of the range.
+ * @returns {number} This number clamped.
+ */
+export function clamp(start, end) {
+  if (typeof end === "undefined") return this::clamp(0.0, start);
+  if (start > end) return max(end, min(start, this));
+  return min(end, max(start, this));
 }
 
 /**
