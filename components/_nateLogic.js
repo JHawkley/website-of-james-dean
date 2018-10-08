@@ -74,22 +74,35 @@ const nateActionList = dew(() => {
 
   // The offsets from Nate's position that bullets should shoot from.
   // This assumes a right facing, so negate the `x` component if the facing is left.
-  const shootOffsets = (aiming, nate) => {
-    const { brain: { moving }, physics: { onGround } } = nate;
-    if (aiming === aimings.ahead) {
-      if (!onGround) return [{ x: 18, y: 27 }];
-      if (moving) return [{ x: 20, y: 24 }];
-      return [{ x: 18, y: 25 }];
-    }
-    if (aiming === aimings.up) {
-      if (!onGround) return [{ x: 9, y: 45 }];
-      if (moving) return [{ x: 11, y: 42 }];
-      return [{ x: 8, y: 43 }];
-    }
-    if (aiming === aimings.down && !onGround)
-      return [{ x: 10, y: 18 }];
-    return maybe.nothing;
-  };
+  const shootOffsets = dew(() => {
+    const lock = (obj) => maybe.one(Object.freeze(obj));
+    const offsets = Object.freeze([
+      lock({ x: 18, y: 27 }), // ahead + in-air
+      lock({ x: 20, y: 24 }), // ahead + running
+      lock({ x: 18, y: 25 }), // ahead + idle
+      lock({ x: 9, y: 45 }),  // up + in-air
+      lock({ x: 11, y: 42 }), // up + running
+      lock({ x: 8, y: 43 }),  // up + idle
+      lock({ x: 10, y: 18 })  // down + in-air
+    ]);
+
+    return (aiming, nate) => {
+      const { brain: { moving }, physics: { onGround } } = nate;
+      if (aiming === aimings.ahead) {
+        if (!onGround) return offsets[0];
+        if (moving === movings.yes) return offsets[1];
+        return offsets[2];
+      }
+      if (aiming === aimings.up) {
+        if (!onGround) return offsets[3];
+        if (moving === movings.yes) return offsets[4];
+        return offsets[5];
+      }
+      if (aiming === aimings.down && !onGround)
+        return offsets[6];
+      return maybe.nothing;
+    };
+  });
 
   const actions = {
 
