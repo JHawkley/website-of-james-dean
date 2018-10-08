@@ -1,7 +1,7 @@
 import { dew, makeArray, forZipped } from "../tools/common";
 import maybe from "../tools/maybe";
 import { nateActionList, bulletActionList } from "./_nateLogic";
-import { facings, aimings, jumps } from "./_nateLogic";
+import { facings, aimings, movings, jumps } from "./_nateLogic";
 
 class Nate extends React.Component {
 
@@ -51,7 +51,7 @@ class Nate extends React.Component {
       },
       brain: {
         // Represent actions to be taken.
-        moving: false,
+        moving: movings.no,
         lookingUp: false,
         jumping: jumps.none,
         shooting: aimings.none,
@@ -59,9 +59,10 @@ class Nate extends React.Component {
         facing: facings.right,
         aiming: aimings.none,
         // Timers.
+        retaliationTimer: 0.0,
         shootCoolDown: 0.0,
         shootHold: 0.0,
-        boredTimer: 0.0
+        cantReach: 0.0
       },
       anim: {
         main: ["idle"],
@@ -169,7 +170,7 @@ class Nate extends React.Component {
    * @memberof Nate
    */
   doGameUpdate(timeNow) {
-    const delta = Math.min(timeNow - this.timeLast, 100.0);
+    const delta = Math.min(timeNow - this.timeLast, 50.0);
     //const delta = (1000 / 60) / 10;
     const container = this.containerRef.current;
     if (delta <= 0.0) return;
