@@ -1,5 +1,5 @@
 import maybe from "../tools/maybe";
-import { dew, copy, randomBetween } from "../tools/common";
+import { dew, copyOwn, randomBetween } from "../tools/common";
 import { toRadians, map, sign } from "../tools/numbers";
 import { sub, unit, angleBetween, rotate, add, mul, set, setXY, makeLength } from "../tools/vectorMath";
 import { length as vLength }  from "../tools/vectorMath";
@@ -374,7 +374,7 @@ const nateActionList = dew(() => {
           bullet.spawned = true;
           bullet.initialized = false;
           bullet.nodePositions[0]::setXY(px + ox, py + oy);
-          bullet.trajectory = trajectories[dir]::copy();
+          bullet.trajectory = trajectories[dir]::copyOwn();
         });
       }
     },
@@ -481,7 +481,7 @@ const bulletActionList = dew(() => {
   const chaseDistNode3 = 3;
 
   const doChase = (leader, chaser, followDistance) => {
-    const direction = chaser::copy()::sub(leader);
+    const direction = chaser::copyOwn()::sub(leader);
     const dist = direction::vLength();
     if (dist <= followDistance) return;
 
@@ -511,7 +511,7 @@ const bulletActionList = dew(() => {
       if (bullet.burst > 0.0) return;
 
       const { nodePositions: [bulletPos] } = bullet;
-      const distance = cursor.relPos::copy()::sub(bulletPos)::vLength();
+      const distance = cursor.relPos::copyOwn()::sub(bulletPos)::vLength();
 
       if (distance <= 4.0) {
         bullet.timeout = 0.0;
@@ -549,7 +549,7 @@ const bulletActionList = dew(() => {
 
       const { relPos: cursorPos } = cursor;
       const { trajectory, nodePositions: [bulletPos] } = bullet;
-      const vector = cursorPos::copy()::sub(bulletPos);
+      const vector = cursorPos::copyOwn()::sub(bulletPos);
       const distance = vector::vLength();
       
       if (distance > homingRange) return;
@@ -581,7 +581,7 @@ const bulletActionList = dew(() => {
       if (lanes.has(handledLogic)) return;
 
       const { trajectory, nodePositions: [node1Pos, node2Pos, node3Pos] } = bullet;
-      node1Pos::add(trajectory::copy()::mul(bulletVel * delta));
+      node1Pos::add(trajectory::copyOwn()::mul(bulletVel * delta));
       doChase(node1Pos, node2Pos, chaseDistNode2);
       doChase(node2Pos, node3Pos, chaseDistNode3);
       lanes.add(handledLogic);

@@ -57,18 +57,24 @@ export function forPair(arr, fn) {
 }
 
 /**
- * Creates a shallow copy of the `own` properties of `this` if possible; otherwise the identity.
+ * Creates a shallow copy of this simple object.
  *
  * @export
- * @returns A shallow copy of the `own` properties of `this` if possible; otherwise the identity.
+ * @param {*} this The object to copy.
+ * @returns A shallow copy of the own-properties of the bound object, if possible; otherwise the identity.
  */
-export function copy() {
+export function copyOwn() {
   'use strict'; // Allows binding to `null`.
-  if (typeof this === "object") {
-    if (this === null) return null;
+  if (typeof this !== "object") return this;
+  if (this === null) return null;
+
+  const proto = Object.getPrototypeOf(this);
+
+  if (proto == null)
+    return Object.assign(Object.create(null), this);
+  if (proto === Object.prototype)
     return Object.assign({}, this);
-  }
-  return this;
+  throw new Error("can only copy simple objects");
 }
 
 /**
