@@ -1,9 +1,6 @@
-import { stokesDrag, aimings, movings, facings } from "./core";
+import { stokesDrag, aimings, movings } from "./core";
 import { dew } from "/tools/common";
-import maybe, { isNotEmpty } from "/tools/maybe";
-import { clamp } from "/tools/numbers";
-
-const { abs } = Math;
+import maybe from "/tools/maybe";
 
 /** Symbols identifying lanes in the action-list. */
 export const lanes = {
@@ -101,50 +98,3 @@ export const shootOffsets = dew(() => {
     return maybe.nothing;
   };
 });
-
-
-/**
- * Determines the best direction to aim to hit the `target`.
- *
- * @param {*} nate Nate's current state.
- * @param {{ x: number, y: number }} target The position of the target.
- * @returns {Symbol} An aiming; may be `none` if no aiming is suitable.
- */
-export const bestAiming = (nate, target) => {
-  const { physics: { pos: natePos }, brain: { facing, shootCoolDown } } = nate;
-
-  if (shootCoolDown > 0.0) return aimings.none;
-
-  const horizDiff = (target.x - natePos.x) * (facing === facings.left ? -1 : 1);
-  const vertDiff = target.y - natePos.y;
-  let shootOffset;
-
-  shootOffset = shootOffsets(aimings.down, nate);
-  if (shootOffset::isNotEmpty()) {
-    const [{x: ox, y: oy}] = shootOffset;
-    const xd = horizDiff - ox;
-    const yd = vertDiff - oy;
-    if (yd <= 0.0 && abs(xd) <= (-yd)::clamp(ranges.firingField))
-      return aimings.down;
-  }
-
-  shootOffset = shootOffsets(aimings.up, nate);
-  if (shootOffset::isNotEmpty()) {
-    const [{x: ox, y: oy}] = shootOffset;
-    const xd = horizDiff - ox;
-    const yd = vertDiff - oy;
-    if (yd >= 0.0 && abs(xd) <= yd::clamp(ranges.firingField))
-      return aimings.up;
-  }
-
-  shootOffset = shootOffsets(aimings.ahead, nate);
-  if (shootOffset::isNotEmpty()) {
-    const [{x: ox, y: oy}] = shootOffset;
-    const xd = horizDiff - ox;
-    const yd = vertDiff - oy;
-    if (xd >= 0.0 && abs(yd) <= xd::clamp(ranges.firingField))
-      return aimings.ahead;
-  }
-
-  return aimings.none;
-};
