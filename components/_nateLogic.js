@@ -1,6 +1,6 @@
 import maybe, { isNotEmpty } from "../tools/maybe";
 import { dew, copyOwn, randomBetween } from "../tools/common";
-import { toRadians, map, clamp, sign } from "../tools/numbers";
+import { toRadians, map, clamp, sign, inRange } from "../tools/numbers";
 import { sub, unit, angleBetween, rotate, add, mul, set, setXY, makeLength } from "../tools/vectorMath";
 import { length as vLength }  from "../tools/vectorMath";
 
@@ -69,10 +69,14 @@ const nateActionList = dew(() => {
 
   // The distances that Nate will consider the cursor too close, based on direction.
   const fleeRanges = { side: 100, above: 100, below: 24 };
-  // The amount of the bounds that Nate will travel when being chased from an edge.
+  // The percentage of the bounds that Nate will travel when being chased from an edge.
   const edgeFleeDistances = { min: 0.1, max: 0.2 };
   // The number of pixels above or below Nate's hand he will consider close-enough to fire.
-  const firingField = 10;
+  const firingField = 15;
+  // The "comfortable" firing range for the cursor to be.
+  const comfortableRange = { min: 150, max: 300 };
+  // The maximum distance the cursor should be when intending to jump over it.
+  const jumpOverDistance = 30;
 
   // The hitbox width and height.
   const hBoxHalfWidth = 7;
@@ -314,6 +318,83 @@ const nateActionList = dew(() => {
         lanes.add(handledMovement);
       }
 
+      function retaliateShootUp(nate, _, {actions, lanes}) {
+        if (!lanes.has(didFlee)) return;
+        if (lanes.has(didRetaliate)) return;
+
+        const { brain, physics: { onGround } } = nate;
+        const { horizDiff, vertDiff } = actions["fleeBehavior"];
+
+        const doRetaliate = dew(() => {
+          if (!onGround) return false;
+          if (abs(horizDiff) > hBoxHalfWidth * 2) return false;
+          if (vertDiff <= hBoxHeight) return false;
+          return true;
+        });
+
+        if (!doRetaliate) return false;
+
+        brain.shooting = aimings.up;
+        lanes.add(didRetaliate);
+      }
+
+      function retaliateJumpOver(nate, {cursor}, {actions, lanes}) {
+        if (!lanes.has(didFlee)) return;
+        if (lanes.has(didRetaliate)) return;
+
+        const { brain, physics: { onGround } } = nate;
+        const { horizDiff, vertDiff } = actions["fleeBehavior"];
+        const stillRetaliating = typeof actions["fleeBehavior:retaliateJumpOver"] !== "undefined";
+
+        const doRetaliate = dew(() => {
+          if (stillRetaliating) return !onGround;
+          if (!onGround) return false;
+          if (brain.retaliationTimer > 0.0) return false;
+
+          // Don't retaliate if the cursor is too far to jump over...
+          if (abs(horizDiff) > jumpOverDistance) return false;
+
+          // ...or if the cursor is too high or too low.
+          if (!vertDiff::inRange(-comfortableRange.max, hBoxHeight)) return false;
+
+          // Retaliate if the cursor is touching his hitbox...
+          if (abs(horizDiff) <= hBoxHalfWidth && horizDiff::inRange(0.0, hBoxHeight)) return true;
+
+          // ...or if moving toward the cursor.
+          if (horizDiff > 0.0 && brain.facing === facings.right) return true;
+          if (horizDiff < 0.0 && brain.facing === facings.left) return true;
+
+          return false;
+        });
+
+        if (!doRetaliate) {
+          if (stillRetaliating)
+            nate.brain.retaliationTimer = randomTime(250, retaliationWaitTime);
+          return;
+        }
+
+        const state = actions["fleeBehavior:retaliateJumpOver"] ?? {
+          facing: brain.facing
+        };
+
+        if (onGround) {
+          brain.jumping = jumps.full;
+        }
+        else {
+          brain.facing = state.facing;
+          brain.moving = movings.yes;
+          const aiming = bestAiming(nate, cursor.relPos);
+          if (aiming === aimings.down)
+            brain.shooting = aiming;
+        }
+
+        // Force Nate to continue to flee until the retaliation completes.
+        nate.actions["fleeBehavior"].forced = true;
+
+        nate.actions["fleeBehavior:retaliateJumpOver"] = state;
+        lanes.add(didRetaliate);
+      }
+
       function retaliateBackFire(nate, {bullets, cursor}, {actions, lanes}) {
         if (!lanes.has(didFlee)) return;
         if (lanes.has(didRetaliate)) return;
@@ -333,7 +414,10 @@ const nateActionList = dew(() => {
           if (unspawnedCount < 2) return false;
 
           // Don't retaliate if the cursor is too low.
-          if (vertDiff < 0.0) return false;
+          if (vertDiff < 15.0) return false;
+
+          // Don't retaliate if the cursor is too close.
+          if (abs(horizDiff) <= hBoxHalfWidth * 2) return false;
 
           // Retaliate if moving away from the cursor.
           if (horizDiff > 0.0 && brain.facing === facings.left) return true;
@@ -366,6 +450,8 @@ const nateActionList = dew(() => {
       return subList(qualificationFn, [
         fleeFromEdge,
         fleeFromCursor,
+        retaliateShootUp,
+        retaliateJumpOver,
         retaliateBackFire
       ]);
     }),
