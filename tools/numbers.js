@@ -73,6 +73,22 @@ export function clamp(start, end) {
 }
 
 /**
+ * Indicates whether this number is between the given range.
+ *
+ * @export
+ * @param {number} this This number.
+ * @param {number} start The start of the range.
+ * @param {number} end The end of the range.
+ * @returns {boolean} Whether this number lies in the range.
+ */
+export function inRange(start, end) {
+  if (start > end) return this::inRange(end, start);
+  if (this < start) return false;
+  if (this > end) return false;
+  return true;
+}
+
+/**
  * Gets the sign of `this` number.  Unlike `Number..sign`, this version always counts `0` as positive.
  *
  * @export
