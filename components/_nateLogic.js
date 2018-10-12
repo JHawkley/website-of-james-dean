@@ -1,124 +1,19 @@
-import maybe, { isNotEmpty } from "../tools/maybe";
 import { dew, copyOwn, randomBetween } from "../tools/common";
-import { toRadians, map, clamp, sign, inRange } from "../tools/numbers";
+import { toRadians, map, sign, inRange } from "../tools/numbers";
 import { sub, unit, angleBetween, rotate, add, mul, set, setXY, makeLength } from "../tools/vectorMath";
 import { length as vLength }  from "../tools/vectorMath";
 import { randomTime, decrementTime, stokesDrag, subList } from "./nateLogic/core";
 import { directions, facings, aimings, movings, jumps, trajectories } from "./nateLogic/core";
+import * as nc from "./nateLogic/nateConfig";
 
 const { max, min, abs, random: randomNum } = Math;
 
 const nateActionList = dew(() => {
-  // Symbols identifying lanes in the action-list.
-  const handledMovement = Symbol("handledMovement");
-  const behaviorFinalized = Symbol("behaviorFinalized");
-  const didFlee = Symbol("didFlee");
-  const didRetaliate = Symbol("didRetaliate");
 
-  // The distances that Nate will consider the cursor too close, based on direction.
-  const fleeRanges = { side: 100, above: 100, below: 24 };
-  // The percentage of the bounds that Nate will travel when being chased from an edge.
-  const edgeFleeDistances = { min: 0.1, max: 0.2 };
-  // The number of pixels above or below Nate's hand he will consider close-enough to fire.
-  const firingField = 15;
-  // The "comfortable" firing range for the cursor to be.
-  const comfortableRange = { min: 150, max: 300 };
-  // The maximum distance the cursor should be when intending to jump over it.
-  const jumpOverDistance = 30;
-
-  // The hitbox width and height.
-  const hBoxHalfWidth = 7;
-  const hBoxHeight = 42;
-  // The physical parameters for Nate.
-  const maxVel = 130 / 1000;
-  const friction = stokesDrag.solveFriction(250);
-  const runAccel = stokesDrag.solveAccel(friction, maxVel);
-  // The velocity to set Nate's vertical momentum to when he jumps.
-  const jumpVelFull = 375 / 1000;
-  const jumpVelWeak = 275 / 1000;
-
-  // The amount of time between shots.
-  const shootCoolDownValue = 200;
-  // The amount of time Nate will hold up his hand after a shot.
-  const shootHoldValue = 500;
-  // When `shootHold` is below this value, `recoil` will be cleared if it is `true`.
-  const shootRecoilThreshold = 300;
-  // The amount of additional time that should pass before attempting to retaliate against
-  // the cursor again when fleeing.
-  const retaliationWaitTime = 1000;
-
-  // The offsets from Nate's position that bullets should shoot from.
-  // This assumes a right facing, so negate the `x` component if the facing is left.
-  const shootOffsets = dew(() => {
-    const lock = (obj) => maybe.one(Object.freeze(obj));
-    const offsets = Object.freeze([
-      lock({ x: 18, y: 27 }), // ahead + in-air
-      lock({ x: 20, y: 24 }), // ahead + running
-      lock({ x: 18, y: 25 }), // ahead + idle
-      lock({ x: 9, y: 45 }),  // up + in-air
-      lock({ x: 11, y: 42 }), // up + running
-      lock({ x: 8, y: 43 }),  // up + idle
-      lock({ x: 10, y: 18 })  // down + in-air
-    ]);
-
-    return (aiming, nate) => {
-      const { brain: { moving }, physics: { onGround } } = nate;
-      if (aiming === aimings.ahead) {
-        if (!onGround) return offsets[0];
-        if (moving === movings.yes) return offsets[1];
-        return offsets[2];
-      }
-      if (aiming === aimings.up) {
-        if (!onGround) return offsets[3];
-        if (moving === movings.yes) return offsets[4];
-        return offsets[5];
-      }
-      if (aiming === aimings.down && !onGround)
-        return offsets[6];
-      return maybe.nothing;
-    };
-  });
-
-  // Looking at the current state of Nate and the cursor, determines the best `aimings`
-  // direction to fire a bullet.  Returns `aimings.none` if no direction is likely to hit.
-  const bestAiming = (nate, target) => {
-    const { physics: { pos: natePos }, brain: { facing, shootCoolDown } } = nate;
-
-    if (shootCoolDown > 0.0) return aimings.none;
-
-    const horizDiff = (target.x - natePos.x) * (facing === facings.left ? -1 : 1);
-    const vertDiff = target.y - natePos.y;
-    let shootOffset;
-
-    shootOffset = shootOffsets(aimings.down, nate);
-    if (shootOffset::isNotEmpty()) {
-      const [{x: ox, y: oy}] = shootOffset;
-      const xd = horizDiff - ox;
-      const yd = vertDiff - oy;
-      if (yd <= 0.0 && abs(xd) <= (-yd)::clamp(firingField))
-        return aimings.down;
-    }
-
-    shootOffset = shootOffsets(aimings.up, nate);
-    if (shootOffset::isNotEmpty()) {
-      const [{x: ox, y: oy}] = shootOffset;
-      const xd = horizDiff - ox;
-      const yd = vertDiff - oy;
-      if (yd >= 0.0 && abs(xd) <= yd::clamp(firingField))
-        return aimings.up;
-    }
-
-    shootOffset = shootOffsets(aimings.ahead, nate);
-    if (shootOffset::isNotEmpty()) {
-      const [{x: ox, y: oy}] = shootOffset;
-      const xd = horizDiff - ox;
-      const yd = vertDiff - oy;
-      if (xd >= 0.0 && abs(yd) <= xd::clamp(firingField))
-        return aimings.ahead;
-    }
-
-    return aimings.none;
-  };
+  const {
+    lanes: { handledMovement, behaviorFinalized, didFlee, didRetaliate },
+    shootOffsets, bestAiming
+  } = nc;
 
   const actions = {
 
@@ -144,7 +39,7 @@ const nateActionList = dew(() => {
 
       const calcFleeDist = (bounds, {min: minDist, max: maxDist}) => {
         const width = bounds.right - bounds.left;
-        return max(randomBetween(minDist * width, maxDist * width), fleeRanges.side);
+        return max(randomBetween(minDist * width, maxDist * width), nc.ranges.flee.side);
       };
 
       function qualificationFn(nate, {cursor}, {delta, actions, lanes}) {
@@ -159,14 +54,14 @@ const nateActionList = dew(() => {
         untilTimer = decrementTime(untilTimer, delta);
 
         if (!forced && untilTimer <= 0.0) {
-          if (vertDiff >= 0 && vertDiff > fleeRanges.above) return false;
-          if (vertDiff < 0 && -vertDiff > fleeRanges.below) return false;
-          if (abs(horizDiff) > fleeRanges.side) return false;
+          if (vertDiff >= 0 && vertDiff > nc.ranges.flee.above) return false;
+          if (vertDiff < 0 && -vertDiff > nc.ranges.flee.below) return false;
+          if (abs(horizDiff) > nc.ranges.flee.side) return false;
         }
 
         const state = actions["fleeBehavior"] ?? dew(() => {
           // Disable retaliation for the first few moments of fleeing.
-          nate.brain.retaliationTimer = randomTime(250, retaliationWaitTime);
+          nate.brain.retaliationTimer = randomTime(250, nc.timing.retaliationWaitTime);
           return {
             horizDiff: 0.0,
             vertDiff: 0.0,
@@ -197,21 +92,21 @@ const nateActionList = dew(() => {
         if (lanes.has(handledMovement)) return;
 
         const { physics: { pos }, brain } = nate;
-        const distFromLeft = max(pos.x - hBoxHalfWidth - bounds.left, 0.0);
-        const distFromRight = max(-1 * (pos.x + hBoxHalfWidth - bounds.right), 0.0);
+        const distFromLeft = max(pos.x - nc.hitbox.halfWidth - bounds.left, 0.0);
+        const distFromRight = max(-1 * (pos.x + nc.hitbox.halfWidth - bounds.right), 0.0);
 
         let state = actions["fleeBehavior:fleeFromEdge"];
 
         if (typeof state === "undefined") {
           if (distFromLeft <= 0.0) {
             state = {
-              edgeFleeDistance: calcFleeDist(bounds, edgeFleeDistances),
+              edgeFleeDistance: calcFleeDist(bounds, nc.ranges.edgeFleeDistances),
               edgeFleeFacing: facings.right
             };
           }
           else if (distFromRight <= 0.0) {
             state = {
-              edgeFleeDistance: calcFleeDist(bounds, edgeFleeDistances),
+              edgeFleeDistance: calcFleeDist(bounds, nc.ranges.edgeFleeDistances),
               edgeFleeFacing: facings.left
             };
           }
@@ -275,8 +170,8 @@ const nateActionList = dew(() => {
 
         const doRetaliate = dew(() => {
           if (!onGround) return false;
-          if (abs(horizDiff) > hBoxHalfWidth * 2) return false;
-          if (vertDiff <= hBoxHeight) return false;
+          if (abs(horizDiff) > nc.hitbox.halfWidth * 2) return false;
+          if (vertDiff <= nc.hitbox.height) return false;
           return true;
         });
 
@@ -300,13 +195,13 @@ const nateActionList = dew(() => {
           if (brain.retaliationTimer > 0.0) return false;
 
           // Don't retaliate if the cursor is too far to jump over...
-          if (abs(horizDiff) > jumpOverDistance) return false;
+          if (abs(horizDiff) > nc.ranges.jumpOverDistance) return false;
 
           // ...or if the cursor is too high or too low.
-          if (!vertDiff::inRange(-comfortableRange.max, hBoxHeight)) return false;
+          if (!vertDiff::inRange(-nc.ranges.comfortable.max, nc.hitbox.height)) return false;
 
           // Retaliate if the cursor is touching his hitbox...
-          if (abs(horizDiff) <= hBoxHalfWidth && horizDiff::inRange(0.0, hBoxHeight)) return true;
+          if (abs(horizDiff) <= nc.hitbox.halfWidth && horizDiff::inRange(0.0, nc.hitbox.height)) return true;
 
           // ...or if moving toward the cursor.
           if (horizDiff > 0.0 && brain.facing === facings.right) return true;
@@ -317,7 +212,7 @@ const nateActionList = dew(() => {
 
         if (!doRetaliate) {
           if (stillRetaliating)
-            nate.brain.retaliationTimer = randomTime(250, retaliationWaitTime);
+            nate.brain.retaliationTimer = randomTime(250, nc.timing.retaliationWaitTime);
           return;
         }
 
@@ -355,7 +250,7 @@ const nateActionList = dew(() => {
           if (stillRetaliating) return !onGround;
           if (!onGround) return false;
           if (brain.retaliationTimer > 0.0) return false;
-          if (abs(vel.x) < maxVel * 0.9) return false;
+          if (abs(vel.x) < nc.physics.maxVel * 0.9) return false;
 
           // Don't retaliate if we have too few bullets to make it worth it.
           const unspawnedCount = bullets.reduce((c, bullet) => c + (!bullet.spawned ? 1 : 0), 0);
@@ -365,7 +260,7 @@ const nateActionList = dew(() => {
           if (vertDiff < 15.0) return false;
 
           // Don't retaliate if the cursor is too close.
-          if (abs(horizDiff) <= hBoxHalfWidth * 2) return false;
+          if (abs(horizDiff) <= nc.hitbox.halfWidth * 2) return false;
 
           // Retaliate if moving away from the cursor.
           if (horizDiff > 0.0 && brain.facing === facings.left) return true;
@@ -375,7 +270,7 @@ const nateActionList = dew(() => {
 
         if (!doRetaliate) {
           if (stillRetaliating)
-            nate.brain.retaliationTimer = randomTime(250, retaliationWaitTime);
+            nate.brain.retaliationTimer = randomTime(250, nc.timing.retaliationWaitTime);
           return;
         }
 
@@ -435,8 +330,8 @@ const nateActionList = dew(() => {
       if (lanes.has(handledMovement)) return;
       lanes.add(handledMovement);
       const { brain, physics: { pos } } = nate;
-      if (pos.x - hBoxHalfWidth <= bounds.left) brain.facing = facings.right;
-      if (pos.x + hBoxHalfWidth >= bounds.right) brain.facing = facings.left;
+      if (pos.x - nc.hitbox.halfWidth <= bounds.left) brain.facing = facings.right;
+      if (pos.x + nc.hitbox.halfWidth >= bounds.right) brain.facing = facings.left;
       brain.moving = movings.yes;
     },
 
@@ -481,13 +376,13 @@ const nateActionList = dew(() => {
       const { brain, physics: { accel } } = nate;
       if (brain.moving !== movings.yes) return;
       const dir = brain.facing === facings.right ? 1.0 : -1.0;
-      accel.x = dir * runAccel;
+      accel.x = dir * nc.physics.runAccel;
     },
 
     doJump(nate) {
       const { brain, physics } = nate;
       if (brain.jumping === jumps.none) return;
-      physics.vel.y += brain.jumping === jumps.full ? jumpVelFull : jumpVelWeak;
+      physics.vel.y += brain.jumping === jumps.full ? nc.physics.jumpVelFull : nc.physics.jumpVelWeak;
       physics.onGround = false;
     },
 
@@ -499,7 +394,7 @@ const nateActionList = dew(() => {
 
       // Apply x-axis drag if not drifting or unable to drift.
       if (moving !== movings.drift || onGround)
-        vel.x = stokesDrag.newVelocity(accel.x * delta, friction * delta, vel.x);
+        vel.x = stokesDrag.newVelocity(accel.x * delta, nc.physics.friction * delta, vel.x);
       vel.y = vel.y + (accel.y * delta);
       pos.x += vel.x * delta;
       pos.y += vel.y * delta;
@@ -508,10 +403,10 @@ const nateActionList = dew(() => {
       accel.x = accel.y = 0.0;
 
       // Keep Nate on the platform.
-      if (pos.x - hBoxHalfWidth < bounds.left)
-        pos.x = bounds.left + hBoxHalfWidth;
-      if (pos.x + hBoxHalfWidth > bounds.right)
-        pos.x = bounds.right - hBoxHalfWidth;
+      if (pos.x - nc.hitbox.halfWidth < bounds.left)
+        pos.x = bounds.left + nc.hitbox.halfWidth;
+      if (pos.x + nc.hitbox.halfWidth > bounds.right)
+        pos.x = bounds.right - nc.hitbox.halfWidth;
     },
 
     collideFloor(nate, {bounds: { ground } }) {
@@ -541,8 +436,8 @@ const nateActionList = dew(() => {
           if (brain.facing === facings.left) ox *= -1;
 
           brain.aiming = brain.shooting;
-          brain.shootCoolDown = shootCoolDownValue;
-          brain.shootHold = shootHoldValue;
+          brain.shootCoolDown = nc.timing.shootCoolDownValue;
+          brain.shootHold = nc.timing.shootHoldValue;
           anim.recoil = true;
 
           bullet.spawned = true;
@@ -594,7 +489,7 @@ const nateActionList = dew(() => {
 
         anim.recoil = dew(() => {
           if (!anim.recoil) return false;
-          if (shootHold < shootRecoilThreshold) return false;
+          if (shootHold < nc.timing.shootRecoilThreshold) return false;
           if (aiming !== state.lastAiming) return false;
           if (!anim.main.includes("idle")) return false;
           return true;
