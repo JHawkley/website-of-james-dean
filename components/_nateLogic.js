@@ -1,10 +1,11 @@
-import { dew, copyOwn, randomBetween } from "../tools/common";
-import { toRadians, map, sign, inRange } from "../tools/numbers";
-import { sub, unit, angleBetween, rotate, add, mul, set, setXY, makeLength } from "../tools/vectorMath";
-import { length as vLength }  from "../tools/vectorMath";
+import { dew, copyOwn, randomBetween } from "/tools/common";
+import { map, sign, inRange } from "/tools/numbers";
+import { sub, unit, angleBetween, rotate, add, mul, set, setXY } from "/tools/vectorMath";
+import { length as vLength }  from "/tools/vectorMath";
 import { randomTime, decrementTime, stokesDrag, subList } from "./nateLogic/core";
 import { directions, facings, aimings, movings, jumps, trajectories } from "./nateLogic/core";
 import * as nc from "./nateLogic/nateConfig";
+import * as bc from "./nateLogic/bulletConfig";
 
 const { max, min, abs, random: randomNum } = Math;
 
@@ -533,40 +534,8 @@ const nateActionList = dew(() => {
 });
 
 const bulletActionList = dew(() => {
-  // Symbols identifying lanes in the action-list.
-  const handledLogic = Symbol("handledLogic");
-  const didInitialize = Symbol("didInitialize");
 
-  // The minimum range before the bullet can home on the cursor.
-  const homingRange = 100.0;
-  // The radius at which homing will be at full strength.
-  const fullHomingRadius = homingRange * 0.25;
-  // The field-of-view of the bullet; the cursor must be in view to home.
-  const maxHomingAngle = 120.0::toRadians();
-  // The maximum amount the bullet can turn, per millisecond.
-  const maxDrift = 150.0::toRadians() / 1000;
-  // The maximum amount a bullet can turn in its life-time.
-  const driftRemainingValue = 60.0::toRadians();
-
-  // The velocity of a bullet.
-  const bulletVel = 450 / 1000;
-  // The amount of time a bullet has before expiring.
-  const timeoutValue = 1000;
-  // The amount of time the burst will remain before the bullet despawns.
-  const burstLifetime = 150;
-
-  // The maximum distance that each node of the bullet allow from its leader.
-  const chaseDistNode2 = 3;
-  const chaseDistNode3 = 3;
-
-  const doChase = (leader, chaser, followDistance) => {
-    const direction = chaser::copyOwn()::sub(leader);
-    const dist = direction::vLength();
-    if (dist <= followDistance) return;
-
-    direction::makeLength(followDistance)::add(leader);
-    chaser::set(direction);
-  };
+  const { lanes: { handledLogic, didInitialize }, doChase } = bc;
 
   const actions = {
 
@@ -578,8 +547,8 @@ const bulletActionList = dew(() => {
       trajectory::unit();
       node2::set(node1);
       node3::set(node1);
-      bullet.driftRemaining = driftRemainingValue;
-      bullet.timeout = timeoutValue;
+      bullet.driftRemaining = bc.physics.driftRemainingValue;
+      bullet.timeout = bc.timings.timeout;
       bullet.burst = 0.0;
       bullet.initialized = true;
       lanes.add(didInitialize);
@@ -594,7 +563,7 @@ const bulletActionList = dew(() => {
 
       if (distance <= 4.0) {
         bullet.timeout = 0.0;
-        bullet.burst = burstLifetime;
+        bullet.burst = bc.timings.burstLifetime;
       }
     },
 
@@ -605,7 +574,7 @@ const bulletActionList = dew(() => {
 
       bullet.timeout = decrementTime(bullet.timeout, delta);
       if (bullet.timeout <= 0.0)
-        bullet.burst = burstLifetime;
+        bullet.burst = bc.timings.burstLifetime;
     },
 
     handleBurst(bullet, _, {delta, lanes}) {
@@ -631,22 +600,22 @@ const bulletActionList = dew(() => {
       const vector = cursorPos::copyOwn()::sub(bulletPos);
       const distance = vector::vLength();
       
-      if (distance > homingRange) return;
+      if (distance > bc.ranges.homing.begin) return;
 
       const driftAngle = dew(() => {
-        const maxDriftAngle = min(maxDrift * delta, bullet.driftRemaining);
+        const maxDriftAngle = min(bc.ranges.maxDrift * delta, bullet.driftRemaining);
         const [angle, angleSign] = dew(() => {
           const angle = vector::angleBetween(trajectory);
           return [abs(angle), angle::sign()];
         });
 
-        if (angle > maxHomingAngle * 0.5)
+        if (angle > bc.ranges.fov * 0.5)
           return 0.0;
-        if (distance <= fullHomingRadius)
+        if (distance <= bc.ranges.homing.full)
           return angleSign * min(angle, maxDriftAngle);
         // Falloff the homing strength based on distance.
-        const nDist = distance - fullHomingRadius;
-        const powerScalar = nDist::map(homingRange - fullHomingRadius, 0.0, 0.0, 1.0);
+        const nDist = distance - bc.ranges.homing.full;
+        const powerScalar = nDist::map(bc.ranges.homing.begin - bc.ranges.homing.full, 0.0, 0.0, 1.0);
         return angleSign * min(angle * powerScalar, maxDriftAngle);
       });
       
@@ -660,9 +629,9 @@ const bulletActionList = dew(() => {
       if (lanes.has(handledLogic)) return;
 
       const { trajectory, nodePositions: [node1Pos, node2Pos, node3Pos] } = bullet;
-      node1Pos::add(trajectory::copyOwn()::mul(bulletVel * delta));
-      doChase(node1Pos, node2Pos, chaseDistNode2);
-      doChase(node2Pos, node3Pos, chaseDistNode3);
+      node1Pos::add(trajectory::copyOwn()::mul(bc.physics.bulletVel * delta));
+      doChase(node1Pos, node2Pos, bc.ranges.chaseDistance.node2);
+      doChase(node2Pos, node3Pos, bc.ranges.chaseDistance.node3);
       lanes.add(handledLogic);
     }
 
