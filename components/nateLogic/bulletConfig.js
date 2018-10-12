@@ -1,7 +1,4 @@
-import { copyOwn } from "/tools/common";
 import { toRadians } from "/tools/numbers";
-import { sub, add, set,  makeLength } from "/tools/vectorMath";
-import { length as vLength }  from "/tools/vectorMath";
 
 /** Symbols identifying lanes in the action-list. */
 export const lanes = {
@@ -35,12 +32,3 @@ export const timings = {
   /** The amount of time the burst will remain before the bullet despawns. */
   burstLifetime: 150
 }
-
-export const doChase = (leader, chaser, followDistance) => {
-  const direction = chaser::copyOwn()::sub(leader);
-  const dist = direction::vLength();
-  if (dist <= followDistance) return;
-
-  direction::makeLength(followDistance)::add(leader);
-  chaser::set(direction);
-};

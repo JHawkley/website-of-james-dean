@@ -1,13 +1,11 @@
 import { dew, copyOwn, randomBetween } from "/tools/common";
-import { map, sign, inRange } from "/tools/numbers";
-import { sub, unit, angleBetween, rotate, add, mul, set, setXY } from "/tools/vectorMath";
-import { length as vLength }  from "/tools/vectorMath";
+import { inRange } from "/tools/numbers";
+import { setXY } from "/tools/vectorMath";
 import { randomTime, decrementTime, stokesDrag, subList } from "./nateLogic/core";
 import { directions, facings, aimings, movings, jumps, trajectories } from "./nateLogic/core";
 import * as nc from "./nateLogic/nateConfig";
-import * as bc from "./nateLogic/bulletConfig";
 
-const { max, min, abs, random: randomNum } = Math;
+const { max, abs, random: randomNum } = Math;
 
 const nateActionList = dew(() => {
 
@@ -533,119 +531,5 @@ const nateActionList = dew(() => {
   ]);
 });
 
-const bulletActionList = dew(() => {
-
-  const { lanes: { handledLogic, didInitialize }, doChase } = bc;
-
-  const actions = {
-
-    initialize(bullet, _, {lanes}) {
-      if (!bullet.spawned) return;
-      if (bullet.initialized) return;
-      const { trajectory, nodePositions: [node1, node2, node3] } = bullet;
-
-      trajectory::unit();
-      node2::set(node1);
-      node3::set(node1);
-      bullet.driftRemaining = bc.physics.driftRemainingValue;
-      bullet.timeout = bc.timings.timeout;
-      bullet.burst = 0.0;
-      bullet.initialized = true;
-      lanes.add(didInitialize);
-    },
-
-    collideWithCursor(bullet, {cursor}) {
-      if (!bullet.spawned) return;
-      if (bullet.burst > 0.0) return;
-
-      const { nodePositions: [bulletPos] } = bullet;
-      const distance = cursor.relPos::copyOwn()::sub(bulletPos)::vLength();
-
-      if (distance <= 4.0) {
-        bullet.timeout = 0.0;
-        bullet.burst = bc.timings.burstLifetime;
-      }
-    },
-
-    expire(bullet, _, {delta, lanes}) {
-      if (!bullet.spawned) return;
-      if (lanes.has(didInitialize)) return;
-      if (bullet.burst > 0.0) return;
-
-      bullet.timeout = decrementTime(bullet.timeout, delta);
-      if (bullet.timeout <= 0.0)
-        bullet.burst = bc.timings.burstLifetime;
-    },
-
-    handleBurst(bullet, _, {delta, lanes}) {
-      if (!bullet.spawned) return;
-      if (lanes.has(didInitialize)) return;
-      if (lanes.has(handledLogic)) return;
-      if (bullet.burst <= 0.0) return;
-
-      bullet.burst = decrementTime(bullet.burst, delta);
-      if (bullet.burst <= 0.0)
-        bullet.spawned = false;
-      lanes.add(handledLogic);
-    },
-
-    homeOnCursor(bullet, {cursor}, {delta, lanes}) {
-      if (!bullet.spawned) return;
-      if (lanes.has(didInitialize)) return;
-      if (lanes.has(handledLogic)) return;
-      if (bullet.driftRemaining <= 0.0) return;
-
-      const { relPos: cursorPos } = cursor;
-      const { trajectory, nodePositions: [bulletPos] } = bullet;
-      const vector = cursorPos::copyOwn()::sub(bulletPos);
-      const distance = vector::vLength();
-      
-      if (distance > bc.ranges.homing.begin) return;
-
-      const driftAngle = dew(() => {
-        const maxDriftAngle = min(bc.ranges.maxDrift * delta, bullet.driftRemaining);
-        const [angle, angleSign] = dew(() => {
-          const angle = vector::angleBetween(trajectory);
-          return [abs(angle), angle::sign()];
-        });
-
-        if (angle > bc.ranges.fov * 0.5)
-          return 0.0;
-        if (distance <= bc.ranges.homing.full)
-          return angleSign * min(angle, maxDriftAngle);
-        // Falloff the homing strength based on distance.
-        const nDist = distance - bc.ranges.homing.full;
-        const powerScalar = nDist::map(bc.ranges.homing.begin - bc.ranges.homing.full, 0.0, 0.0, 1.0);
-        return angleSign * min(angle * powerScalar, maxDriftAngle);
-      });
-      
-      bullet.driftRemaining = max(bullet.driftRemaining - abs(driftAngle), 0.0);
-      trajectory::rotate(driftAngle);
-    },
-
-    flyAhead(bullet, _, {delta, lanes}) {
-      if (!bullet.spawned) return;
-      if (lanes.has(didInitialize)) return;
-      if (lanes.has(handledLogic)) return;
-
-      const { trajectory, nodePositions: [node1Pos, node2Pos, node3Pos] } = bullet;
-      node1Pos::add(trajectory::copyOwn()::mul(bc.physics.bulletVel * delta));
-      doChase(node1Pos, node2Pos, bc.ranges.chaseDistance.node2);
-      doChase(node2Pos, node3Pos, bc.ranges.chaseDistance.node3);
-      lanes.add(handledLogic);
-    }
-
-  };
-
-  return Object.freeze([
-    actions.initialize,
-    actions.collideWithCursor,
-    actions.expire,
-    actions.handleBurst,
-    actions.homeOnCursor,
-    actions.flyAhead
-  ]);
-});
-
 export { directions, facings, aimings, movings, jumps };
-export { nateActionList, bulletActionList };
+export { nateActionList };

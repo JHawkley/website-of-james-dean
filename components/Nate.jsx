@@ -1,6 +1,7 @@
-import { dew, makeArray, forZipped } from "../tools/common";
-import maybe from "../tools/maybe";
-import { nateActionList, bulletActionList } from "./_nateLogic";
+import { dew, makeArray, forZipped } from "/tools/common";
+import maybe from "/tools/maybe";
+import bulletActionList from "./nateLogic/bulletActionList";
+import { nateActionList } from "./_nateLogic";
 import { facings, aimings, movings, jumps } from "./_nateLogic";
 
 class Nate extends React.Component {
