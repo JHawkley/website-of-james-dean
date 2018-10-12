@@ -18,6 +18,16 @@ const maybe = dew(() => {
 });
 
 /**
+ * Determines if this array has at least one item in it.
+ *
+ * @export
+ * @returns {boolean} Whether this array has at least one item in it.
+ */
+export function isNotEmpty() {
+  return Array.isArray(this) && this.length > 0;
+}
+
+/**
  * Produces the first value of an array, or else the `defaultValue`.  The `defaultValue` can be a function.
  *
  * @export
