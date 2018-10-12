@@ -1,4 +1,4 @@
-import maybe, { match, firstOrElse } from "../tools/maybe";
+import maybe, { isNotEmpty } from "../tools/maybe";
 import { dew, copyOwn, randomBetween } from "../tools/common";
 import { toRadians, map, clamp, sign } from "../tools/numbers";
 import { sub, unit, angleBetween, rotate, add, mul, set, setXY, makeLength } from "../tools/vectorMath";
@@ -136,26 +136,36 @@ const nateActionList = dew(() => {
 
     const horizDiff = (target.x - natePos.x) * (facing === facings.left ? -1 : 1);
     const vertDiff = target.y - natePos.y;
+    let shootOffset;
 
-    return match(shootOffsets(aimings.down, nate), ([{x: ox, y: oy}]) => {
+    shootOffset = shootOffsets(aimings.down, nate);
+    if (shootOffset::isNotEmpty()) {
+      const [{x: ox, y: oy}] = shootOffset;
       const xd = horizDiff - ox;
       const yd = vertDiff - oy;
-      if (yd > 0.0) return maybe.nothing;
-      if (abs(xd) > (-yd)::clamp(firingField)) return maybe.nothing;
-      return maybe.one(aimings.down);
-    })::match(shootOffsets(aimings.up, nate), ([{x: ox, y: oy}]) => {
+      if (yd <= 0.0 && abs(xd) <= (-yd)::clamp(firingField))
+        return aimings.down;
+    }
+
+    shootOffset = shootOffsets(aimings.up, nate);
+    if (shootOffset::isNotEmpty()) {
+      const [{x: ox, y: oy}] = shootOffset;
       const xd = horizDiff - ox;
       const yd = vertDiff - oy;
-      if (yd < 0.0) return maybe.nothing;
-      if (abs(xd) > yd::clamp(firingField)) return maybe.nothing;
-      return maybe.one(aimings.up);
-    })::match(shootOffsets(aimings.ahead, nate), ([{x: ox, y: oy}]) => {
+      if (yd >= 0.0 && abs(xd) <= yd::clamp(firingField))
+        return aimings.up;
+    }
+
+    shootOffset = shootOffsets(aimings.ahead, nate);
+    if (shootOffset::isNotEmpty()) {
+      const [{x: ox, y: oy}] = shootOffset;
       const xd = horizDiff - ox;
       const yd = vertDiff - oy;
-      if (xd < 0.0) return maybe.nothing;
-      if (abs(yd) > xd::clamp(firingField)) return maybe.nothing;
-      return maybe.one(aimings.ahead);
-    })::firstOrElse(aimings.none);
+      if (xd >= 0.0 && abs(yd) <= xd::clamp(firingField))
+        return aimings.ahead;
+    }
+
+    return aimings.none;
   };
 
   const actions = {
