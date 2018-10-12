@@ -2,7 +2,7 @@ import { dew, copyOwn, randomBetween } from "/tools/common";
 import { inRange } from "/tools/numbers";
 import { setXY } from "/tools/vectorMath";
 import { randomTime, decrementTime, stokesDrag, subList } from "./nateLogic/core";
-import { directions, facings, aimings, movings, jumps, trajectories } from "./nateLogic/core";
+import { facings, aimings, movings, jumps, trajectories } from "./nateLogic/core";
 import * as nc from "./nateLogic/nateConfig";
 
 const { max, abs, random: randomNum } = Math;
@@ -531,5 +531,4 @@ const nateActionList = dew(() => {
   ]);
 });
 
-export { directions, facings, aimings, movings, jumps };
 export { nateActionList };
