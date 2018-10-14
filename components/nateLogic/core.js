@@ -40,16 +40,16 @@ export const jumps = Object.freeze({
   none: Symbol("none")
 });
 
-export const subList = (qualificationFn, actionList) => {
-  return (object, world, listState) => {
-    if (qualificationFn(object, world, listState))
-      actionList.forEach(action => action(object, world, listState));
-  };
-};
-
 export const trajectories = Object.freeze({
   [directions.up]: Object.freeze({ x: 0.0, y: 1.0 }),
   [directions.right]: Object.freeze({ x: 1.0, y: 0.0 }),
   [directions.down]: Object.freeze({ x: 0.0, y: -1.0 }),
   [directions.left]: Object.freeze({ x: -1.0, y: 0.0 }),
 });
+
+export const subList = (qualificationFn, actionList) => {
+  return (object, world, listState) => {
+    if (qualificationFn(object, world, listState))
+      actionList.forEach(action => action(object, world, listState));
+  };
+};

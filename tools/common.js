@@ -59,16 +59,19 @@ export function forPair(arr, fn) {
 }
 
 /**
- * Creates a shallow copy of this simple object.
+ * Creates a shallow copy of this simple object, where a "simple object" is one that has a prototype that is
+ * `Object.prototype` or `null`.  If the value does not qualify as a simple object, an error is thrown.
  *
  * @export
  * @template T
  * @param {T} this The object to copy.
- * @returns {T} A shallow copy of the own-properties of the bound object, if possible; otherwise the identity.
+ * @returns {T} A shallow copy of the own-properties of the bound object.
  */
 export function copyOwn() {
   'use strict'; // Allows binding to `null`.
-  if (typeof this !== "object") return this;
+  if (typeof this !== "object")
+    throw new Error("the bound value must be an object reference");
+  
   if (this === null) return null;
 
   const proto = Object.getPrototypeOf(this);
