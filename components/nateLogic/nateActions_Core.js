@@ -4,9 +4,9 @@ import { decrementTime, stokesDrag } from "./core";
 import { facings, aimings, movings, jumps, trajectories } from "./core";
 import * as nc from "./nateConfig";
 
-const { physics: { friction, runAccel, jumpVelFull, jumpVelWeak } } = nc;
-const { hitbox: { halfWidth: hbHalfWidth } } = nc;
-const { timing: { shootCoolDownValue, shootHoldValue, shootRecoilThreshold } } = nc;
+const { friction, runAccel, jumpVel } = nc.physics;
+const { halfWidth: hbHalfWidth } = nc.hitbox;
+const { shootCoolDownValue, shootHoldValue, shootRecoilThreshold } = nc.timing;
 const { shootOffsets } = nc;
 
 const $$applyShootAnim = Symbol("nateActions_Core/applyShootAnim");
@@ -37,7 +37,7 @@ export function doMove(nate) {
 export function doJump(nate) {
   const { brain, physics } = nate;
   if (brain.jumping === jumps.none) return;
-  physics.vel.y += brain.jumping === jumps.full ? jumpVelFull : jumpVelWeak;
+  physics.vel.y += brain.jumping === jumps.full ? jumpVel.full : jumpVel.weak;
   physics.onGround = false;
 }
 

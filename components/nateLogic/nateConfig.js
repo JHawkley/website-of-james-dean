@@ -7,27 +7,7 @@ export const lanes = {
   handledMovement: Symbol("handledMovement"),
   behaviorFinalized: Symbol("behaviorFinalized"),
   didFlee: Symbol("didFlee"),
-  didRetaliate: Symbol("didRetaliate")
-};
-
-export const ranges = {
-  /** The distances that Nate will consider the cursor too close, based on direction. */
-  flee: { side: 100, above: 100, below: 24 },
-  /** The "comfortable" firing range for the cursor to be. */
-  comfortable: { min: 150, max: 300 },
-  /** The percentage of the bounds that Nate will travel when being chased from an edge. */
-  edgeFleeDistances: { min: 0.1, max: 0.2 },
-  /** The number of pixels above or below Nate's hand he will consider close-enough to fire. */
-  firingField: 15,
-  /** The maximum distance the cursor should be when intending to jump over it. */
-  jumpOverDistance: 30
-};
-
-export const hitbox = {
-  /** The half-width of the hitbox. */
-  halfWidth: 7,
-  /** The height of the hitbox. */
-  height: 42
+  didAttack: Symbol("didAttack")
 };
 
 const maxVel = 130 / 1000;
@@ -41,10 +21,40 @@ export const physics = {
   friction,
   /** The acceleration to apply when Nate runs. */
   runAccel,
-  /** The velocity to apply to Nate when he performs a full jump. */
-  jumpVelFull: 375 / 1000,
-  /** The velocity to apply to Nate when he performs a weak jump. */
-  jumpVelWeak: 275 / 1000
+  /** The velocities to apply for each type of jump. */
+  jumpVel: { weak: 275 / 1000, full: 375 / 1000 },
+  /**
+   * Based on above numbers, this is how high Nate should be able to reach, relative to ground level.
+   * If the above numbers change, make sure this value is updated.
+   */
+  jumpHeight: { weak: 35, full: 67 }
+};
+
+export const hitbox = {
+  /** The half-width of the hitbox. */
+  halfWidth: 7,
+  /** The height of the hitbox. */
+  height: 42
+};
+
+// The upper-most limit that Nate can achieve.
+const topPhysicalLimits = physics.jumpHeight.full + hitbox.height;
+
+export const ranges = {
+  /** The distances that Nate will consider the cursor too close, based on direction. */
+  flee: { side: 100, above: topPhysicalLimits, below: 24 },
+  /** The "comfortable" firing range for the cursor to be. */
+  comfortable: { min: 150, max: 300 },
+  /** The maximum distance out-of-bounds the cursor may be before being considered unreachable. */
+  maxTargetDistance: 400,
+  /** When the cursor is off to the side, it will be considered out of bounds if not in these vertical bounds. */
+  sideReachableBounds: { bottom: 15, top: topPhysicalLimits },
+  /** The percentage of the bounds that Nate will travel when being chased from an edge. */
+  edgeFleeDistances: { min: 0.1, max: 0.2 },
+  /** The number of pixels above or below Nate's hand he will consider close-enough to fire. */
+  firingField: 15,
+  /** The maximum distance the cursor should be when intending to jump over it. */
+  jumpOverDistance: 50
 };
 
 export const timing = {

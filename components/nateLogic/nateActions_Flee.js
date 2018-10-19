@@ -7,12 +7,13 @@ import * as nc from "./nateConfig";
 
 const { max, abs } = Math;
 
-const { lanes: { handledMovement, behaviorFinalized, didFlee, didRetaliate } } = nc;
-const { ranges: { flee: { above: rangeAbove, below: rangeBelow, side: rangeSide } } } = nc;
-const { ranges: { edgeFleeDistances, jumpOverDistance, comfortable: { max: comfortableRangeMax } } } = nc;
-const { hitbox: { halfWidth: hbHalfWidth, height: hbHeight } } = nc;
-const { physics: { maxVel } } = nc;
-const { timing: { retaliationWaitTime } } = nc;
+const { handledMovement, behaviorFinalized, didFlee, didAttack } = nc.lanes;
+const { above: rangeAbove, below: rangeBelow, side: rangeSide } = nc.ranges.flee;
+const { edgeFleeDistances, jumpOverDistance, comfortable: { max: comfortableRangeMax } } = nc.ranges;
+const { bottom: bottomReach } = nc.ranges.sideReachableBounds;
+const { halfWidth: hbHalfWidth, height: hbHeight } = nc.hitbox;
+const { maxVel } = nc.physics;
+const { retaliationWaitTime } = nc.timing;
 
 const defaultState = Object.freeze({ until: 0.0, forced: false });
 
@@ -54,20 +55,14 @@ export function qualificationFn(nate, {cursor}, {delta, actions, lanes}) {
       forced: false
     };
   });
-  
 
   state.horizDiff = horizDiff;
   state.vertDiff = vertDiff;
   state.until = untilTimer > 0.0 ? untilTimer : randomTime(500.0, 500.0);
   state.forced = false;
 
-  // Save this state into the active `actions` so actions in the sub-list can
-  // make use of the data that it contains.
-  actions[$$fleeBehavior] = state;
-  // But also save it into the future `nate.actions` as per-usual so the object
-  // isn't reallocated next frame.
+  // This action-state will be used by sub-list actions.
   nate.actions[$$fleeBehavior] = state;
-
   lanes.add(behaviorFinalized);
   return true;
 }
@@ -122,7 +117,7 @@ export function fleeFromCursor(nate, _, {delta, actions, lanes}) {
   if (lanes.has(handledMovement)) return;
 
   const { brain } = nate;
-  const { horizDiff } = actions[$$fleeBehavior];
+  const { horizDiff } = nate.actions[$$fleeBehavior];
   const state = actions[$$fleeFromCursor] ?? {
     lastFacing: facings.left,
     holdTimer: 0.0
@@ -146,32 +141,32 @@ export function fleeFromCursor(nate, _, {delta, actions, lanes}) {
   lanes.add(handledMovement);
 }
 
-export function retaliateShootUp(nate, _, {actions, lanes}) {
+export function retaliateShootUp(nate, {cursor}, {lanes}) {
   if (!lanes.has(didFlee)) return;
-  if (lanes.has(didRetaliate)) return;
+  if (lanes.has(didAttack)) return;
 
   const { brain, physics: { onGround } } = nate;
-  const { horizDiff, vertDiff } = actions[$$fleeBehavior];
+  const { vertDiff } = nate.actions[$$fleeBehavior];
 
   const doRetaliate = dew(() => {
     if (!onGround) return false;
-    if (abs(horizDiff) > hbHalfWidth * 2) return false;
     if (vertDiff <= hbHeight) return false;
+    if (bestAiming(nate, cursor.relPos, false) !== aimings.up) return false;
     return true;
   });
 
   if (!doRetaliate) return false;
 
   brain.shooting = aimings.up;
-  lanes.add(didRetaliate);
+  lanes.add(didAttack);
 }
 
 export function retaliateJumpOver(nate, {cursor}, {actions, lanes}) {
   if (!lanes.has(didFlee)) return;
-  if (lanes.has(didRetaliate)) return;
+  if (lanes.has(didAttack)) return;
 
   const { brain, physics: { onGround } } = nate;
-  const { horizDiff, vertDiff } = actions[$$fleeBehavior];
+  const { horizDiff, vertDiff } = nate.actions[$$fleeBehavior];
   const stillRetaliating = typeof actions[$$retaliateJumpOver] !== "undefined";
 
   const doRetaliate = dew(() => {
@@ -220,15 +215,15 @@ export function retaliateJumpOver(nate, {cursor}, {actions, lanes}) {
   nate.actions[$$fleeBehavior].forced = true;
 
   nate.actions[$$retaliateJumpOver] = state;
-  lanes.add(didRetaliate);
+  lanes.add(didAttack);
 }
 
 export function retaliateBackFire(nate, {bullets, cursor}, {actions, lanes}) {
   if (!lanes.has(didFlee)) return;
-  if (lanes.has(didRetaliate)) return;
+  if (lanes.has(didAttack)) return;
 
   const { brain, physics: { onGround, vel } } = nate;
-  const { horizDiff, vertDiff } = actions[$$fleeBehavior];
+  const { horizDiff, vertDiff } = nate.actions[$$fleeBehavior];
   const stillRetaliating = actions[$$retaliateBackFire] === true;
 
   const doRetaliate = dew(() => {
@@ -242,7 +237,7 @@ export function retaliateBackFire(nate, {bullets, cursor}, {actions, lanes}) {
     if (unspawnedCount < 2) return false;
 
     // Don't retaliate if the cursor is too low.
-    if (vertDiff < 15.0) return false;
+    if (vertDiff < bottomReach) return false;
 
     // Don't retaliate if the cursor is too close.
     if (abs(horizDiff) <= hbHalfWidth * 2) return false;
@@ -272,5 +267,5 @@ export function retaliateBackFire(nate, {bullets, cursor}, {actions, lanes}) {
   nate.actions[$$fleeBehavior].forced = true;
 
   nate.actions[$$retaliateBackFire] = true;
-  lanes.add(didRetaliate);
+  lanes.add(didAttack);
 }

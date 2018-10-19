@@ -92,6 +92,7 @@ export function copyOwn() {
  * @returns {number} A random number.
  */
 export function randomBetween(min, max) {
+  if (min === max) return min;
   return random()::map(0.0, 1.0, min, max);
 }
 

@@ -1,6 +1,7 @@
 import { dew } from "/tools/common";
 import { decrementTime, randomTime } from "./core";
 import { facings, aimings, movings, jumps } from "./core";
+import { makeRandomJump } from "./nateCommon";
 import * as nc from "./nateConfig";
 
 const { random: randomNum } = Math;
@@ -8,8 +9,8 @@ const { random: randomNum } = Math;
 const { lanes: { handledMovement }, hitbox: { halfWidth: hitboxHalfWidth } } = nc;
 
 const $$randomIdle = Symbol("nateActions_Debug/randomIdle");
-const $$randomJump = Symbol("nateActions_Debug/randomJump");
 const $$randomShoot = Symbol("nateActions_Debug/randomShoot");
+const $$logJumpHeights = Symbol("nateActions_Debug/logJumpHeights");
 
 export function randomIdle(nate, _, {delta, actions, lanes}) {
   const state = actions[$$randomIdle] ?? dew(() => {
@@ -47,20 +48,7 @@ export function paceBackAndForth(nate, {bounds}, {lanes}) {
   brain.moving = movings.yes;
 }
 
-export function randomJump(nate, _, {delta, actions}) {
-  const { brain, physics } = nate;
-  if (!physics.onGround) return;
-
-  const state = actions[$$randomJump] ?? {
-    nextJump: randomTime(500.0, 1500.0)
-  };
-
-  state.nextJump = decrementTime(state.nextJump, delta);
-  if (state.nextJump > 0.0)
-    nate.actions[$$randomJump] = state;
-  else
-    brain.jumping = randomNum() > 0.5 ? jumps.full : jumps.weak;
-}
+export const randomJump = makeRandomJump(500.0, 1500.0, "nateActions_Debug/randomJump");
 
 export function randomShoot(nate, _, {delta, actions}) {
   const { brain } = nate;
@@ -82,4 +70,24 @@ export function randomShoot(nate, _, {delta, actions}) {
   }
 
   nate.actions[$$randomShoot] = state;
+}
+
+export function logJumpHeights(nate, {bounds}, {actions}) {
+  const { brain, physics } = nate;
+
+  if (typeof actions[$$logJumpHeights] === "undefined")
+    if (brain.jumping === jumps.none)
+      return;
+
+  const state = actions[$$logJumpHeights] ?? { jump: brain.jumping, height: 0.0, starting: true };
+
+  if (physics.onGround && !state.starting) {
+    const finalHeight = (state.height - bounds.ground) | 0;
+    console.log(`jump height of ${state.jump.toString()}: ${finalHeight}`);
+    return;
+  }
+
+  state.height = Math.max(state.height, physics.pos.y);
+  state.starting = false;
+  nate.actions[$$logJumpHeights] = state;
 }
