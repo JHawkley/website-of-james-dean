@@ -1,13 +1,13 @@
 import * as coreActions from "./nateActions_Core";
-import * as debugActions from "./nateActions_Debug";
-import fleeBehavior from "./nateBehavior_Flee";
-import chaseBehavior from "./nateBehavior_Chase";
+//import * as debugActions from "./nateActions_Debug";
+import passiveBehavior from "./nateBehavior_Passive";
+import aggressiveBehavior from "./nateBehavior_Aggressive";
 
 export default Object.freeze([
   coreActions.doSpawn,
   coreActions.runTimers,
-  fleeBehavior,
-  chaseBehavior,
+  passiveBehavior,
+  aggressiveBehavior,
   //debugActions.randomIdle,
   //debugActions.paceBackAndForth,
   //debugActions.randomJump,

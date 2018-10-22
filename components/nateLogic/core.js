@@ -9,6 +9,11 @@ export const stokesDrag = {
   newVelocity: (a, f, v) => v + (a - f * v)
 };
 
+export const behaviorModes = Object.freeze({
+  passive: Symbol("passive"),
+  aggressive: Symbol("aggressive")
+});
+
 export const directions = Object.freeze({
   up: Symbol("up"),
   right: Symbol("right"),

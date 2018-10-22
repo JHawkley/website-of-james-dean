@@ -4,6 +4,7 @@ import { decrementTime, stokesDrag } from "./core";
 import { facings, aimings, movings, jumps, trajectories } from "./core";
 import * as nc from "./nateConfig";
 
+const { handledMovement } = nc.lanes;
 const { friction, runAccel, jumpVel } = nc.physics;
 const { halfWidth: hbHalfWidth } = nc.hitbox;
 const { shootCoolDownValue, shootHoldValue, shootRecoilThreshold } = nc.timing;
@@ -25,6 +26,27 @@ export function runTimers({brain}, _, {delta}) {
   brain.retaliationTimer = decrementTime(brain.retaliationTimer, delta);
   brain.shootCoolDown = decrementTime(brain.shootCoolDown, delta);
   brain.shootHold = decrementTime(brain.shootHold, delta);
+}
+
+export function approachCursor(nate, {cursor, bounds}, {lanes}) {
+  if (lanes.has(handledMovement)) return;
+
+  const { physics: { pos: natePos }, brain } = nate;
+  
+  const hbLeft = natePos.x - hbHalfWidth;
+  const hbRight = natePos.x + hbHalfWidth;
+
+  const horizDiff = cursor.relPos.x - natePos.x;
+  const newFacing = horizDiff >= 0 ? facings.right : facings.left;
+
+  // Stop if touching the edge of the bounds.
+  if (newFacing === facings.left && hbLeft <= bounds.left) return;
+  if (newFacing === facings.right && hbRight >= bounds.right) return;
+  
+  brain.facing = newFacing;
+  brain.moving = movings.yes;
+
+  lanes.add(handledMovement);
 }
 
 export function doMove(nate) {

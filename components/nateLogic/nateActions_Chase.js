@@ -1,8 +1,9 @@
 import { dew, randomBetween } from "/tools/common";
 import { inRange } from "/tools/numbers";
-import { aimings, facings, movings, jumps } from './core';
-import { randomTime, decrementTime, subList } from './core';
-import { bestAiming, isTargetReachable, makeRandomJump } from './nateCommon';
+import { aimings, facings, movings, jumps } from "./core";
+import { randomTime, decrementTime, subList } from "./core";
+import { bestAiming, makeRandomJump } from "./nateCommon";
+import { approachCursor } from "./nateActions_Core";
 import * as nc from "./nateConfig";
 
 const { min, max, abs } = Math;
@@ -26,30 +27,8 @@ const $$passOverCursor = Symbol("nateActions_Chase/shootFromAbove/passOverCursor
 const $$stayComfortable = Symbol("nateActions_Chase/comfortableShooting/stayComfortable");
 const $$takeShots = Symbol("nateActions_Chase/comfortableShooting/takeShots");
 
-function approach(nate, {cursor, bounds}, {lanes}) {
-  if (lanes.has(handledMovement)) return;
-
-  const { physics: { pos: natePos }, brain } = nate;
-  
-  const hbLeft = natePos.x - hbHalfWidth;
-  const hbRight = natePos.x + hbHalfWidth;
-
-  const horizDiff = cursor.relPos.x - natePos.x;
-  const newFacing = horizDiff >= 0 ? facings.right : facings.left;
-
-  // Stop if touching the edge of the bounds.
-  if (newFacing === facings.left && hbLeft <= bounds.left) return;
-  if (newFacing === facings.right && hbRight >= bounds.right) return;
-  
-  brain.facing = newFacing;
-  brain.moving = movings.yes;
-
-  lanes.add(handledMovement);
-}
-
-export function qualificationFn(_, {cursor, bounds}, {lanes}) {
+export function qualificationFn(nate, _, {lanes}) {
   if (lanes.has(behaviorFinalized)) return false;
-  if (!isTargetReachable(cursor.relPos, bounds)) return false;
   
   lanes.add(behaviorFinalized);
   return true;
@@ -94,7 +73,7 @@ export const shootFromBelow = dew(() => {
     else {
       // Only approach the target if the time needed to retarget has lapsed.
       if (state.retargetTimer <= 0.0)
-        approach(nate, world, listState);
+        approachCursor(nate, world, listState);
       
       state.retargetTimer = decrementTime(state.retargetTimer, delta);
       state.didShoot = false;
@@ -181,7 +160,7 @@ export const shootFromAbove = dew(() => {
     switch(state.curState) {
       case passOverStates.approaching:
         if (!onGround) state.curState = passOverStates.jumping;
-        else approach(nate, world, listState);
+        else approachCursor(nate, world, listState);
         break;
       case passOverStates.jumping:
         brain.moving = movings.yes;

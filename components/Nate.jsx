@@ -2,7 +2,7 @@ import { dew, makeArray, forZipped } from "/tools/common";
 import maybe from "/tools/maybe";
 import bulletActionList from "./nateLogic/bulletActionList";
 import nateActionList from "./nateLogic/nateActionList";
-import { facings, aimings, movings, jumps } from "./nateLogic/core";
+import { behaviorModes, facings, aimings, movings, jumps } from "./nateLogic/core";
 
 class Nate extends React.Component {
 
@@ -51,6 +51,8 @@ class Nate extends React.Component {
         onGround: false
       },
       brain: {
+        // Current behavior mode.
+        behavior: behaviorModes.aggressive,
         // Represent actions to be taken.
         moving: movings.no,
         lookingUp: false,
@@ -63,7 +65,7 @@ class Nate extends React.Component {
         retaliationTimer: 0.0,
         shootCoolDown: 0.0,
         shootHold: 0.0,
-        cantReach: 0.0
+        pacificationTimer: 0.0
       },
       anim: {
         main: ["idle"],

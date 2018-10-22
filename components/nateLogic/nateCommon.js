@@ -57,30 +57,57 @@ export function bestAiming(nate, target, considerCooldown = true) {
 }
 
 /**
- * Determines if the target is in a location where bullets are able to hit.
+ * Determines if the target is in a location that can be attacked from the side, potentially with a jump.
  *
  * @export
  * @param {{x: number, y: number}} target The target's position.
- * @param {{left: number, right: number}} bounds The traversable bounds.
- * @returns {boolean} Whether the target is in a location that can be attacked.
+ * @param {{left: number, right: number, ground: number}} bounds The traversable bounds.
+ * @returns {boolean} Whether the target is in a location that can be attacked from the side.
  */
-export function isTargetReachable(target, bounds) {
+export function isTargetReachableHorizontally(target, bounds) {
   const { x, y } = target;
-  const {left: boundsLeft, right: boundsRight, ground: groundLevel } = bounds;
+  const { left: boundsLeft, right: boundsRight, ground: groundLevel } = bounds;
 
   const reachLeft = boundsLeft - maxTargetDistance;
   const reachRight = boundsRight + maxTargetDistance;
 
-  // Can the target be attacked from the side, potentially with a jump?
   if (x::inRange(reachLeft, reachRight))
     if (y::inRange(reachBottom + groundLevel, reachTop + groundLevel))
       return true;
+  
+  return false;
+}
 
-  // Can the target be attacked form above and below?
+/**
+ * Determines if the target is in a location that can be attacked from above or below.
+ *
+ * @export
+ * @param {{x: number, y: number}} target The target's position.
+ * @param {{left: number, right: number}} bounds The traversable bounds.
+ * @returns {boolean} Whether the target is in a location that can be attacked from above or below.
+ */
+export function isTargetReachableVertically(target, bounds) {
+  const { x, y } = target;
+  const { left: boundsLeft, right: boundsRight } = bounds;
+
   if (y::inRange(-maxTargetDistance, maxTargetDistance))
     if (x::inRange(boundsLeft, boundsRight))
       return true;
   
+  return false;
+}
+
+/**
+ * Determines if the target is in a location where bullets are able to hit.
+ *
+ * @export
+ * @param {{x: number, y: number}} target The target's position.
+ * @param {{left: number, right: number, ground: number}} bounds The traversable bounds.
+ * @returns {boolean} Whether the target is in a location that can be attacked.
+ */
+export function isTargetReachable(target, bounds) {
+  if (isTargetReachableHorizontally(target, bounds)) return true;
+  if (isTargetReachableVertically(target, bounds)) return true;
   return false;
 }
 

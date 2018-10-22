@@ -1,5 +1,6 @@
 import { stokesDrag, aimings, movings } from "./core";
 import { dew } from "/tools/common";
+import { toRadians } from "/tools/numbers";
 import maybe from "/tools/maybe";
 
 /** Symbols identifying lanes in the action-list. */
@@ -7,7 +8,8 @@ export const lanes = {
   handledMovement: Symbol("handledMovement"),
   behaviorFinalized: Symbol("behaviorFinalized"),
   didFlee: Symbol("didFlee"),
-  didAttack: Symbol("didAttack")
+  didAttack: Symbol("didAttack"),
+  isFrustrated: Symbol("isFrustrated")
 };
 
 const maxVel = 130 / 1000;
@@ -54,7 +56,11 @@ export const ranges = {
   /** The number of pixels above or below Nate's hand he will consider close-enough to fire. */
   firingField: 15,
   /** The maximum distance the cursor should be when intending to jump over it. */
-  jumpOverDistance: 50
+  jumpOverDistance: 50,
+  /** The offset nate can have before he feels like he is close enough to the cursor to stare at it. */
+  stareAtOffset: 100,
+  /** The range of angles that wil cause Nate to look up at a cursor while staring at it. */
+  stareUpRange: { min: -45::toRadians(), max: 45::toRadians() }
 };
 
 export const timing = {
@@ -68,7 +74,20 @@ export const timing = {
    * The amount of additional time that should pass before attempting to retaliate against
    * the cursor again when fleeing.
    */
-  retaliationWaitTime: 1000
+  retaliationWaitTime: 1000,
+  /** How long the cursor must remain stationary before Nate begins to become bored. */
+  stationaryTargetBoredomThreshold: 4000,
+  /** How long before Nate will become bored of the cursor when it is frustrating him. */
+  becomePassiveTime: 16000,
+  /** How long Nate will stop being frustrated to glare at the cursor while it is boring him. */
+  stareTimes: { start: 500, added: 1000 },
+  /** Special timing settings for the frustration sub-actions. */
+  frustratedActions: {
+    /** Times for general sub-actions. */
+    shortTimes: { start: 1000, added: 1000 },
+    /** Times for the pretend-not-to-care sub-action. */
+    longTimes: { start: 4000, added: 4000 }
+  }
 };
 
 /**
