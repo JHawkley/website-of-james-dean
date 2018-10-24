@@ -7,10 +7,6 @@ function modulo(a, b) {
   return (+a % (b = +b) + b) % b;
 }
 
-function normalizeAngle_Deg(input) {
-  return modulo(input, 360);
-}
-
 function normalizeAngle_Rad(input) {
   return modulo(input, PI2);
 }
@@ -122,24 +118,6 @@ export function toRadians() {
 }
 
 /**
- * Compares `this` angle with an `other` angle, both in degrees.  This function will normalize both values so
- * that they lie between the range of `0..360`.  The comparison is done in a tolerant way.
- *
- * @export
- * @param {number} this This number, representing an angle in degrees.
- * @param {number} other Another number, representing an angle in degrees.
- * @returns {boolean} Whether the numbers represent roughly the same angle.
- */
-export function compareAngleDegrees(other) {
-  let self = this;
-  if (self < 0 || self >= 360)
-    self = normalizeAngle_Deg(this);
-  if (other < 0 || other >= 360)
-    other = normalizeAngle_Deg(other);
-  return self::tolerantCompare(other);
-}
-
-/**
  * Compares `this` angle with an `other` angle, both in radians.  This function will normalize both values so
  * that they lie between the range of `0..(PI*2)`.  The comparison is done in a tolerant way.
  *
@@ -148,11 +126,36 @@ export function compareAngleDegrees(other) {
  * @param {number} other Another number, representing an angle in radians.
  * @returns {boolean} Whether the numbers represent roughly the same angle.
  */
-export function compareAngleRadians(other) {
+export function compareAngle(other) {
   let self = this;
   if (self < 0 || self >= PI2)
     self = normalizeAngle_Rad(self);
   if (other < 0 || other >= PI2)
     other = normalizeAngle_Rad(other);
   return self::tolerantCompare(other);
+}
+
+/**
+ * Determines if this number, treated as an angle in radians, is between `min` and `max`.  This function will
+ * normalize all values so that they lie between the range of `0..(PI*2)`.
+ * 
+ * If `min` is greater than `max`, then the inverse slice of the circle will be used.
+ *
+ * @export
+ * @param {number} this This number, an angle in radians.
+ * @param {number} min The minimum angle of the range.
+ * @param {number} max The maximum angle of the range.
+ * @returns {boolean} Whether this number is an angle between the `min` and `max` angles.
+ */
+export function angleInRange(min, max) {
+  if (min === max) return this::compareAngle(min, max);
+
+  let self = this;
+  if (min < 0 || min >= PI2)
+    min = normalizeAngle_Rad(min);
+  if (max < 0 || max >= PI2)
+    max = normalizeAngle_Rad(max);
+  if (self < 0 || self >= PI2)
+    self = normalizeAngle_Rad(self);
+  return min < max ? (self >= min && self <= max) : (self >= min || self <= max);
 }
