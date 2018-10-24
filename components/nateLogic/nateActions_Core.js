@@ -58,7 +58,10 @@ export function doMove(nate) {
 
 export function doJump(nate) {
   const { brain, physics } = nate;
+
+  if (!physics.onGround) return;
   if (brain.jumping === jumps.none) return;
+
   physics.vel.y += brain.jumping === jumps.full ? jumpVel.full : jumpVel.weak;
   physics.onGround = false;
 }
