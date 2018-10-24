@@ -60,7 +60,13 @@ export const ranges = {
   /** The offset nate can have before he feels like he is close enough to the cursor to stare at it. */
   stareAtOffset: 100,
   /** The range of angles that wil cause Nate to look up at a cursor while staring at it. */
-  stareUpRange: { min: -45::toRadians(), max: 45::toRadians() }
+  stareUpRange: { min: -45::toRadians(), max: 45::toRadians() },
+  /** The range of angles for each direction that the cursor should be in for Nate to spot it. */
+  sightFOV: {
+    [aimings.ahead]: { min: 45::toRadians(), max: 110::toRadians() },
+    [aimings.up]: { min: -10::toRadians(), max: 60::toRadians() },
+    [aimings.down]: {min: 135:: toRadians(), max: 225::toRadians() }
+  }
 };
 
 export const timing = {
