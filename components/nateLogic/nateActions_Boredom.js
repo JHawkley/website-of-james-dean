@@ -1,5 +1,5 @@
 import { dew, randomBetween, copyOwn } from "/tools/common";
-import { inRange, clamp } from "/tools/numbers";
+import { inRange, angleInRange, clamp } from "/tools/numbers";
 import { shuffle } from "/tools/array";
 import { angle } from "/tools/vectorMath";
 import { behaviorModes, aimings, facings, movings, jumps } from './core';
@@ -54,13 +54,14 @@ function hasOverlap(left1, right1, left2, right2) {
   return false;
 }
 
-function shouldLookUp(natePos, cursorPos) {
+function shouldLookUp(natePos, cursorPos, flipX) {
   let { x: nx, y: ny } = natePos;
   ny += hbHeight;
   const v = cursorPos::copyOwn();
   v.x -= nx;
   v.y -= ny;
-  return v::angle()::inRange(stareUpAngleMin, stareUpAngleMax);
+  if (flipX) v.x *= -1;
+  return v::angle()::angleInRange(stareUpAngleMin, stareUpAngleMax);
 }
 
 function facingTowardFarBounds(natePos, bounds) {
@@ -302,8 +303,6 @@ export function beFrustrated(nate, world, listState) {
     const inPosition = hasOverlap(hbLeft, hbRight, cursorRangeLeft, cursorRangeRight);
     const tooClose = abs(horizDiff) < stareAtOffset * 0.4;
 
-    brain.lookingUp = shouldLookUp(natePos, cursorPos);
-
     if (!inPosition) {
       if (repositionNow) {
         // Get into position.
@@ -323,6 +322,8 @@ export function beFrustrated(nate, world, listState) {
       brain.facing = horizDiff >= 0.0 ? facings.right : facings.left;
       state.repositionTimer = randomTime(50, 150);
     }
+
+    brain.lookingUp = shouldLookUp(natePos, cursorPos, brain.facing === facings.left);
 
     if (state.inPosition)
       state.stareTimer = decrementTime(state.stareTimer, delta);
