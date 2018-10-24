@@ -47,7 +47,10 @@ export const ranges = {
   flee: { side: 100, above: topPhysicalLimits, below: 24 },
   /** The "comfortable" firing range for the cursor to be. */
   comfortable: { min: 150, max: 300 },
-  /** The maximum distance out-of-bounds the cursor may be before being considered unreachable. */
+  /**
+   * The maximum distance out-of-bounds the cursor may be before being considered unreachable.
+   * Also used to determine if the cursor is close enough to become aggressive.
+   */
   maxTargetDistance: 400,
   /** When the cursor is off to the side, it will be considered out of bounds if not in these vertical bounds. */
   sideReachableBounds: { bottom: 15, top: topPhysicalLimits },
@@ -63,8 +66,8 @@ export const ranges = {
   stareUpRange: { min: -45::toRadians(), max: 45::toRadians() },
   /** The range of angles for each direction that the cursor should be in for Nate to spot it. */
   sightFOV: {
-    [aimings.ahead]: { min: 45::toRadians(), max: 110::toRadians() },
-    [aimings.up]: { min: -10::toRadians(), max: 60::toRadians() },
+    [aimings.ahead]: { min: 45::toRadians(), max: 125::toRadians() },
+    [aimings.up]: { min: -15::toRadians(), max: 60::toRadians() },
     [aimings.down]: {min: 135:: toRadians(), max: 225::toRadians() }
   }
 };
