@@ -52,7 +52,7 @@ class Nate extends React.Component {
       },
       brain: {
         // Current behavior mode.
-        behavior: behaviorModes.aggressive,
+        behavior: behaviorModes.passive,
         // Represent actions to be taken.
         moving: movings.no,
         lookingUp: false,
