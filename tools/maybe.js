@@ -32,7 +32,7 @@ export function isNotEmpty() {
  *
  * @export
  * @template T
- * @param {Array<T>} this This maybe object.
+ * @this {Array<T>} This maybe object.
  * @param {T | (() => T)} defaultValue The value to use in case `this` is empty.
  * @returns {T} The value.
  */
@@ -50,7 +50,7 @@ export function firstOrElse(defaultValue) {
  *
  * @export
  * @template T,U
- * @param {Array<T>} this This array.
+ * @this {Array<T>} This array.
  * @param {T => U} xformFn The transformation function.
  * @returns {U} A new array, containing the results of the transformation.
  */
@@ -65,7 +65,7 @@ export function map(xformFn) {
  *
  * @export
  * @template T,U
- * @param {Array<U>} this The bound object, which should be an array.
+ * @this {Array<U>} The bound object, which should be an array.
  * @param {Array<T>} expr An `Array` with at least one element; otherwise the match fails.
  * @param {(option: Array<T>) => Array<U>} xformFn A function to call in the case of a match; should return a `maybe`.
  * @returns {Array<U>} May be an object that was matched.

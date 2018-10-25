@@ -5,7 +5,7 @@ const { floor, random: randomNum } = Math;
  *
  * @export
  * @template T
- * @param {T[]} this This Array.
+ * @this {T[]} This Array.
  * @returns {T[]} This array, with its elements shuffled.
  */
 export function shuffle() {
@@ -32,7 +32,7 @@ export function shuffle() {
  *
  * @export
  * @template T
- * @param {T[]} this This Array.
+ * @this {T[]} This Array.
  * @returns {T | undefined} A random element of this array.
  */
 export function randomElement() {

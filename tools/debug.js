@@ -3,7 +3,7 @@
  *
  * @export
  * @template T
- * @param {T} this This value, to be logged.
+ * @this {T} This value, to be logged.
  * @param {string} label A string to label the value with.
  * @returns {T} This value.
  */

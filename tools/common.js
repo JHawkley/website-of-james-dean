@@ -64,7 +64,7 @@ export function forPair(arr, fn) {
  *
  * @export
  * @template T
- * @param {T} this The object to copy.
+ * @this {T} The object to copy.
  * @returns {T} A shallow copy of the own-properties of the bound object.
  */
 export function copyOwn() {

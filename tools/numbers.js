@@ -15,7 +15,7 @@ function normalizeAngle_Rad(input) {
  * Compares `this` number to an `other` number in a manner tolerant of floating-point errors.
  *
  * @export
- * @param {number} this This number.
+ * @this {number} This number.
  * @param {number} other The other number.
  * @returns {boolean} A boolean indicating rough equality.
  */
@@ -27,7 +27,7 @@ export function tolerantCompare(other) {
  * Linearly interpolates between the range `start` and `end` by `this` number.  The range is not clamped.
  *
  * @export 
- * @param {number} this This number.
+ * @this {number} This number.
  * @param {number} start The low end of the range.
  * @param {number} end The high end of the range.
  * @returns {number} The result of the interpolation.
@@ -41,7 +41,7 @@ export function lerp(start, end) {
  * Neither range is clamped.
  *
  * @export
- * @param {number} this This number.
+ * @this {number} This number.
  * @param {number} inStart The start of the input range.
  * @param {number} inEnd The end of the input range.
  * @param {number} outStart The start of the output range.
@@ -57,7 +57,7 @@ export function map(inStart, inEnd, outStart, outEnd) {
  * clamp between 0.0 and `start`.
  *
  * @export
- * @param {number} this This number.
+ * @this {number} This number.
  * @param {number} start The start of the range.
  * @param {number} [end] The end of the range.
  * @returns {number} This number clamped.
@@ -72,7 +72,7 @@ export function clamp(start, end) {
  * Indicates whether this number is between the given range.
  *
  * @export
- * @param {number} this This number.
+ * @this {number} This number.
  * @param {number} start The start of the range.
  * @param {number} end The end of the range.
  * @returns {boolean} Whether this number lies in the range.
@@ -88,7 +88,7 @@ export function inRange(start, end) {
  * Gets the sign of `this` number.  Unlike `Number..sign`, this version always counts `0` as positive.
  *
  * @export
- * @param {number} this This number.
+ * @this {number} This number.
  * @returns {1 | -1} Either `1` if greater-than-or-equal to zero or `-1` otherwise.
  */
 export function sign() {
@@ -99,7 +99,7 @@ export function sign() {
  * Converts `this` number of radians to degrees.
  *
  * @export
- * @param {number} this This number, representing an angle in radians.
+ * @this {number} This number, representing an angle in radians.
  * @returns {number} The number converted to degrees.
  */
 export function toDegrees() {
@@ -110,7 +110,7 @@ export function toDegrees() {
  * Converts `this` number of degrees to radians.
  *
  * @export
- * @param {number} this This number, representing an angle in degrees.
+ * @this {number} This number, representing an angle in degrees.
  * @returns {number} The number converted to radians.
  */
 export function toRadians() {
@@ -122,7 +122,7 @@ export function toRadians() {
  * that they lie between the range of `0..(PI*2)`.  The comparison is done in a tolerant way.
  *
  * @export
- * @param {number} this This number, representing an angle in radians.
+ * @this {number} This number, representing an angle in radians.
  * @param {number} other Another number, representing an angle in radians.
  * @returns {boolean} Whether the numbers represent roughly the same angle.
  */
@@ -142,7 +142,7 @@ export function compareAngle(other) {
  * If `min` is greater than `max`, then the inverse slice of the circle will be used.
  *
  * @export
- * @param {number} this This number, an angle in radians.
+ * @this {number} This number, an angle in radians.
  * @param {number} min The minimum angle of the range.
  * @param {number} max The maximum angle of the range.
  * @returns {boolean} Whether this number is an angle between the `min` and `max` angles.
