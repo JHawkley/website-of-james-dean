@@ -4,7 +4,7 @@ import { shuffle } from "/tools/array";
 import { angle } from "/tools/vectorMath";
 import { behaviorModes, aimings, facings, movings, jumps } from './core';
 import { randomTime, decrementTime } from './core';
-import { isTargetReachable } from './nateCommon';
+import { isTargetReachable, playSound } from './nateCommon';
 import chaseBehavior from "./nateBehavior_Chase";
 import * as nc from "./nateConfig";
 
@@ -341,7 +341,8 @@ export function beFrustrated(nate, world, listState) {
 export function becomePassive(nate, _, {lanes}) {
   if (lanes.has(isFrustrated)) return;
 
-  const { brain } = nate;
+  const { brain, sounds } = nate;
+  playSound(nate, sounds.aroo);
   brain.behavior = behaviorModes.passive;
   brain.pacificationTimer = randomTime(2000.0, 1000.0);
 }

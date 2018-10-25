@@ -14,6 +14,13 @@ export function dew(fn) {
 }
 
 /**
+ * Represents a no-operation function.
+ *
+ * @export
+ */
+export function noop() { return; }
+
+/**
  * Creates an array with the specified count, calling the given function for each element and populating the element
  * with its return value.
  * 
@@ -56,6 +63,19 @@ export function forZipped(a, b, fn) {
 export function forPair(arr, fn) {
   const lim = arr.length - 1;
   for (let i = 0; i < lim; i++) fn(arr[i], arr[i + 1]);
+}
+
+/**
+ * Iterates through each own-property of this object.
+ *
+ * @export
+ * @this {*} This object.
+ * @param {(value: *, key: (string|symbol)) => void} fn A function applied to each property key-value-pair.
+ */
+export function forOwnProps(fn) {
+  'use strict'; // Allows binding to `null`.
+  if (this == null) return;
+  Object.keys(this).forEach(k => fn(this[k], k));
 }
 
 /**

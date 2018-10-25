@@ -2,7 +2,7 @@ import { dew, copyOwn } from "/tools/common";
 import { angleInRange } from "/tools/numbers";
 import { angle, length as vLength } from "/tools/vectorMath";
 import { behaviorModes, facings, aimings, decrementTime, subList } from "./core";
-import { isTargetReachable } from './nateCommon';
+import { isTargetReachable, playSound } from './nateCommon';
 import * as actions from "./nateActions_Debug";
 import * as nc from "./nateConfig";
 
@@ -44,7 +44,7 @@ function getCursorData(natePos, cursorPos, flipX) {
 function lookForCursor(nate, {bounds, cursor}, {lanes}) {
   if (lanes.has(behaviorFinalized)) return;
 
-  const { physics: { pos: natePos }, brain } = nate;
+  const { physics: { pos: natePos }, brain, sounds } = nate;
   const { relPos: cursorPos } = cursor;
 
   if (cursor.msSinceUpdate >= stationaryTargetBoredomThreshold) return;
@@ -61,6 +61,7 @@ function lookForCursor(nate, {bounds, cursor}, {lanes}) {
   if (!inSight) return;
 
   brain.behavior = behaviorModes.aggressive;
+  playSound(nate, sounds.bark);
 }
 
 const passiveBehavior = dew(() => {

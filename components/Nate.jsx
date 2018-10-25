@@ -1,4 +1,4 @@
-import { dew, makeArray, forZipped } from "/tools/common";
+import { dew, makeArray, forZipped, forOwnProps } from "/tools/common";
 import maybe from "/tools/maybe";
 import bulletActionList from "./nateLogic/bulletActionList";
 import nateActionList from "./nateLogic/nateActionList";
@@ -73,6 +73,12 @@ class Nate extends React.Component {
         recoil: false,
         land: 0.0
       },
+      sounds: {
+        bark: React.createRef(),
+        aroo: React.createRef(),
+        jump: React.createRef(),
+        land: React.createRef()
+      },
       spawned: false,
       actions: {}
     },
@@ -93,7 +99,12 @@ class Nate extends React.Component {
         { x: 0.0, y: 0.0 },
         { x: 0.0, y: 0.0 },
         { x: 0.0, y: 0.0 },
-      ]
+      ],
+      sounds: {
+        spawned: React.createRef(),
+        hit: React.createRef(),
+        timedOut: React.createRef()
+      }
     }))
   };
 
@@ -134,8 +145,18 @@ class Nate extends React.Component {
     const container = this.containerRef.current;
     if (container == null) return;
 
+    // Attach the game elements.
     this.nateDiv.forEach(div => container.appendChild(div));
     this.bulletNodes.forEach(nodes => nodes.forEach(div => container.appendChild(div)));
+
+    // Set sound volume.
+    const soundSetter = (sound) => {
+      if (sound.current == null) return;
+      sound.current.volume = 0.33;
+    }
+
+    this.world.nate.sounds::forOwnProps(soundSetter);
+    this.world.bullets.forEach(bullet => bullet.sounds::forOwnProps(soundSetter));
   }
 
   /**
@@ -235,7 +256,40 @@ class Nate extends React.Component {
   }
 
   render() {
-    return <div className="nate-container" ref={this.containerRef} />;
+    return (
+      <div className="nate-container" ref={this.containerRef}>
+        <audio ref={this.world.nate.sounds.bark}>
+          <source src="static/sounds/nate-game/bow-wow.ogg" type="audio/ogg; codecs=vorbis" />
+          <source src="static/sounds/nate-game/bow-wow.mp3" type="audio/mpeg" />
+        </audio>
+        <audio ref={this.world.nate.sounds.aroo}>
+          <source src="static/sounds/nate-game/aroo.ogg" type="audio/ogg; codecs=vorbis" />
+          <source src="static/sounds/nate-game/aroo.mp3" type="audio/mpeg" />
+        </audio>
+        <audio ref={this.world.nate.sounds.land}>
+          <source src="static/sounds/nate-game/land.ogg" type="audio/ogg; codecs=vorbis" />
+          <source src="static/sounds/nate-game/land.mp3" type="audio/mpeg" />
+        </audio>
+        {this.world.bullets.map((bullet, i) => {
+          return (
+            <React.Fragment key={i}>
+              <audio ref={bullet.sounds.spawned}>
+                <source src="static/sounds/nate-game/pew.ogg" type="audio/ogg; codecs=vorbis" />
+                <source src="static/sounds/nate-game/pew.mp3" type="audio/mpeg" />
+              </audio>
+              <audio ref={bullet.sounds.hit}>
+                <source src="static/sounds/nate-game/pop1.ogg" type="audio/ogg; codecs=vorbis" />
+                <source src="static/sounds/nate-game/pop1.mp3" type="audio/mpeg" />
+              </audio>
+              <audio ref={bullet.sounds.timedOut}>
+                <source src="static/sounds/nate-game/pop2.ogg" type="audio/ogg; codecs=vorbis" />
+                <source src="static/sounds/nate-game/pop2.mp3" type="audio/mpeg" />
+              </audio>
+            </React.Fragment>
+          );
+        })}
+      </div>
+    );
   }
 
 }

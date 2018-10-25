@@ -2,6 +2,7 @@ import { dew, copyOwn } from "/tools/common";
 import { setXY } from "/tools/vectorMath";
 import { decrementTime, stokesDrag } from "./core";
 import { facings, aimings, movings, jumps, trajectories } from "./core";
+import { playSound } from "./nateCommon";
 import * as nc from "./nateConfig";
 
 const { handledMovement } = nc.lanes;
@@ -90,7 +91,7 @@ export function applyPhysics(nate, {bounds}, {delta}) {
 }
 
 export function collideFloor(nate, { bounds: { ground } }) {
-  const { physics, anim } = nate;
+  const { physics, anim, sounds } = nate;
   const { vel, pos } = physics;
   if (pos.y < ground) {
     vel.y = 0.0;
@@ -98,6 +99,7 @@ export function collideFloor(nate, { bounds: { ground } }) {
     if (!physics.onGround) {
       physics.onGround = true;
       anim.land = 100.0;
+      playSound(nate, sounds.land);
     }
   }
 }

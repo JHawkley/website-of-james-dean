@@ -2,6 +2,7 @@ import { dew, copyOwn } from "/tools/common";
 import { map, sign } from "/tools/numbers";
 import { sub, unit, angleBetween, rotate, add, mul, set, makeLength } from "/tools/vectorMath";
 import { length as vLength }  from "/tools/vectorMath";
+import { playSound } from "./nateCommon";
 import { decrementTime } from "./core";
 import * as bc from "./bulletConfig";
 
@@ -24,10 +25,10 @@ function doChase(leader, chaser, followDistance) {
   chaser::set(direction);
 }
 
-function initialize(bullet, _, {lanes}) {
+function initialize(bullet, {nate}, {lanes}) {
   if (!bullet.spawned) return;
   if (bullet.initialized) return;
-  const { trajectory, nodePositions: [node1, node2, node3] } = bullet;
+  const { trajectory, sounds, nodePositions: [node1, node2, node3] } = bullet;
 
   trajectory::unit();
   node2::set(node1);
@@ -36,30 +37,36 @@ function initialize(bullet, _, {lanes}) {
   bullet.timeout = timeout;
   bullet.burst = 0.0;
   bullet.initialized = true;
+
+  playSound(nate, sounds.spawned);
+
   lanes.add(didInitialize);
 }
 
-function collideWithCursor(bullet, {cursor}) {
+function collideWithCursor(bullet, {cursor, nate}) {
   if (!bullet.spawned) return;
   if (bullet.burst > 0.0) return;
 
-  const { nodePositions: [bulletPos] } = bullet;
+  const { sounds, nodePositions: [bulletPos] } = bullet;
   const distance = cursor.relPos::copyOwn()::sub(bulletPos)::vLength();
 
-  if (distance <= 4.0) {
-    bullet.timeout = 0.0;
-    bullet.burst = burstLifetime;
-  }
+  if (distance > 4.0) return;
+
+  bullet.timeout = 0.0;
+  bullet.burst = burstLifetime;
+  playSound(nate, sounds.hit);
 }
 
-function expire(bullet, _, {delta, lanes}) {
+function expire(bullet, {nate}, {delta, lanes}) {
   if (!bullet.spawned) return;
   if (lanes.has(didInitialize)) return;
   if (bullet.burst > 0.0) return;
 
   bullet.timeout = decrementTime(bullet.timeout, delta);
-  if (bullet.timeout <= 0.0)
-    bullet.burst = burstLifetime;
+  if (bullet.timeout > 0.0) return;
+
+  bullet.burst = burstLifetime;
+  playSound(nate, bullet.sounds.timedOut);
 }
 
 function handleBurst(bullet, _, {delta, lanes}) {
