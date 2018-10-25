@@ -111,6 +111,15 @@ export function isTargetReachable(target, bounds) {
   return false;
 }
 
+/**
+ * Makes an action that has Nate perform a jump at some random interval.
+ *
+ * @export
+ * @param {*} minTime The minimum time between jumps.
+ * @param {*} addedTime An amount of additional time that may be randomly added between jumps.
+ * @param {string} [symbolName="nateCommon/randomJump"] A name for the symbol representing the action's state.
+ * @returns {(nate: *, world: *, listState: *) => void} An action function.
+ */
 export function makeRandomJump(minTime, addedTime, symbolName = "nateCommon/randomJump") {
 
   const $$randomJump = Symbol(symbolName);
