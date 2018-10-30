@@ -89,7 +89,7 @@ export const timing = {
   /** How long before Nate will become bored of the cursor when it is frustrating him. */
   becomePassiveTime: 16000,
   /** How long Nate will stop being frustrated to glare at the cursor while it is boring him. */
-  stareTimes: { start: 500, added: 1000 },
+  stareTimes: { start: 1000, added: 3000 },
   /** Special timing settings for the frustration sub-actions. */
   frustratedActions: {
     /** Times for general sub-actions. */
