@@ -249,7 +249,7 @@ class Nate extends React.Component {
           div.className = "despawned";
         else {
           div.className = `${baseClassName} node-${i + 1}`;
-          div.setAttribute("style", `left: ${x}px; bottom: ${y}px`);
+          div.setAttribute("style", `left: ${x | 0}px; bottom: ${y | 0}px`);
         }
       });
     });
