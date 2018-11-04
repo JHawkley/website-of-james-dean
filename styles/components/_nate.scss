@@ -59,6 +59,7 @@ $bullet-burst-size: 17px;
   margin: 0px (-1 * _size(element-margin));
   position: relative;
   margin-top: 4rem;
+  margin-bottom: 2rem;
 
   &:after {
     content: '';

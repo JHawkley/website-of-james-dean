@@ -313,7 +313,6 @@ class Main extends React.Component {
           <h2 className="major">Nate Game</h2>
           <span className="image main"><img src="/static/images/pic03.jpg" alt="" onClick={lightboxOpener("nate")} /></span>
           <p>A jump'n'shoot side-scroller game targeting JavaScript platforms and using the <Jump href="https://impactjs.com/" target="_blank">Impact game engine</Jump>.  I was coding everything in <Jump href="https://coffeescript.org/" target="_blank">CoffeeScript</Jump> at the time and <Jump href="https://box2d.org/about/" target="_blank">Box2D</Jump> was being used to provide physics.  A friend of mine, an artist who goes by Tderek99, was doing the graphics while I was doing the programming.</p>
-          {article === "nate" && Nate.supported && <Nate />}
           <h3>Details</h3>
           <p>This game was pitched as: Binding of Isaac, but plays like MegaMan and has a dash of Metroid.</p>
           <p>You were to play a dog-boy named Nate who is abducted from his world by a mighty dragon demon and given to his daughter as a pet.  This <Gallery target="nate" index={1}>childish dragon girl, Chie</Gallery>, &quot;plays&quot; with Nate by using her reality warping powers to create a pocket dimension full of obstacles, traps, and <Gallery target="nate" index={2}>monsters</Gallery> looking to tear him apart.</p>
@@ -328,6 +327,16 @@ class Main extends React.Component {
           <p>Unfortunately, I was not satisfied with Box2D's performance for driving the physics of the game.  Nate was using the old &quot;capsule body&quot; trick to make him run smoothly across slopes and other surfaces without getting stuck; this gave him a bit of a slippery feel on the edges of platforms.</p>
           <p>Most likely, I would have eventually disabled the physical simulation and only used Box2D for collision detection.  I didn't really like the thought of having so much dead weight from Box2D hanging around, though, and it inspired me to instead work on <Jump href="#platter">Platter</Jump>, a collision detection engine specifically for classical feeling 2D games.</p>
           <p>At the time we stopped working on the game, I was still building out the basic gameplay mechanics, figuring out how to handle all the power interactions and abilities, as well as laying the foundation for enemy programming.  Although I had scribbled out thoughts on how I'd try and do all the proc-gen stuff, I never got started on a prototype.</p>
+          <h3>Interactive Example</h3>
+          <p>What with not being able to get more than a simple GIF animation together to demonstrate the original game, I put together this neat interactive widget for this website.  You can use your cursor to play with Nate, who will chase after and try to shoot it when he sees it.</p>
+          <p>When he is in his passive state, he will just pace around, showing off his move-set through random actions.  But when he sees the cursor, he'll bark at it and switch to his aggressive state.</p>
+          <p>He'll chase the cursor around and try to shoot at it.  If it gets too close, he'll flee, but try and take potshots at it.  If the cursor sits still too long or gets to a place he can't reach, he'll stare at it and display frustration in not being able to play anymore.</p>
+          <p>If he is left bored for too long, he'll make a sad, confused whine and return to his passive behaviors.  Be nice and give him some fun!  It gets boring on that blue platform...</p>
+          {article === "nate" && Nate.supported && <Nate />}
+          {!Nate.supported && <p>(Unfortunately, your browser does not support the features of the interactive component.  Please revisit this page with a different browser if you would like to play with Nate.)</p>}
+          <p>All of this was made using a combination of HTML, JavaScript (with ESNext features via <Jump href="https://babeljs.io/" target="_blank">Babel</Jump>), and CSS (via <Jump href="https://sass-lang.com/" target="_blank">SASS</Jump>).  The sounds were created using <Jump href="http://github.grumdrig.com/jsfxr/" target="_blank">jsfxr</Jump> and hopefully the sounds he makes when he changes between his behavior states are recognized as sounds a dog might make.</p>
+          <p>While the Canvas API would probably have been the more performant option, an HTML-element based solution is fine for such a simple interactive piece.  His animations are all driven and controlled by CSS, and an action-list coded in a data-driven style drives his rather complicated behavior, made up of around 50 individual actions spread across 4 major behaviors.</p>
+          <p>This was actually the most complex AI that I have made to date.</p>
         </Page>
 
         <Page id="platter" parent="work" article={article}>
