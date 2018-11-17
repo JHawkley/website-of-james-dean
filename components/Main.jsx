@@ -133,13 +133,56 @@ class Main extends React.Component {
           <h2 className="major">Intro</h2>
           <span className="image main"><img src="/static/images/pic01.jpg" alt="" /></span>
           <p>Welcome!  I'm James!  I'm a software developer from Texas, USA.</p>
-          <p>I'm a software developer and have been doing it professionally since 2002.  In that time, I've put together and maintained three big applications for my former employer.  You can read all about it in the <Jump href="#work">work section of the site</Jump>.</p>
+          <p>I have been working professionally since 2002.  In that time, I've put together and maintained three big applications for my former employer.  You can read all about it in the <Jump href="#work">work section of the site</Jump>.</p>
           <p>My first serious programming was in C#, which I primarily used until 2010, when I decided to shift much of my focus on to JavaScript and related technologies.  I consider web services and applications to pretty much be the future of end-user software, a universal platform that spans all devices across the planet.</p>
           <p>Though, it probably won't realize that potential for a while longer.  Nevertheless, it surely will be some day and in some form and I intend to help make it happen.</p>
           <p>I primarily consider myself a front-end and application developer; it's certainly where I've had most of my success.  User experiences that I design tend to be highly contextual and minimally cluttered.  If it isn't important to the user at the time, it should be given little to no screen space.  I also like to keep things clear, so one part of the UI is easily distinguishable from another part.</p>
           <p>I've also always had the dream to create games since I was in high school, which is where most of my spare time goes.  I have mostly been studying the technical aspects of game development, rather than building complete games.  The systems and algorithms that drive games fascinate me.</p>
-          <p>Though, a lot of it is also that I've not yet gotten together with like-minded individuals who can handle the more artistic side of things and tough it out with me until the end.</p>
+          <p>I just have not yet gotten together with like-minded individuals who can handle the more artistic side of things and tough it out with me until the end.</p>
           <p>If you are such a person, please have a look at my <Jump href="#work">game-specific works here</Jump>, toward the bottom of the page, to help you determine if I might be an asset to your project.</p>
+          <p>A table of my skills is below:</p>
+          <table>
+            <thead>
+              <tr>
+                <td>Skill</td>
+                <td>Description</td>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Confident Programming Languages</td>
+                <td><strong>C#</strong>, <strong>Scala</strong> (ScalaJS), <strong>HTML</strong>, <strong>CSS</strong> (SASS, Stylus), <strong>JavaScript</strong> (CoffeeScript, TypeScript)</td>
+              </tr>
+              <tr>
+                <td>Frameworks</td>
+                <td><strong>.NET Framework</strong>, <strong>React</strong> (NextJS), <strong>Ember</strong>, formerly well-acquainted with <strong>Angular</strong>, formerly well-acquainted with <strong>Backbone</strong></td>
+              </tr>
+              <tr>
+                <td>Build Tools</td>
+                <td><strong>Visual Studio Projects</strong>, <strong>Grunt</strong>, <strong>Babel</strong>, basic competency with <strong>Scala Build Tool</strong></td>
+              </tr>
+              <tr>
+                <td>Testing Frameworks</td>
+                <td><strong>Jasmine</strong></td>
+              </tr>
+              <tr>
+                <td>Source Control</td>
+                <td>Basic competency with <strong>Git</strong>, <strong>GitHub</strong></td>
+              </tr>
+              <tr>
+                <td>IDEs</td>
+                <td><strong>Visual Studio 20XX</strong>, <strong>Visual Studio Code</strong>, <strong>IntelliJ IDEA</strong></td>
+              </tr>
+              <tr>
+                <td>3D Modeling Software</td>
+                <td>Basic competency with <strong>Autodesk Inventor</strong>, formerly well-acquainted with <strong>3D Studio Max</strong></td>
+              </tr>
+              <tr>
+                <td>Other Software</td>
+                <td><strong>Office-Related Software</strong> (such as Word, Excel), basic competency with <strong>Image Manipulation Software</strong> (such as Photoshop, The GIMP, Inkscape)</td>
+              </tr>
+            </tbody>
+          </table>
         </Page>
 
         <Page id="work" article={article}>
@@ -154,8 +197,7 @@ class Main extends React.Component {
           {workItem("More Modeling", "Miscellaneous 3D", "threedee")}
           <p>I also enjoy taking on <strong>personal projects</strong>, usually to help me learn new things and expand my horizons.  A selection of my more worth-while projects, largely centered around game development, appear below:</p>
           {workItem("Abducted Dog Adventure", "Nate Game", "nate")}
-          {workItem("Platformer Physics Engine", "Platter", "platter")}
-          {workItem("Immutable World Experiment", "Scala Game Engine", "sge")}
+          {workItem("My Time Invested", "Misc Programming", "miscprogramming")}
         </Page>
         
         <Page id="terravu" parent="work" article={article}>
@@ -167,11 +209,13 @@ class Main extends React.Component {
           <p>TerraVu 2 is a geosteering software package that I first started development on in 2002, programmed in C# using .NET's <Jump href="https://docs.microsoft.com/en-us/dotnet/framework/winforms/" target="_blank">Windows Forms API</Jump>.  It was my very first professional project.  It was used internally by Terra Domain until 2004 or so, when licenses began to be sold to other businesses in the Oil &amp; Gas industry.</p>
           <p>It is not inaccurate to say that for every well that TerraVu was deployed on, millions of dollars of our customer's capital rode on its successful function.  It was a big money-maker for Terra Domain, selling for over $20,000 a license.</p>
           <p>Along with building the application and maintaining its code, I also tended to provide technical support to customers.  I still do work on TerraVu on a contractor basis.</p>
+
           <h3>Geosteering?</h3>
           <p>This software is used by geologists while drilling horizontal wells deep underground to pin-point their vertical location with respect to known rock layers and markers.  This is done by first drilling a completely vertical well near where the main well is to be drilled, called the &quot;offset well&quot;, and measuring the intensity of gamma-rays emitted by the rocks as the drill bit descends into the earth.</p>
           <p>Generally speaking, the intensity of gamma-rays remain consistent within a rock layer.  This offset well represents a &quot;known state&quot; to which the second, main well is compared.  The productive portion of the main well is drilled side-ways in order to maximize its time in a single layer of the earth, which is why it's often called the &quot;horizontal well&quot;.</p>
           <p>As the horizontal well is being drilled, the gamma-rays being detected are compared to the offset well, then a rough map of the well's position relative to nearby layers can be derived using a bit of geometry.</p>
           <p>Using this knowledge, the well can be steered to remain within a single, target layer; the layer that the geologist believes will produce the most oil or gas!</p>
+
           <h3>Design &amp; Development</h3>
           <p>I designed TerraVu's user experience in a manner not unlike a computer game's user interface.  As much of the program's functionality was kept contextual.  Interface elements that were not appropriate to the program's current state are hidden, so as not to clutter things or distract the user.  It all gives TerraVu <Gallery  target="terravu" index={0}>a very minimalist appearance</Gallery>.</p>
           <p>User friendliness was quite important.  Most functionality could be accessed with a right-click on one of the charts and there was a help bar at the bottom of the window that always guided the user through the software's use.</p>
@@ -188,12 +232,14 @@ class Main extends React.Component {
             <div className="label-right">Gallery</div>
           </span>
           <p>Lithologic is a tool to assist mud-loggers in their task of producing rock descriptions.  It was my second major application coded in C# using .NET's <Jump href="https://docs.microsoft.com/en-us/dotnet/framework/winforms/" target="_blank">Windows Forms API</Jump>.  I believe this project started in 2011 when someone came to us with the idea and was seeking a software developer to make it a reality.</p>
+
           <h3>Purpose &amp; Use</h3>
           <p>Lithologic has all the cold, focused functionality of <Gallery target="lithologic" index={0}>a calculator strapped to a digital encyclopedia</Gallery>.  It is given a very flat layout and presentation, intended to allow its users to very quickly find the option they need and input it.</p>
           <p>Mud-loggers would typically use it while peering into a microscope at rock shavings recovered from the depths of a well, and then make selections in the program to produce a description of the rock they were examining.  It had profiles for several kinds of rocks, guiding them through to ensure they hit all the important points.</p>
           <p>To help them along, the software also featured the entire Dictionary of Geological Terms and almost 1 gigabyte of photos and movies to assist in identifying and explaining features of the rocks.  Naturally, this also made Lithologic an excellent tool for training.</p>
           <p>Lithologic was intended to bring consistency to an industry that had little.  Rock descriptions were highly subjective and the quality of a description varied wildly from one logger to another, including the actual abbreviations they used to represent different rock properties in the description.</p>
           <p>It was pretty much impossible to use rock descriptions in any kind of quantifiable way thanks to this terrible consistency.  They couldn't be searched, sorted, correlated, or subjected to most any kind of computerization.  Lithologic hoped to create a shift in the industry to change that.</p>
+
           <h3>Design &amp; Development</h3>
           <p>Lithologic had a lot of parts to it; far more than just simple programming.</p>
           <p>Along with building the application itself, I also had to produce tools to assist other teams in assembling and collating the massive library of photographs and videos.  They used these tools while doing the photography to keep track of their work: what they were photographing, who was photographing, the conditions of the microscope, etc.</p>
@@ -209,6 +255,7 @@ class Main extends React.Component {
           </span>
           <p>Lithologic Photo was a big project intended to create a database of rock sample photography, extracting quantifiable information for other uses.  I worked on the front-end of this project while a second programmer specifically handled the back-end.</p>
           <p>The front-end was a monolithic single-page application built in <Jump href="https://coffeescript.org/" target="_blank">CoffeeScript</Jump> and <Jump href="https://www.emberjs.com/" target="_blank">Ember</Jump>, supported by various other technologies such as <Jump href="http://stylus-lang.com/" target="_blank">Stylus</Jump>, <Jump href="http://emblemjs.com/" target="_blank">Emblem</Jump>, and <Jump href="https://getbootstrap.com/" target="_blank">Twitter's Bootstrap</Jump>.  The back-end was built on <Jump href="https://aws.amazon.com/" target="_blank">Amazon's Web Services</Jump>.  The project was pretty mature at the time it was shelved.</p>
+
           <h3>Purpose &amp; Use</h3>
           <p>The idea with Lithologic Photo was to provide a simple means for mud-loggers to catalog photography of a well's rock samples in as close to real-time as possible and make it dead simple for decision makers to get access to that information.</p>
           <p>To put it more simply, it was an image database system specializing in tiny, ground-up rocks.</p>
@@ -218,6 +265,7 @@ class Main extends React.Component {
           </span>
           <p>The photography was to be done using a special photography plate; simple image detection was used to pin-point color swatches on the plate to use as guides in the color correction.  Combined with Lithologic, a standardized, high-quality description of the rock would also be provided.</p>
           <p>The hope was this information would be quantitative enough to act as additional data to improve geosteering, and this project would naturally have lead into TerraVu 3.</p>
+
           <h3>Design &amp; Development</h3>
           <p>At the time the project was getting off the ground, Microsoft was showing off their &quot;Metro&quot; design language, later renamed to the way lamer &quot;MDL&quot;.  Since I found its simplistic design with hard corners and bold colors rather appealing and easy to work with, I adopted it for <Gallery target="lithphoto" index={0}>this project</Gallery>.</p>
           <p>In all honesty, the programming was the easy part.  The API provided by my back-end developer just worked and flowed beautifully into the front-end.  It all worked exactly as I needed it and Ember interacted with it swimmingly.  Aside from a few performance problems concerning rendering lists of thousands of samples, it was all smooth on the programming front.</p>
@@ -242,12 +290,13 @@ class Main extends React.Component {
           <p>My former employer, Terra Domain, had ambitions beyond oil &amp; gas exploration services and software.  One of these was creating a <Gallery target="solar" index={0}>hybrid power generator</Gallery> for remote locations with abundant solar energy.  I was tasked to create 3D renders and animations to help explain the concept.</p>
           <p>It involved a centralized solar tower combined with a giant algae tank.  The solar tower would generate electrical power while the algae tank would be used to generate bio-fuel for portable energy.</p>
           <p>However, I had nothing to do with the design of the concept.  I was merely hired to make the pretty pictures.</p>
+
           <h3>Details</h3>
           <Jump href="https://drive.google.com/open?id=1Yj7qHMptjpBB9uTfc1dLBvsXy34srr_5" target="_blank" icon="none" className="image right">
             <img src="/static/images/3drenders/br_anim_inset.jpg" alt="Bioreactor Flyby Animation" />
             <div className="label-right">Video</div>
           </Jump>
-          <p>Pretty much all the modeling in this project was done in <Jump href="https://www.autodesk.com/products/3ds-max/overview" target="_blank">3D Studio Max</Jump>.  It relied heavily on ray-tracing to demonstrate some <Gallery target="solar" index={2}>interesting ideas involving the mirrors</Gallery>.  They were capable of both focusing on the power-tower and de-focusing to cast light on the algae tank.</p>
+          <p>Pretty much all the modeling in this project was done in <Jump href="https://www.autodesk.com/products/3ds-max/overview" target="_blank">3D Studio Max</Jump>.  It relied heavily on ray-tracing to demonstrate some <Gallery target="solar" index={2}>interesting ideas involving the mirrors</Gallery>.  They were capable of both focusing on the power-tower and de-focusing to cast softer light on the algae tank.</p>
           <p>These mirrors were <Jump icon="movie" href="https://drive.google.com/open?id=1cCztyiDUtS8LZbiBiOI7l1c81v5QEMcf" target="_blank">all rigged up using inverse-kinematics</Jump> to be realistically aimed in order to bounce light onto their respective targets.  I had to create a control script to <Gallery target="solar" index={1}>populate the scene with mirrors</Gallery>, as well as aim them according to the current position of the sun in the scene.</p>
           <p>A really fun piece of software called <Jump href="https://www.world-machine.com/" target="_blank">World Machine</Jump> was used to generate a Tibetan-style landscape, which was apparently one of the locations this idea was thought to be practical.  The various texture maps it produced were used to add variation to the terrain; little touches like erosion and snow all played a part.</p>
           <span className="image right javascript-link" onClick={lightboxOpener("solar", 4)}>
@@ -265,6 +314,7 @@ class Main extends React.Component {
             <div className="label-right">Gallery</div>
           </span>
           <p>Along with the Solar Bio-Reactor, I had a few other 3D projects as well.</p>
+
           <h3>Geo-Steering Concepts</h3>
           <p>Some of my first animations were to help explain geo-steering and related concepts to others.  These started as really quite poorly done Flash animations (which I'm not gonna be showing here), but I eventually got my hands on a copy of 3D Studio Max and did...  better?</p>
           <span className="span-across align-center">
@@ -281,7 +331,8 @@ class Main extends React.Component {
             </Jump>
           </span>
           <p>This animation, I believe, was intended to show how horizontal drilling could be effective at hitting oil sands.  I seem to recall that you could use steam to release the oil that was trapped in the sand.  Been a long time since I thought about this old animation.</p>
-          <p>These might not be much, but they got the point across.</p>
+          <p>Gosh, this camera work is real bad...  Well, these might not be much, but they got their point across.</p>
+
           <h3>Blackhole Animation</h3>
           <Jump href="https://drive.google.com/open?id=1X8FK2cpaQxLQLB2M7UHaOVgFco98uup9" target="_blank" icon="none" className="image right">
             <img src="/static/images/3drenders/blackhole_anim_inset.jpg" alt="Blackhole Atmosphere Animation" />
@@ -297,6 +348,7 @@ class Main extends React.Component {
           <p>As you can see, I was aiming for photo-realism.  It features some 35,000 pine tree facades.  The original trees were created using this impressive procedurally-generated plant/tree plugin for 3DSMax called <Jump href="https://exlevel.com/features/">GrowFX</Jump>, then rendered to a 2D sprite and distributed all over the scene using a distribution map.</p>
           <p>A blinding light would have flown overhead before a hellish flash shown from the far side of the mountain.  <Gallery target="threedee" index={1}>The trees</Gallery> all instantly catch fire and this idyllic landscape would have then begun to crack and glow as the shockwaves twisted the crust and reshaped it into a hellscape.</p>
           <p>Describing it makes me wish I had at least finished that scene...  It'd have been a <em>hell</em> of a sight!  Alas, I got distracted by game-dev stuff instead and shelved my plans for this animation.</p>
+
           <h3>Ice Cavern</h3>
           <span className="image right javascript-link" onClick={lightboxOpener("threedee", 2)}>
             <img src="/static/images/3drenders/icecave.jpg" alt="Ice Cavern Render" />
@@ -313,20 +365,24 @@ class Main extends React.Component {
           <h2 className="major">Nate Game</h2>
           <span className="image main"><img src="/static/images/pic03.jpg" alt="" onClick={lightboxOpener("nate")} /></span>
           <p>A jump'n'shoot side-scroller game targeting JavaScript platforms and using the <Jump href="https://impactjs.com/" target="_blank">Impact game engine</Jump>.  I was coding everything in <Jump href="https://coffeescript.org/" target="_blank">CoffeeScript</Jump> at the time and <Jump href="https://box2d.org/about/" target="_blank">Box2D</Jump> was being used to provide physics.  A friend of mine, an artist who goes by Tderek99, was doing the graphics while I was doing the programming.</p>
+
           <h3>Details</h3>
           <p>This game was pitched as: Binding of Isaac, but plays like MegaMan and has a dash of Metroid.</p>
           <p>You were to play a dog-boy named Nate who is abducted from his world by a mighty dragon demon and given to his daughter as a pet.  This <Gallery target="nate" index={1}>childish dragon girl, Chie</Gallery>, &quot;plays&quot; with Nate by using her reality warping powers to create a pocket dimension full of obstacles, traps, and <Gallery target="nate" index={2}>monsters</Gallery> looking to tear him apart.</p>
-          <p>She grants him only a simple magical bullet for self-defense when she drops him into this terrifying world, but scatters &quot;dog toys&quot; that can grant him new powers all over the place.</p>
+          <p>She's technically a child, and her treatment of Nate is kind of the demonic equivalent of putting the hamster in the microwave; she just doesn't know better.</p>
+          <p>She still grants him a simple magical bullet for self-defense when she drops him into this terrifying world, but scatters &quot;dog toys&quot; that can grant him new powers all over the place.</p>
           <p>In the same fashion as Binding of Isaac, these powers could combine and interact, giving every play-through the potential for something unexpected and exciting.</p>
           <p>The world was gonna rely on procedural generation to make every game different.  The map would generate in such a way that some of the items sprinkled in the world would be used as keys for progressing into new areas, adding a little bit of Metroidvania mechanics into the mix.</p>
           <p>Each of the four or so areas was going to have a boss fight, and upon defeating all the bosses, Nate would escape the pocket dimension and face Chie herself, who'd try to do the demonic equivalent of smacking his nose with a newspaper for trying to bite.</p>
           <p>In order to get the good ending, though, you needed to discover and complete optional goals; if done so, you'd face Chie's father as the final boss, earning your freedom and returning home ...if you manage to beat him.</p>
           <p>We'd probably have tuned things so a single run would probably take one to three hours.</p>
+
           <h3>Design</h3>
           <p>This project was my first time utilizing Entity-Component Systems and Action Lists.  Impact did not really have support for ECS entities out of the box, so I integrated an open-source ECS library, which I later ported to CoffeeScript so I could understand how it worked better as well as customize it.</p>
           <p>Unfortunately, I was not satisfied with Box2D's performance for driving the physics of the game.  Nate was using the old &quot;capsule body&quot; trick to make him run smoothly across slopes and other surfaces without getting stuck; this gave him a bit of a slippery feel on the edges of platforms.</p>
           <p>Most likely, I would have eventually disabled the physical simulation and only used Box2D for collision detection.  I didn't really like the thought of having so much dead weight from Box2D hanging around, though, and it inspired me to instead work on <Jump href="#platter">Platter</Jump>, a collision detection engine specifically for classical feeling 2D games.</p>
           <p>At the time we stopped working on the game, I was still building out the basic gameplay mechanics, figuring out how to handle all the power interactions and abilities, as well as laying the foundation for enemy programming.  Although I had scribbled out thoughts on how I'd try and do all the proc-gen stuff, I never got started on a prototype.</p>
+
           <h3>Interactive Example</h3>
           <p>What with not being able to get more than a simple GIF animation together to demonstrate the original game, I put together this neat interactive widget for this website.  You can use your cursor to play with Nate, who will chase after and try to shoot it when he sees it.</p>
           <p>When he is in his passive state, he will just pace around, showing off his move-set through random actions.  But when he sees the cursor, he'll bark at it and switch to his aggressive state.</p>
@@ -336,73 +392,68 @@ class Main extends React.Component {
           {!Nate.supported && <p>(Unfortunately, your browser does not support the features of the interactive component.  Please revisit this page with a different browser if you would like to play with Nate.)</p>}
           <p>All of this was made using a combination of HTML, JavaScript (with ESNext features via <Jump href="https://babeljs.io/" target="_blank">Babel</Jump>), and CSS (via <Jump href="https://sass-lang.com/" target="_blank">SASS</Jump>).  The sounds were created using <Jump href="http://github.grumdrig.com/jsfxr/" target="_blank">jsfxr</Jump> and hopefully the sounds he makes when he changes between his behavior states are recognized as sounds a dog might make.</p>
           <p>While the Canvas API would probably have been the more performant option, an HTML-element based solution is fine for such a simple interactive piece.  His animations are all driven and controlled by CSS, and an action-list coded in a data-driven style drives his rather complicated behavior, made up of around 50 individual actions spread across 4 major behaviors.</p>
-          <p>This was actually the most complex AI that I have made to date.</p>
+          <p>This was actually the most complex AI that I have made to date, in terms of behavioral complexity.</p>
         </Page>
 
-        <Page id="platter" parent="work" article={article}>
-          <h2 className="major">Platter</h2>
-          <span className="image main"><img src="/static/images/pic03.jpg" alt="" /></span>
+        <Page id="miscprogramming" parent="work" article={article}>
+          <h2 className="major">Misc Programming</h2>
+          <span className="image main"><img src="/static/images/miscprogramming/header.png" alt="" /></span>
+          <p>For the following projects, I have less to show, but they're still worth mentioning.</p>
+
+          <h3>Platter</h3>
           <p>Platter was an attempt to create a collision detection engine that was specially suited for creating 2D retro-style games.  It started out being programmed in CoffeeScript but was shifted to TypeScript later on.</p>
-          <p>Platter's code is available for viewing on <Jump href="https://github.com/JHawkley/platter" target="_blank">GitHub</Jump>.  It is a decent example of my coding ability.</p>
-          <p>I was not having much luck attracting collaborators on my other game-dev projects, so I decided to focus on building a collision detection library in the meantime while I considered my future plans.  I also took this as an opportunity to cut my teeth on test-driven development.  I felt that a collision-detection engine would be well suited for this method of development, since its domain should be quite testable.</p>
-          <h3>Design</h3>
-          <p>The only real physical simulation that Platter performs is simple translation of shapes.  A 2D vector is applied to a kinematic and when the simulation is executed, they are basically translated in steps, checking for collisions in the vicinity while it happens.</p>
-          <p>If a collision is detected, a callback is notified to handle it.  Pretty simple really; or it is on paper.  I really liked Box2D's system of using &quot;callback types&quot;, which were basically a bit-set on the kinematic indicating what other objects it could interact with, so I adopted a similar system in Platter.</p>
-          <p>The collision engine was to feature a broadphase with time-of-impact islands; these would break the problem of resolving the collisions down into smaller chunks that could be resolved independently of other TOI islands.</p>
-          <h3>Development</h3>
+          <p>Platter's code is available for viewing on <Jump href="https://github.com/JHawkley/platter" target="_blank">GitHub</Jump>.  It is a recent and decent example of my coding ability, however it is not presently functional.</p>
+          <p>I was not having much luck attracting collaborators on my other game-dev projects, so I decided to focus on building an open-source collision detection library in the meantime while I considered my future plans.  I also took this as an opportunity to cut my teeth on test-driven development.  I felt that a collision-detection engine would be well suited for this method of development, since its domain should be quite testable.</p>
           <p>Sticking to test-driven development proved to be pretty tricky as the project grew, especially as the project entered into the bulk of the actual collision detection routines.  The temptation to just &quot;get it working&quot; and not bother with the complexity of building tests first became pretty strong.</p>
-          <p>However, the technique was very good for building the initial APIs for the various kinds of shaped colliders.  It certainly helped to focus things early on; I suspect I still have more to learn on sticking to TDD as the project's code-base grows in size.</p>
-          <p>The switch from CoffeeScript to TypeScript I actually view as an unfortunate choice.  While the type-system certainly aided things a lot and reduced the amount of tests I would need to do, even catching some bugs I missed in my original code, TypeScript wasn't compatible with the way I tended to code in JavaScript.</p>
-          <p>TypeScript's type-system just cannot type JavaScript completely.  Many of the things you can do in JavaScript have no typed equivalent in TypeScript or require insane &quot;type-system gymnastics&quot; to achieve.  While working in CoffeeScript, I had adopted many kinds of patterns that rely on object composition which were notoriously difficult to type properly in TypeScript's type-system.</p>
-          <p>As a result of this project, I eventually got a slight distaste for TypeScript.  I still believe it is better to use it than not to use it, but you do have to do things &quot;the TypeScript way&quot; if you're going to be successful with it.</p>
-          <p>But I knew how to do JavaScript a particular way and dug my heels in.  That was a mistake.  Now I know better.</p>
-          <p>I eventually paused work on Platter in order to re-evaluate my game-dev goals.  I began to think about working on a classical Rogue-like instead, which was a project better sized for a single person to tackle.</p>
-        </Page>
+          <p>However, the technique was very good for building the initial APIs for the various kinds of shaped colliders.  It certainly helped to focus things early on; I still have more to learn on sticking to TDD as the project's code-base grows in size.</p>
+          <p>The switch from CoffeeScript to TypeScript I actually view as an unfortunate choice.  Many of the patterns I used in JavaScript were not compatible with the type-system at the time, mostly object-composition related patterns.  This caused TypeScript to rub me the wrong way as I tried to force it to work the way I wanted through complicated &quot;type-system gymnastics&quot;.</p>
+          <p>TypeScript also has very few language features that make programming in it terse and expressive; it's just a more-restricted sub-set of JavaScript with few added language features over ECMAScript 2015.  I know this was a design goal of the language, but it is regrettable that the language won't do more to support the programmer.  You sometimes just have to accept that you can't make DRY code that is also clear and readable.</p>
+          <p>In the end, I made the mistake of trying to fight TypeScript; it has a particular way it wants you to do things and deviating from that will cause you nothing but grief.  Now I know better.</p>
 
-        <Page id="sge" parent="work" article={article}>
-          <h2 className="major">Scala Game Engine</h2>
-          <span className="image main"><img src="/static/images/pic03.jpg" alt="" /></span>
-          <p>Unfortunately, I don't have too much to show in regards to this project, aside from <Jump href="/static/sge/index-dev.html" target="_blank">some bouncing-boxes</Jump>, but it is my most recent project.  Much of the work has so far been under-the-hood; laying the foundation of the engine and all that.</p>
-          <p>While I was working with Impact, I actually re-wrote it a few times as my needs changed, getting pretty intimate with it; added things like <Jump href="http://www.pixijs.com/" target="_blank">PixiJS</Jump> integration to modernize it a bit, an entity-component system, etc.  It helped me understand how game engines functioned, and with other influences, that understanding evolved.</p>
+          <h3>Scala Game Engine</h3>
+          <p>While I was working with Impact, I actually re-wrote and enhanced it a few times as my needs changed, getting pretty intimate with it; added things like <Jump href="http://www.pixijs.com/" target="_blank">PixiJS</Jump> integration to modernize it a bit, an entity-component system, etc.  It helped me understand how game engines functioned, and with other influences, that understanding evolved.</p>
+          <p>This eventually led into this project, to create a game engine in Scala from scratch.</p>
+          <p>Unfortunately, I don't have too much to show in regards to this project, aside from <Jump href="/static/sge/index-dev.html" target="_blank">a bouncing-box benchmark</Jump> (based on <Jump href="https://pixijs.io/bunny-mark/" target="_blank">Pixi.js' Bunnymark</Jump>), but it is my most recent project.  Much of the work has so far been under-the-hood; laying the foundation of the engine and all that.</p>
+          <p>While the demo doesn't reveal it very well, it has an input system, resource management infrastructure, an entity-component system, and the beginnings of a customizable rendering pipeline.</p>
           <p>Interested in Scala, I was poking around to see what the state of game development was on the platform.  This led me to <Jump href="http://michaelshaw.io/game_talk/game.html#/" target="_blank">an intriguing little slideshow</Jump>, which made reference to <Jump icon="movie" href="https://youtu.be/1PhArSujR_A?t=16m18s" target="_blank">an old key-note of John Carmack's from QuakeCon 2013</Jump> and his thoughts on the future of multi-threaded game engine architecture.  It seemed like it might be kind of fun to try and work within an immutable world state.</p>
-          <p>Unfortunately, I did a bit of a silly thing and did it all in ScalaJS, which targets the decidedly single-threaded JavaScript platform, but hey.  Baby steps.  I know JavaScript well.  I could adapt it to JVM later once I got the principals down.</p>
-          <h3>Design</h3>
-          <p>Scala seemed like one of the best places to do something with an immutable world state.  Much of its data-structures are immutable by default and case-classes seemed great for building logic-less components.</p>
-          <p>First thing to do was to build an appropriate ECS that respected immutability.  I decided to build this using <Jump icon="movie" href="https://www.youtube.com/watch?v=XRYN2xt11Ek" target="_blank">functional-reactive programming concepts</Jump>.  When the game-loop produces an <code>update</code> signal, that signal cascades through the entity manager and into the systems, producing effects that will be used to update the entities.</p>
-          <p>My FRP library is a little interesting in that it supports two-way messaging.  A <code>Stream</code> can only transmit messages to subscribers (which is typical of FRP libraries), but a <code>Channel</code> can both transmit a message and receive a response from each of its subscribers.  This is leveraged by the ECS; the current entity and world are given to the systems in a message, and the systems respond with effects to change the world and its entities.</p>
-          <p>Each entity gets its own <code>Channel</code> and systems that are interested in that entity can subscribe to it.  This basically serves the same role as &quot;aspects&quot; in other ECS implementations.</p>
-          <p>At the end of the day, the entity manager's job is simple: it takes the world's entities, applies a <code>map</code> function to each of them, and creates updated versions of those entities.  It's actually the most straight-forward ECS I've made to date.</p>
-          <p>This design does have its disadvantages, though.  The order that entities come down the pipe is undefined, as is the order that systems will be queried.  For this reason, you usually want each component to have only one system that can actually produce effects that will change it.</p>
-          <p>Some kinds of effects are also handled asynchronously.  When an entity wants to change another entity, it has to use a message called an <code>Event</code> to do it, and these events are not applied to the target entity until the next frame; the world needs to stabilize and finish updating first.  This asynchronous nature of events means they can fail; such a possibility needs to be handled.</p>
-          <p>Finally, all these little message objects add up to a lot of garbage collector churn.  This could be alleviated with certain techniques, like object-pooling.</p>
-          <h3>Result</h3>
-          <p>So far, I've only made <Jump href="/static/sge/index-dev.html" target="_blank">a little bouncing-box benchmark</Jump> (based on <Jump href="https://pixijs.io/bunny-mark/" target="_blank">Pixi.js' Bunnymark</Jump>) to stress-test the ECS.  On my system, it can drive about 2000 such boxes before the update overhead becomes too great and performance degrades.  Unexpectedly, garbage collection isn't the big issue there.  It's mostly the cost of iterating over the hash-map of entities that is the biggest limitation.  This seems to suggest that a more intelligent data-structure could significantly speed things up.</p>
-          <p>In the future, I want to use this engine to build a small space shooter game; see how it performs in a more life-like workload.  I've gotten stalled at the moment figuring out how to handle resource management and rendering, but I'm sure I'll get there.</p>
+          <p>Unfortunately, I did a bit of a silly thing and did it all in ScalaJS, which targets the decidedly single-threaded JavaScript platform and can't take advantage of the concurrency gains from immutability.  But hey, baby steps.  I know JavaScript well.  I could adapt it to JVM later once I got the principals down.</p>
+          <p>I kind of wish I had targeted the JVM, though, as I can see a number of mistakes now that would negatively impact concurrency.  I also think I over-complicated the design a lot by using a functional-reactive style for the entity manager.</p>
+          <p>I think if I ever come back to this project, I'd probably do a number of refactors to reduce that complexity and make safe concurrency easier to obtain.  However, making my own engine, while a great learning experience, wouldn't be the best use of my time.  I would prefer investing my time mastering Unity instead.</p>
         </Page>
 
         <Page id="about" article={article}>
           <h2 className="major">About</h2>
-          <span className="image main"><img src="/static/images/pic03.jpg" alt="" /></span>
           <p>Lorem ipsum dolor sit amet, consectetur et adipiscing elit. Praesent eleifend dignissim arcu, at eleifend sapien imperdiet ac. Aliquam erat volutpat. Praesent urna nisi, fringila lorem et vehicula lacinia quam. Integer sollicitudin mauris nec lorem luctus ultrices. Aliquam libero et malesuada fames ac ante ipsum primis in faucibus. Cras viverra ligula sit amet ex mollis mattis lorem ipsum dolor sit amet.</p>
         </Page>
         
         <Page id="questions" article={article}>
           <h2 className="major">Questions &amp; Answers</h2>
-          <span className="image main"><img src="/static/images/pic03.jpg" alt="" /></span>
           <p>Below I'll answer some questions that I suspect might be pretty common.</p>
           <dl>
             <dt>Are you able to move?</dt>
             <dd>I currently have a house and three roommates.  Moving would be a significant inconvenience for a lot of people.  I would be resistant to the idea of moving, but with the right offer and support during the move, I could be persuaded.</dd>
             <dd>Telepresence would be a much more agreeable solution, though, if you can support it.</dd>
+
+            <dt>Are you willing to learn a programming language?</dt>
+            <dd>Certainly.  I should be able to pick up most popular imperative languages pretty readily.  I can't imagine it would take me very long to pick up <Jump href="https://swift.org/" target="_blank">Swift</Jump> or <Jump href="https://www.rust-lang.org/" target="_blank">Rust</Jump>, for instance.</dd>
+            <dd>As most of my experience has been in these imperative languages, learning a purely functional language may take more time; if you need a Haskell developer on short notice, you may want to search elsewhere.</dd>
+            <dd>I do have an interest in learning a functional language, but they tend to require a different style of thinking from what I'm used to.  I've slowly been wrapping my head around it, thanks to my work in Scala, but I fear it would still be some time before my competency reaches acceptable levels.</dd>
+
             <dt>Can you work in <code>&lt;javascript web framework&gt;</code>?</dt>
             <dd>Yes, I can work in <code>&lt;javascript web framework&gt;</code>, no problem.</dd>
-            <dd>I've got experience in Backbone, Angular, and Ember; I've been around and am pretty aware of how these frameworks are organized and operate.  JavaScript frameworks are a dime-a-dozen and it seems like a new one pops up every few months that is the new darling of the JavaScript community.  I have good generalized experience that should allow me to become effective in an unfamiliar framework in just a couple of days.</dd>
-            <dd>In fact, case in point is this website.  It uses React, which I had never used before, but in only a couple days, I was already building useful components for this page and had basic routing operating  ...which this template's developer apparently attempted, but gave up on finishing.</dd>
+            <dd>I've got experience in Backbone, Angular, Ember, and now React; I've been around and am pretty aware of how these frameworks are organized and operate.  JavaScript frameworks are a dime-a-dozen and it seems like a new one pops up every few months that is the new darling of the JavaScript community.  I have good generalized experience that should allow me to become effective in an unfamiliar framework in just a couple of days.</dd>
+            <dd>In fact, case in point is this website.  It uses React, which I had never used before, but in only a couple days, I was already building useful components for this site and had basic routing operating  ...which this template's developer apparently attempted, but gave up on finishing.</dd>
             <dd>As long as you're not looking to use something exotic, like <Jump href="https://elm-lang.org/" target="_blank">Elm</Jump>, I should be able to manage.</dd>
+
+            <dt>How is your experience with back-end development?</dt>
+            <dd>Not the greatest.  I've worked closely with a back-end developer before and am familiar with a lot of the technologies involved and a number of the security pitfalls to avoid, but aside from some of my own toy projects, I haven't done much back-end development or systems administration of server environments.</dd>
+            <dd>In a pinch, I feel like I could manage it, but I would be slower and more error-prone than someone with more focused experience, and this part of your web application infrastructure really does require the best talent.</dd>
+            <dd>I feel that I would be best suited in a support role with more veteran back-end developers, where I could work under their guidance and learn from them, while taking some of the less critical workloads off their shoulders.</dd>
+
             <dt>Do you have Unity experience?</dt>
-            <dd>Very little direct experience.  I've been keeping tabs on it and ran through a few of the tutorials, but I have yet to build anything in it.  Most of my experience has been related to modding Unity-powered games, which isn't the best experience, but it's something!</dd>
+            <dd>Very little direct experience.  I've been keeping tabs on it and ran through a few of the tutorials, but I have yet to build anything in it.  Most of my experience has been related to creating source-level mods for Unity-powered games using the <Jump href="https://github.com/pardeike/Harmony" target="_blank">Harmony library</Jump>, which isn't the best experience, but it's something!</dd>
             <dd>I suppose I haven't started with it yet because I'm waiting for <Jump href="https://docs.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-7" target="_blank">C# 7</Jump> support, which is slated to come in <Jump href="https://blogs.unity3d.com/2018/09/13/unity-2018-3-beta-get-early-access-now/" target="_blank">Unity 2018.3</Jump>.  After my time with Scala, working in C# 6 and lower just seems like a chore by comparison.</dd>
-            <dd>But, if you need a Unity dev, I can probably manage it.  I will just be a little sad without my pattern-matching and out-variables is all  ...for a few months anyways.  They do have the open beta out now; surely it won't be too much longer!</dd>
+            <dd>But, if you need a Unity dev, I can likely manage it.  I will just be a little sad without my pattern-matching and out-variables is all  ...for a few months anyways.  They do have the open beta out now; surely it won't be too much longer!</dd>
           </dl>
         </Page>
 
