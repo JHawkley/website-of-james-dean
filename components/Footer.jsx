@@ -1,5 +1,5 @@
-import PropTypes from 'prop-types';
-import Jump from '../components/Jump';
+import PropTypes from "prop-types";
+import Jump from "./Jump";
 
 const Footer = (props) => (
   <footer id="footer" style={props.timeout ? {display: 'none'} : {}}>

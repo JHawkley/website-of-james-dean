@@ -1,5 +1,5 @@
-import PropTypes from 'prop-types';
-import Link from 'next/link';
+import PropTypes from "prop-types";
+import Link from "next/link";
 
 const Page = (props) => {
   const { id, children, parent, article } = props;
@@ -22,7 +22,12 @@ const Page = (props) => {
 }
 
 Page.propTypes = {
-  article: PropTypes.string,
+  id: PropTypes.string.isRequired,
+  children: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.node),
+    PropTypes.node
+  ]).isRequired,
+  article: PropTypes.string.isRequired,
   parent: PropTypes.string
 };
 

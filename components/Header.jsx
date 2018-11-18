@@ -1,7 +1,7 @@
-import PropTypes from 'prop-types';
-import Jump from '../components/Jump';
-import FontAwesomeIcon from '@fortawesome/react-fontawesome';
-import faGem from '@fortawesome/fontawesome-free-regular/faGem';
+import PropTypes from "prop-types";
+import Jump from "./Jump";
+import FontAwesomeIcon from "@fortawesome/react-fontawesome";
+import faGem from "@fortawesome/fontawesome-free-regular/faGem";
 
 const Header = (props) => (
   <header id="header" style={props.timeout ? {display: 'none'} : {}}>

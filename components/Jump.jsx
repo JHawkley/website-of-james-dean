@@ -1,7 +1,7 @@
 import Link from "next/link";
-import FontAwesomeIcon from '@fortawesome/react-fontawesome';
-import faImage from '@fortawesome/fontawesome-free-regular/faImage';
-import { faExternalLinkAlt, faFilm, faImages } from '@fortawesome/free-solid-svg-icons';
+import FontAwesomeIcon from "@fortawesome/react-fontawesome";
+import faImage from "@fortawesome/fontawesome-free-regular/faImage";
+import { faExternalLinkAlt, faFilm, faImages } from "@fortawesome/free-solid-svg-icons";
 
 const buildIcon = (props) => {
   function _icon() {
