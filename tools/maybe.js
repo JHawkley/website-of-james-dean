@@ -5,6 +5,7 @@ const maybe = dew(() => {
   const nothing = Object.freeze([]);
   const one = (value) => Object.freeze([value]);
   const some = (...values) => values.length > 0 ? Object.freeze(values) : nothing;
+  const from = (array) => array.length > 0 ? Object.freeze(array) : nothing;
 
   const fn = (...values) => {
     if (values.length === 0)
@@ -14,13 +15,27 @@ const maybe = dew(() => {
     return some(...values.filter(v => v != null));
   };
 
-  return Object.freeze(Object.assign(fn, { nothing, one, some }));
+  return Object.freeze(Object.assign(fn, { nothing, one, some, from }));
 });
+
+/**
+ * Determines if this array is empty.
+ *
+ * @export
+ * @template T
+ * @this {Array<T>} This array.
+ * @returns {boolean} Whether this array is empty.
+ */
+export function isEmpty() {
+  return this === maybe.nothing || (Array.isArray(this) && this.length === 0);
+}
 
 /**
  * Determines if this array has at least one item in it.
  *
  * @export
+ * @template T
+ * @this {Array<T>} This array.
  * @returns {boolean} Whether this array has at least one item in it.
  */
 export function isNotEmpty() {
@@ -37,12 +52,39 @@ export function isNotEmpty() {
  * @returns {T} The value.
  */
 export function firstOrElse(defaultValue) {
-  if (this.length > 0)
-    return this[0];
-
-  if (typeof defaultValue === "function")
-    return defaultValue();
+  if (this.length > 0) return this[0];
+  if (typeof defaultValue === "function") return defaultValue();
   return defaultValue;
+}
+
+/**
+ * Results in this array if it is not empty, otherwise it will produce a new maybe object from the given values
+ * and return it instead.
+ *
+ * @export
+ * @template T
+ * @this {Array<T>} This maybe object.
+ * @param {Array<T>} defaultValues The values to provide in case this array is empty.
+ * @returns {ReadonlyArray<T>} A maybe object that contains the `defaultValues`.
+ */
+export function orElse(...defaultValues) {
+  if (this.length > 0) return this;
+  return maybe.from(defaultValues);
+}
+
+/**
+ * Results in this array if it is not empty, otherwise it will produce a new maybe object from the values returned
+ * from the given function.
+ *
+ * @export
+ * @template T
+ * @this {Array<T>} This maybe object.
+ * @param {() => Array<T>} defaultValuesFn A function that produces an array of default values.
+ * @returns {ReadonlyArray<T>} A maybe object that contains the results of calling `defaultValuesFn`.
+ */
+export function orElseFrom(defaultValuesFn) {
+  if (this.length > 0) return this;
+  return maybe.from(defaultValuesFn());
 }
 
 /**
@@ -51,8 +93,8 @@ export function firstOrElse(defaultValue) {
  * @export
  * @template T,U
  * @this {Array<T>} This array.
- * @param {T => U} xformFn The transformation function.
- * @returns {U} A new array, containing the results of the transformation.
+ * @param {(value: T) => U} xformFn The transformation function.
+ * @returns {Array<U>} A new array, containing the results of the transformation.
  */
 export function map(xformFn) {
   return this.length > 0 ? Object.freeze(this.map(xformFn)) : maybe.nothing;

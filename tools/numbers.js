@@ -69,6 +69,36 @@ export function clamp(start, end) {
 }
 
 /**
+ * Reflows this number, ensuring it is in the bounds of the inclusive range of 0 and `end`.  If `this`
+ * underflows or overflows the range, it will be wrapped to the other end of the range until the number
+ * sits within the range.
+ *
+ * @export
+ * @this {number} This number.
+ * @param {number} limit The limit of the range, starting from zero.
+ * @returns {number} The reflowed number.
+ */
+export function reflow(limit) {
+  return this::reflowRange(0, limit);
+}
+
+/**
+ * Reflows this number, ensuring it is in the bounds of the inclusive range defined by `start` and `end`.
+ * If `this` underflows or overflows the range, it will be wrapped to the other end of the range until the
+ * number sits within the range.
+ *
+ * @export
+ * @this {number} This number.
+ * @param {number} start The start of the range.
+ * @param {number} end The end of the range.
+ * @returns {number} The reflowed number.
+ */
+export function reflowRange(start, end) {
+  if (start > end) return this::reflowRange(end, start);
+  return modulo((this - start), (end - start + 1)) + start;
+}
+
+/**
  * Indicates whether this number is between the given range.
  *
  * @export
