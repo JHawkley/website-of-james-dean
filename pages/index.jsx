@@ -2,10 +2,13 @@ import Router from "next/router";
 import Head from "next/head";
 import stylesheet from 'styles/main.scss';
 import lightboxStyle from "react-image-lightbox/style.css";
+import Modal from 'react-modal';
 
 import Header from "../components/Header";
 import Main from "../components/Main";
 import Footer from "../components/Footer";
+
+Modal.setAppElement('#__next');
 
 class IndexPage extends React.Component {
   constructor(props) {
