@@ -87,13 +87,13 @@ class IndexPage extends React.Component {
   }
   
   render() {
-    const { loading, isArticleVisible, timeout, articleTimeout, article, historyLength } = this.state;
+    const { loading, isArticleVisible, timeout, articleTimeout, article } = this.state;
   
     return (
       <div className={`body ${loading} ${isArticleVisible ? "is-article-visible" : ""}`}>
         <div className="prevent-scroll">
           <Head>
-            <title>Next.js Starter</title>
+            <title>A Programmer's Place</title>
             <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,300i,600,600i" rel="stylesheet" />
           </Head>
 
@@ -108,7 +108,6 @@ class IndexPage extends React.Component {
               timeout={timeout}
               articleTimeout={articleTimeout}
               article={article}
-              historyLength={historyLength}
             />
             <Footer timeout={timeout} />
           </div>

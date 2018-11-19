@@ -4,6 +4,8 @@ import bulletActionList from "./nateLogic/bulletActionList";
 import nateActionList from "./nateLogic/nateActionList";
 import { behaviorModes, facings, aimings, movings, jumps } from "./nateLogic/core";
 
+const Fragment = React.Fragment;
+
 class Nate extends React.Component {
 
   /**
@@ -272,7 +274,7 @@ class Nate extends React.Component {
         </audio>
         {this.world.bullets.map((bullet, i) => {
           return (
-            <React.Fragment key={i}>
+            <Fragment key={i}>
               <audio ref={bullet.sounds.spawned}>
                 <source src="static/sounds/nate-game/pew.ogg" type="audio/ogg; codecs=vorbis" />
                 <source src="static/sounds/nate-game/pew.mp3" type="audio/mpeg" />
@@ -285,7 +287,7 @@ class Nate extends React.Component {
                 <source src="static/sounds/nate-game/pop2.ogg" type="audio/ogg; codecs=vorbis" />
                 <source src="static/sounds/nate-game/pop2.mp3" type="audio/mpeg" />
               </audio>
-            </React.Fragment>
+            </Fragment>
           );
         })}
       </div>

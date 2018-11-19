@@ -2,17 +2,13 @@ import PropTypes from "prop-types";
 import Jump from "./Jump";
 import Page from "./Page";
 import Nate from "./Nate";
-import FontAwesomeIcon from '@fortawesome/react-fontawesome';
+import Lightbox from "react-image-lightbox";
 import FontAwesomeIcon from "@fortawesome/react-fontawesome";
 import faTwitter from "@fortawesome/fontawesome-free-brands/faTwitter";
 import faFacebook from "@fortawesome/fontawesome-free-brands/faFacebook";
 import faInstagram from "@fortawesome/fontawesome-free-brands/faInstagram";
 import faGithub from "@fortawesome/fontawesome-free-brands/faGithub";
 import { faImages } from "@fortawesome/free-solid-svg-icons";
-import dynamic from "next/dynamic";
-
-const Lightbox = dynamic(import("react-image-lightbox"));
-
 class Main extends React.Component {
   
   constructor(props) {
