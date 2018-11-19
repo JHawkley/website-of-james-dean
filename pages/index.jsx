@@ -86,7 +86,7 @@ class IndexPage extends React.Component {
   
   getHash() {
     const articleHash = window.location.hash;
-    return articleHash.length > 1 && articleHash.startsWith("#") ? articleHash.substring(1) : "";
+    return (articleHash.length > 1 && articleHash.startsWith("#")) ? articleHash.substring(1) : "";
   }
   
   render() {

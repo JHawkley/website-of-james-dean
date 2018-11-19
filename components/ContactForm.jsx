@@ -132,10 +132,10 @@ class ContactForm extends React.Component {
     const isModalOpen = this.state.isModalOpen;
     const validationErrors = this.state.validationErrors::orElse("There were no errors; this component is bugged.");
     const nextPath = dew(() => {
-      if (typeof location === "undefined") return maybe.nothing;
+      if (typeof location === "undefined") return null;
 
       const buffer = [location.origin, location.pathname, "#contacted"];
-      return maybe.one(buffer.join(""));
+      return buffer.join("");
     });
 
     return (
@@ -153,17 +153,13 @@ class ContactForm extends React.Component {
             <label htmlFor="message">Message</label>
             <textarea name="message" id="message" rows="4" ref={this.msgRef}></textarea>
           </div>
-          {nextPath.map(str => <input type="hidden" name="_next" value={str} key="_next" />)}
+          <input type="hidden" name="_next" id="_next" value={nextPath} />
           <ul className="actions">
             <li><input type="button" value="Send Message" className="special" onClick={this.handleSend} /></li>
             <li><input type="reset" value="Reset" /></li>
           </ul>
         </form>
-        <ModalPopup
-          isOpen={isModalOpen}
-          onRequestClose={this.closeModal}
-          contentLabel="Form Validation Errors"
-        >
+        <ModalPopup isOpen={isModalOpen} onRequestClose={this.closeModal} contentLabel="Form Validation Errors">
           <p>Failed to submit the form due to the following errors:</p>
           <ul>
             {validationErrors.map((reason, i) => {
