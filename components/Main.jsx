@@ -130,13 +130,13 @@ class Main extends React.Component {
           <h2 className="major">Intro</h2>
           <span className="image main"><img src="/static/images/pic01.jpg" alt="" /></span>
           <p>Welcome!  I'm James!  I'm a software developer from Texas, USA.</p>
-          <p>I have been working professionally since 2002.  In that time, I've put together and maintained three big applications for my former employer.  You can read all about it in the <Jump href="#work">work section of the site</Jump>.</p>
+          <p>I have been working professionally since 2002.  In that time, I've put together and maintained three big applications for my former employer.  You can read all about it in the <Jump href="./#work">work section of the site</Jump>.</p>
           <p>My first serious programming was in C#, which I primarily used until 2010, when I decided to shift much of my focus on to JavaScript and related technologies.  I consider web services and applications to pretty much be the future of end-user software, a universal platform that spans all devices across the planet.</p>
           <p>Though, it probably won't realize that potential for a while longer.  Nevertheless, it surely will be some day and in some form and I intend to help make it happen.</p>
           <p>I primarily consider myself a front-end and application developer; it's certainly where I've had most of my success.  User experiences that I design tend to be highly contextual and minimally cluttered.  If it isn't important to the user at the time, it should be given little to no screen space.  I also like to keep things clear, so one part of the UI is easily distinguishable from another part.</p>
           <p>I've also always had the dream to create games since I was in high school, which is where most of my spare time goes.  I have mostly been studying the technical aspects of game development, rather than building complete games.  The systems and algorithms that drive games fascinate me.</p>
           <p>I just have not yet gotten together with like-minded individuals who can handle the more artistic side of things and tough it out with me until the end.</p>
-          <p>If you are such a person, please have a look at my <Jump href="#work">game-specific works here</Jump>, toward the bottom of the page, to help you determine if I might be an asset to your project.</p>
+          <p>If you are such a person, please have a look at my <Jump href="./#work">game-specific works here</Jump>, toward the bottom of the page, to help you determine if I might be an asset to your project.</p>
           <p>A table of my skills is below:</p>
           <table>
             <thead>
@@ -377,7 +377,7 @@ class Main extends React.Component {
           <h3>Design</h3>
           <p>This project was my first time utilizing Entity-Component Systems and Action Lists.  Impact did not really have support for ECS entities out of the box, so I integrated an open-source ECS library, which I later ported to CoffeeScript so I could understand how it worked better as well as customize it.</p>
           <p>Unfortunately, I was not satisfied with Box2D's performance for driving the physics of the game.  Nate was using the old &quot;capsule body&quot; trick to make him run smoothly across slopes and other surfaces without getting stuck; this gave him a bit of a slippery feel on the edges of platforms.</p>
-          <p>Most likely, I would have eventually disabled the physical simulation and only used Box2D for collision detection.  I didn't really like the thought of having so much dead weight from Box2D hanging around, though, and it inspired me to instead work on <Jump href="#platter">Platter</Jump>, a collision detection engine specifically for classical feeling 2D games.</p>
+          <p>Most likely, I would have eventually disabled the physical simulation and only used Box2D for collision detection.  I didn't really like the thought of having so much dead weight from Box2D hanging around, though, and it inspired me to instead work on <Jump href="./#platter">Platter</Jump>, a collision detection engine specifically for classical feeling 2D games.</p>
           <p>At the time we stopped working on the game, I was still building out the basic gameplay mechanics, figuring out how to handle all the power interactions and abilities, as well as laying the foundation for enemy programming.  Although I had scribbled out thoughts on how I'd try and do all the proc-gen stuff, I never got started on a prototype.</p>
 
           <h3>Interactive Example</h3>

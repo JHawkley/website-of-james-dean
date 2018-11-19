@@ -5,10 +5,10 @@ const Page = (props) => {
   const { id, children, parent, article } = props;
 
   const back = parent != null
-    ? (<Link href={`#${parent}`}><div className="back"></div></Link>)
+    ? (<Link href={`./#${parent}`}><div className="back"></div></Link>)
     : null;
   
-  const close = <Link href="#"><div className="close"></div></Link>;
+  const close = <Link href="./"><div className="close"></div></Link>;
   
   const klass = article === id ? "active" : null;
   
