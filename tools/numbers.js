@@ -99,6 +99,27 @@ export function reflowRange(start, end) {
 }
 
 /**
+ * Reflows this number to the range specified by an array-like object.  Handy for making sure an index is
+ * always in the bounds of an array.
+ *
+ * @export
+ * @this {number} This number.
+ * @param {{ length: Number }} arrayLike Something with a `length` property.
+ * @returns The number, reflowed, so that it is bound to the range of the array.
+ */
+export function boundedBy(arrayLike) {
+  if (typeof arrayLike?.length !== "number")
+    throw new Error("cannot bind the number to the array-like; it has no length property");
+
+  const len = arrayLike.length;
+
+  if (len === 0)
+    throw new Error("cannot bind the number to the array-like; it is empty");
+
+  return this::reflowRange(0, len - 1);
+}
+
+/**
  * Indicates whether this number is between the given range.
  *
  * @export
