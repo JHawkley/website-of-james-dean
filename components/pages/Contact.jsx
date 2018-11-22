@@ -13,7 +13,7 @@ export default class Contact extends Page($contact) {
     return (
       <Fragment>
         <h2 className="major">Contact</h2>
-        <ContactForm />
+        <ContactForm displayed={this.isCurrentPage} />
         <ul className="icons">
           <li><a href="https://www.linkedin.com/in/james-dean-7b96aa169/">
             <FontAwesomeIcon icon={faLinkedin} />

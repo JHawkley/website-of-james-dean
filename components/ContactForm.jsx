@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import ModalPopup from "./ModalPopup";
 import { dew } from "/tools/common";
 import { reflow } from "/tools/numbers";
@@ -76,6 +77,10 @@ function extractValue(ref) {
 
 class ContactForm extends React.Component {
 
+  static propTypes = {
+    displayed: PropTypes.bool.isRequired
+  };
+
   formRef = React.createRef();
   nameRef = React.createRef();
   emailRef = React.createRef();
@@ -126,6 +131,13 @@ class ContactForm extends React.Component {
 
   closeModal() {
     this.setState({ isModalOpen: false });
+  }
+
+  componentDidUpdate(prevProps) {
+    // If the form isn't displayed, close the modal.
+    if (this.props.displayed !== prevProps.displayed)
+      if (!this.props.displayed)
+        this.closeModal();
   }
 
   render() {
