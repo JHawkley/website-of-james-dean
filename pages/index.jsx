@@ -1,13 +1,27 @@
+import ReactDOMServer from "react-dom/server";
 import Router from "next/router";
 import Head from "next/head";
-import stylesheet from 'styles/main.scss';
+import stylesheet from "styles/main.scss";
 import lightboxStyle from "react-image-lightbox/style.css";
-import Modal from 'react-modal';
+import Modal from "react-modal";
+import { collectProps } from "/tools/common";
 
+import NoJavaScript from "/components/NoJavaScript";
 import Header from "/components/Header";
 import Main from "/components/Main";
 import Footer from "/components/Footer";
 import Page from "/components/Page";
+
+const { Fragment } = React;
+
+// Little component to help solve a hydration error in the version of React in use.
+// See: https://github.com/facebook/react/issues/11423#issuecomment-341760646
+const NoScript = (props) => {
+  const { children } = props;
+  const { otherProps } = props::collectProps((k, v) => k !== "children" ? v : void 0);
+  const staticMarkup = ReactDOMServer.renderToStaticMarkup(children);
+  return (<noscript {...otherProps} dangerouslySetInnerHTML={{ __html: staticMarkup }} />);
+}
 
 Modal.setAppElement('#__next');
 
@@ -99,31 +113,50 @@ class IndexPage extends React.Component {
     const { loading, isArticleVisible, timeout, articleTimeout, article } = this.state;
   
     return (
-      <div className={`body ${loading} ${isArticleVisible ? "is-article-visible" : ""}`}>
-        <div className="prevent-scroll">
-          <Head>
-            <title>A Programmer's Place</title>
-            <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,300i,600,600i" rel="stylesheet" />
-          </Head>
+      <Fragment>
+        <Head>
+          <title>A Programmer's Place</title>
+          <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,300i,600,600i" rel="stylesheet" />
+        </Head>
 
-          <style dangerouslySetInnerHTML={{ __html: stylesheet }} />
-          <style dangerouslySetInnerHTML={{ __html: lightboxStyle }} />
-          <style dangerouslySetInnerHTML={{ __html: "body { overflow-y: scroll; }"}} />
+        <style dangerouslySetInnerHTML={{ __html: stylesheet }} />
+        <style dangerouslySetInnerHTML={{ __html: lightboxStyle }} />
+        <style dangerouslySetInnerHTML={{ __html: "body { overflow-y: scroll; }"}} />
 
-          <div id="wrapper">
-            <Header timeout={timeout} />
-            <Main
-              isArticleVisible={isArticleVisible}
-              timeout={timeout}
-              articleTimeout={articleTimeout}
-              article={article}
-            />
-            <Footer timeout={timeout} />
+        {/* A special no-script version of the website. */}
+        <NoScript>
+          <style dangerouslySetInnerHTML={{ __html: ".js-only { display: none !important; }"}} />
+          
+          <div className="body is-article-visible">
+            <div className="prevent-scroll">
+              <div id="wrapper">
+                <NoJavaScript />
+              </div>
+              <div id="bg" />
+            </div>
           </div>
+        </NoScript>
 
-          <div id="bg" />
+        {/* The normal version of the website. */}
+        <div className={`body js-only ${loading} ${isArticleVisible ? "is-article-visible" : ""}`}>
+          <div className="prevent-scroll">
+            <div id="wrapper">
+              <div className="js-only">
+                <Header timeout={timeout} />
+                <Main
+                  isArticleVisible={isArticleVisible}
+                  timeout={timeout}
+                  articleTimeout={articleTimeout}
+                  article={article}
+                />
+                <Footer timeout={timeout} />
+              </div>
+            </div>
+            <div id="bg" />
+          </div>
         </div>
-      </div>
+
+      </Fragment>
     );
   }
 }
