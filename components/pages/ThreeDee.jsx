@@ -47,11 +47,11 @@ export default class ThreeDee extends Page($threedee) {
         </Jump>
         <p>A long while ago, I had it in my mind that I wanted to do a big animation of Earth trapping a minor blackhole in its orbit and the slow, horrendous destruction of the world as it slowly fell into the core.</p>
         <p>It would basically fall through the atmosphere as this blindingly hot ball of swirling gas before punching clean through the Earth leaving a molten scar.</p>
+        <p>Was gonna be this big, epic thing where you see the initial strike, then the blackhole erupt out the other side of the planet.  It would fly far enough out to eventually strike the moon before drifting back in again.  This landscape was going to be the setting of the initial blast.</p>
         <span className="image right javascript-link" onClick={Gallery.openCallback(0)}>
           <img src="/static/images/3drenders/landscape1.jpg" alt="Blackhole Landscape Render" />
           <div className="label-right">Image</div>
         </span>
-        <p>Was gonna be this big, epic thing where you see the initial strike, then the blackhole erupt out the other side of the planet.  It would fly far enough out to eventually strike the moon before drifting back in again.  This landscape was going to be the setting of the initial blast.</p>
         <p>As you can see, I was aiming for photo-realism.  It features some 35,000 pine tree facades.  The original trees were created using this impressive procedurally-generated plant/tree plugin for 3DSMax called <Jump href="https://exlevel.com/features/">GrowFX</Jump>, then rendered to a 2D sprite and distributed all over the scene using a distribution map.</p>
         <p>A blinding light would have flown overhead before a hellish flash shown from the far side of the mountain.  <Gallery index={1}>The trees</Gallery> all instantly catch fire and this idyllic landscape would have then begun to crack and glow as the shockwaves twisted the crust and reshaped it into a hellscape.</p>
         <p>Describing it makes me wish I had at least finished that scene...  It'd have been a <em>hell</em> of a sight!  Alas, I got distracted by game-dev stuff instead and shelved my plans for this animation.</p>
