@@ -4,9 +4,10 @@ import stylesheet from 'styles/main.scss';
 import lightboxStyle from "react-image-lightbox/style.css";
 import Modal from 'react-modal';
 
-import Header from "../components/Header";
-import Main from "../components/Main";
-import Footer from "../components/Footer";
+import Header from "/components/Header";
+import Main from "/components/Main";
+import Footer from "/components/Footer";
+import Page from "/components/Page";
 
 Modal.setAppElement('#__next');
 
@@ -49,7 +50,7 @@ class IndexPage extends React.Component {
   }
   
   doStateUpdate() {
-    const article = this.getHash();
+    const article = this.getArticleFromHash();
     const finalState = !!article;
     
     if (this.state.timeout && !this.state.articleTimeout) {
@@ -84,9 +85,14 @@ class IndexPage extends React.Component {
     }
   }
   
-  getHash() {
+  getArticleFromHash() {
     const articleHash = window.location.hash;
-    return (articleHash.length > 1 && articleHash.startsWith("#")) ? articleHash.substring(1) : "";
+    if (articleHash.length > 1 && articleHash.startsWith("#")) {
+      const article = articleHash.substring(1);
+      if (!Page.knownArticles.has(article)) return "404";
+      return article;
+    }
+    return "";
   }
   
   render() {

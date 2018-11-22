@@ -14,6 +14,7 @@ import AboutPage from "./pages/About";
 import QuestionsPage from "./pages/Questions";
 import ContactPage from "./pages/Contact";
 import ContactedPage from "./pages/Contacted";
+import FourOhFourPage from "./pages/FourOhFour";
 
 class Main extends React.Component {
 
@@ -50,6 +51,8 @@ class Main extends React.Component {
         <ContactPage article={article} />
 
         <ContactedPage article={article} />
+
+        <FourOhFourPage article={article} />
         
         <Lightbox />
 
