@@ -4,6 +4,8 @@ import Head from "next/head";
 import stylesheet from "styles/main.scss";
 import lightboxStyle from "react-image-lightbox/style.css";
 import Modal from "react-modal";
+import { parse as parseUrl } from "url";
+import { isNullishOrEmpty } from "/tools/strings";
 
 import NoJavaScript from "/components/NoJavaScript";
 import Header from "/components/Header";
@@ -21,11 +23,23 @@ const NoScript = (props) => {
   return (<noscript {...otherProps} dangerouslySetInnerHTML={{ __html: staticMarkup }} />);
 }
 
+const hashToArticle = (articleHash) => {
+  if (articleHash::isNullishOrEmpty()) return "";
+  if (articleHash.startsWith("#")) {
+    const article = articleHash.substring(1);
+    if (!Page.knownArticles.has(article)) return "404";
+    return article;
+  }
+  return "";
+}
+
 Modal.setAppElement('#__next');
 
 class IndexPage extends React.Component {
+
   constructor(props) {
     super(props);
+    this.transitionTarget = null;
     this.state = {
       isArticleVisible: false,
       timeout: false,
@@ -34,35 +48,43 @@ class IndexPage extends React.Component {
       loading: "is-loading"
     };
     this.setState = ::this.setState;
-    this.tryStateUpdate = ::this.tryStateUpdate;
+    this.onRouteChangeComplete = ::this.onRouteChangeComplete;
     this.doStateUpdate = ::this.doStateUpdate;
   }
 
   componentDidMount() {
     if (typeof window.history.scrollRestoration !== "undefined")
       window.history.scrollRestoration = "manual";
-    Router.router.events.on("hashChangeComplete", this.tryStateUpdate);
+    Router.events.on("hashChangeComplete", this.onRouteChangeComplete);
+    Router.events.on("routeChangeComplete", this.onRouteChangeComplete);
     
     this.timeoutId = setTimeout(this.setState, 100, { loading: "" });
     // Restore location.
-    this.tryStateUpdate();
+    this.onRouteChangeComplete(Router.router.asPath);
   }
 
   componentWillUnmount() {
-    Router.router.events.off("hashChangeComplete", this.tryStateUpdate);
+    Router.events.off("hashChangeComplete", this.onRouteChangeComplete);
+    Router.events.off("routeChangeComplete", this.onRouteChangeComplete);
     
     if (this.timeoutId)
       clearTimeout(this.timeoutId);
   }
   
-  tryStateUpdate() {
-    if (this.transitionStarted) return;
-    this.transitionStarted = true;
-    this.doStateUpdate();
+  onRouteChangeComplete(as) {
+    const newArticle = hashToArticle(parseUrl(as).hash);
+    const oldArticle = this.transitionTarget ?? this.state.article;
+
+    if (newArticle === oldArticle) return;
+
+    const canStartTransition = this.transitionTarget == null;
+    this.transitionTarget = newArticle;
+
+    if (canStartTransition) this.doStateUpdate();
   }
   
   doStateUpdate() {
-    const article = this.getArticleFromHash();
+    const article = this.transitionTarget;
     const finalState = !!article;
     
     if (this.state.timeout && !this.state.articleTimeout) {
@@ -93,18 +115,8 @@ class IndexPage extends React.Component {
       this.setState({ isArticleVisible: false }, this.doStateUpdate);
     }
     else {
-      this.transitionStarted = false;
+      this.transitionTarget = null;
     }
-  }
-  
-  getArticleFromHash() {
-    const articleHash = window.location.hash;
-    if (articleHash.length > 1 && articleHash.startsWith("#")) {
-      const article = articleHash.substring(1);
-      if (!Page.knownArticles.has(article)) return "404";
-      return article;
-    }
-    return "";
   }
   
   render() {
@@ -155,6 +167,7 @@ class IndexPage extends React.Component {
       </Fragment>
     );
   }
+
 }
 
 export default IndexPage;
