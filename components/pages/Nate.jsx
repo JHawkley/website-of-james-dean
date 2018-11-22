@@ -7,8 +7,9 @@ const $nate = "nate";
 const { Fragment } = React;
 const Gallery = Lightbox.makeGallery($nate, [
   { i: "static/images/nate-game/1.gif", d: "Nate jumps about in the test level.  Unfortunately, the build I have right now has shooting disabled; I believe I was reworking it at the time.  The gnarly design of the final room was intended to help work out issues with auto-tiling." },
-  { i: "static/images/nate-game/2.jpg", d: "Chie's kind-of-cute appearance conceals the frightening power she has at her command.  This artwork was done by my partner on this project, Tderek99." },
-  { i: "static/images/nate-game/3.jpg", d: "These early concept sketches of enemies show that Chie had some fun looking playmates for her \"pet\" in mind.  This artwork was done by my partner on this project, Tderek99." }
+  { i: "static/images/nate-game/2.jpg", d: "Basic sketches of Nate himself; I wish I had more concept art of him to show.  This artwork was done by my partner on this project, Tderek99." },
+  { i: "static/images/nate-game/3.jpg", d: "Chie's kind-of-cute appearance conceals the frightening power she has at her command.  This artwork was done by my partner on this project, Tderek99." },
+  { i: "static/images/nate-game/4.jpg", d: "These early concept sketches of enemies show that Chie had some fun looking playmates for her \"pet\" in mind.  This artwork was done by my partner on this project, Tderek99." }
 ]);
 
 export default class Nate extends Page($nate) {
@@ -17,16 +18,27 @@ export default class Nate extends Page($nate) {
     return (
       <Fragment>
         <h2 className="major">Nate Game</h2>
-        <span className="image main"><img src="/static/images/pic03.jpg" alt="" onClick={Gallery.openCallback(0)} /></span>
+        <span className="image main javascript-link" onClick={Gallery.openCallback(0)}>
+          <img src="/static/images/nate-game/header.png" alt="Nate Game Gallery" />
+          <div className="label-right">Gallery</div>
+        </span>
         <p>A jump'n'shoot side-scroller game targeting JavaScript platforms and using the <Jump href="https://impactjs.com/" target="_blank">Impact game engine</Jump>.  I was coding everything in <Jump href="https://coffeescript.org/" target="_blank">CoffeeScript</Jump> at the time and <Jump href="https://box2d.org/about/" target="_blank">Box2D</Jump> was being used to provide physics.  A friend of mine, an artist who goes by Tderek99, was doing the graphics while I was doing the programming.</p>
 
         <h3>Details</h3>
+        <span className="image right javascript-link" onClick={Gallery.openCallback(1)}>
+          <img src="/static/images/nate-game/2.jpg" alt="Nate Concepts" />
+          <div className="label-right">Image</div>
+        </span>
         <p>This game was pitched as: Binding of Isaac, but plays like MegaMan and has a dash of Metroid.</p>
-        <p>You were to play a dog-boy named Nate who is abducted from his world by a mighty dragon demon and given to his daughter as a pet.  This <Gallery index={1}>childish dragon girl, Chie</Gallery>, &quot;plays&quot; with Nate by using her reality warping powers to create a pocket dimension full of obstacles, traps, and <Gallery index={2}>monsters</Gallery> looking to tear him apart.</p>
+        <p>You were to play a <Gallery index={1}>dog-boy named Nate</Gallery> who is abducted from his world by a mighty dragon demon and given to his daughter as a pet.  This <Gallery index={2}>childish dragon girl, Chie</Gallery>, &quot;plays&quot; with Nate by using her reality warping powers to create a pocket dimension full of obstacles, traps, and <Gallery index={3}>monsters</Gallery> looking to tear him apart.</p>
         <p>She's technically a child, and her treatment of Nate is kind of the demonic equivalent of putting the hamster in the microwave; she just doesn't know better.</p>
         <p>She still grants him a simple magical bullet for self-defense when she drops him into this terrifying world, but scatters &quot;dog toys&quot; that can grant him new powers all over the place.</p>
         <p>In the same fashion as Binding of Isaac, these powers could combine and interact, giving every play-through the potential for something unexpected and exciting.</p>
         <p>The world was gonna rely on procedural generation to make every game different.  The map would generate in such a way that some of the items sprinkled in the world would be used as keys for progressing into new areas, adding a little bit of Metroidvania mechanics into the mix.</p>
+        <span className="image right javascript-link" onClick={Gallery.openCallback(2)}>
+          <img src="/static/images/nate-game/3_inset.jpg" alt="Chie Concepts" />
+          <div className="label-right">Image</div>
+        </span>
         <p>Each of the four or so areas was going to have a boss fight, and upon defeating all the bosses, Nate would escape the pocket dimension and face Chie herself, who'd try to do the demonic equivalent of smacking his nose with a newspaper for trying to bite.</p>
         <p>In order to get the good ending, though, you needed to discover and complete optional goals; if done so, you'd face Chie's father as the final boss, earning your freedom and returning home ...if you manage to beat him.</p>
         <p>We'd probably have tuned things so a single run would probably take one to three hours.</p>
@@ -34,11 +46,11 @@ export default class Nate extends Page($nate) {
         <h3>Design</h3>
         <p>This project was my first time utilizing Entity-Component Systems and Action Lists.  Impact did not really have support for ECS entities out of the box, so I integrated an open-source ECS library, which I later ported to CoffeeScript so I could understand how it worked better as well as customize it.</p>
         <p>Unfortunately, I was not satisfied with Box2D's performance for driving the physics of the game.  Nate was using the old &quot;capsule body&quot; trick to make him run smoothly across slopes and other surfaces without getting stuck; this gave him a bit of a slippery feel on the edges of platforms.</p>
-        <p>Most likely, I would have eventually disabled the physical simulation and only used Box2D for collision detection.  I didn't really like the thought of having so much dead weight from Box2D hanging around, though, and it inspired me to instead work on <Jump href="./#platter">Platter</Jump>, a collision detection engine specifically for classical feeling 2D games.</p>
+        <p>Most likely, I would have eventually disabled the physical simulation and only used Box2D for collision detection.  I didn't really like the thought of having so much dead weight from Box2D hanging around, though, and it inspired me to instead work on <Jump href="./#miscprogramming">Platter</Jump>, a collision detection engine specifically for classical feeling 2D games.</p>
         <p>At the time we stopped working on the game, I was still building out the basic gameplay mechanics, figuring out how to handle all the power interactions and abilities, as well as laying the foundation for enemy programming.  Although I had scribbled out thoughts on how I'd try and do all the proc-gen stuff, I never got started on a prototype.</p>
 
-        <h3>Interactive Example</h3>
-        <p>What with not being able to get more than a simple GIF animation together to demonstrate the original game, I put together this neat interactive widget for this website.  You can use your cursor to play with Nate, who will chase after and try to shoot it when he sees it.</p>
+        <h3>Interactive Sample</h3>
+        <p>What with not being able to get more than a <Gallery index={0}>simple GIF animation</Gallery> together to demonstrate the original game, I put together this neat interactive widget for this website.  You can use your cursor to play with Nate, who will chase after and try to shoot it when he sees it.</p>
         <p>When he is in his passive state, he will just pace around, showing off his move-set through random actions.  But when he sees the cursor, he'll bark at it and switch to his aggressive state.</p>
         <p>He'll chase the cursor around and try to shoot at it.  If it gets too close, he'll flee, but try and take potshots at it.  If the cursor sits still too long or gets to a place he can't reach, he'll stare at it and display frustration in not being able to play anymore.</p>
         <p>If he is left bored for too long, he'll make a sad, confused whine and return to his passive behaviors.  Be nice and give him some fun!  It gets boring on that blue platform...</p>
