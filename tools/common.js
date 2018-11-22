@@ -1,6 +1,13 @@
 import { map } from "./numbers";
 const { random } = Math;
 
+function newObjectBasedOn(original) {
+  const proto = Object.getPrototypeOf(original);
+  if (proto == null) return Object.create(null);
+  if (proto === Object.prototype) return {};
+  throw new Error(`cannot base a new object on \`${original}\`; it is not a simple object`);
+}
+
 /**
  * Executes the given function and returns its result.  A helper for immediately-invoked function expressions.
  * 
@@ -69,13 +76,37 @@ export function forPair(arr, fn) {
  * Iterates through each own-property of this object.
  *
  * @export
- * @this {*} This object.
+ * @template T
+ * @this {Object.<string|symbol, T>} This object.
  * @param {(value: *, key: (string|symbol)) => void} fn A function applied to each property key-value-pair.
  */
 export function forOwnProps(fn) {
   'use strict'; // Allows binding to `null`.
   if (this == null) return;
   Object.keys(this).forEach(k => fn(this[k], k));
+}
+
+/**
+ * Uses a function to filter and map a simple object's own-properties into a new object.  If the function
+ * returns `undefined`, then that property will be dropped from the result.  A "simple object" is one that
+ * has a prototype that is `Object.prototype` or `null`.
+ *
+ * @export
+ * @template T,U
+ * @this {Object.<string|symbol, T>} The object to collect the properties from.
+ * @param {(key: string, value: T) => U} fn The transformation function.
+ * @returns {Object.<string|symbol, U>} A new object.
+ */
+export function collectProps(fn) {
+  'use strict'; // Allows binding to `null`.
+  if (this == null) return null;
+  const result = newObjectBasedOn(this);
+  Object.keys(this).forEach(k => {
+    const val = fn(k, this[k]);
+    if (typeof val === "undefined") return;
+    result[k] = val;
+  });
+  return result;
 }
 
 /**
@@ -93,14 +124,7 @@ export function copyOwn() {
     throw new Error("the bound value must be an object reference");
   
   if (this === null) return null;
-
-  const proto = Object.getPrototypeOf(this);
-
-  if (proto == null)
-    return Object.assign(Object.create(null), this);
-  if (proto === Object.prototype)
-    return Object.assign({}, this);
-  throw new Error("can only copy simple objects");
+  return Object.assign(newObjectBasedOn(this), this);
 }
 
 /**
