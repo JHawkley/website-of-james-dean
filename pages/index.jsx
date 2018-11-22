@@ -4,7 +4,6 @@ import Head from "next/head";
 import stylesheet from "styles/main.scss";
 import lightboxStyle from "react-image-lightbox/style.css";
 import Modal from "react-modal";
-import { collectProps } from "/tools/common";
 
 import NoJavaScript from "/components/NoJavaScript";
 import Header from "/components/Header";
@@ -17,8 +16,7 @@ const { Fragment } = React;
 // Little component to help solve a hydration error in the version of React in use.
 // See: https://github.com/facebook/react/issues/11423#issuecomment-341760646
 const NoScript = (props) => {
-  const { children } = props;
-  const { otherProps } = props::collectProps((k, v) => k !== "children" ? v : void 0);
+  const { children, ...otherProps } = props;
   const staticMarkup = ReactDOMServer.renderToStaticMarkup(children);
   return (<noscript {...otherProps} dangerouslySetInnerHTML={{ __html: staticMarkup }} />);
 }

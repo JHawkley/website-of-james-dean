@@ -2,6 +2,7 @@ import Link from "next/link";
 import FontAwesomeIcon from "@fortawesome/react-fontawesome";
 import faImage from "@fortawesome/fontawesome-free-regular/faImage";
 import { faExternalLinkAlt, faFilm, faImages } from "@fortawesome/free-solid-svg-icons";
+import { forOwnProps } from "/tools/common";
 
 const buildIcon = (props) => {
   function _icon() {
@@ -28,14 +29,15 @@ const buildIcon = (props) => {
 const Jump = (props) => {
   const linkProps = {};
   const anchorProps = {};
-  for (const key of Object.keys(props)) {
-    if (key === "children") continue;
-    if (key === "icon") continue;
+  props::forOwnProps((value, key) => {
+    if (key === "children") return;
+    if (key === "icon") return;
     if (key in Link.propTypes)
-      linkProps[key] = props[key];
+      linkProps[key] = value;
     else
-      anchorProps[key] = props[key];
-  }
+      anchorProps[key] = value;
+  });
+
   return (
     <Link {...linkProps}>
       <a {...anchorProps}>

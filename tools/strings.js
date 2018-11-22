@@ -26,5 +26,7 @@ export function isNullishOrEmpty() {
 
   if (this == null) return true;
   if (this === "") return true;
+  if (typeof this !== "string")
+    throw new Error(`expected a string, but found \`${this}\` instead`);
   return false;
 }
