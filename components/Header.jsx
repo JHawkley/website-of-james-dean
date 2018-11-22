@@ -18,15 +18,15 @@ const Header = (props) => (
     </div>
     <nav>
       <ul>
-        <li><Jump href="#intro">Intro</Jump></li>
-        <li><Jump href="#work">Work</Jump></li>
-        <li><Jump href="#about">About</Jump></li>
-        <li><Jump href="#questions">Q&amp;A</Jump></li>
+        <li><Jump href="./#intro">Intro</Jump></li>
+        <li><Jump href="./#work">Work</Jump></li>
+        <li><Jump href="./#about">About</Jump></li>
+        <li><Jump href="./#questions">Q&amp;A</Jump></li>
       </ul>
     </nav>
     <nav>
       <ul>
-        <li><Jump href="#contact">Contact</Jump></li>
+        <li><Jump href="./#contact">Contact</Jump></li>
       </ul>
     </nav>
   </header>
