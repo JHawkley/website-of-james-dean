@@ -141,16 +141,14 @@ class IndexPage extends React.Component {
         <div className={`body js-only ${loading} ${isArticleVisible ? "is-article-visible" : ""}`}>
           <div className="prevent-scroll">
             <div id="wrapper">
-              <div className="js-only">
-                <Header timeout={timeout} />
-                <Main
-                  isArticleVisible={isArticleVisible}
-                  timeout={timeout}
-                  articleTimeout={articleTimeout}
-                  article={article}
-                />
-                <Footer timeout={timeout} />
-              </div>
+              <Header timeout={timeout} />
+              <Main
+                isArticleVisible={isArticleVisible}
+                timeout={timeout}
+                articleTimeout={articleTimeout}
+                article={article}
+              />
+              <Footer timeout={timeout} />
             </div>
             <div id="bg" />
           </div>
