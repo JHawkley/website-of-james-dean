@@ -9,7 +9,7 @@ export default function NoJavaScript() {
         <p>This site is a single-page web application and requires JavaScript to render properly.  If you wish to experience this web page, please add this domain as an exception to your browser's JavaScript blocker and then refresh the page.</p>
         <h3>Site Summary</h3>
         <p>This is the personal web site for James Dean, a programmer out of the Dallas/Fort Worth area in Texas, USA.  It showcases my work to potential employers or those otherwise interested in a programmer for a project.</p>
-        <p>It is driven by the React JavaScript framework and has a few programming demonstrations that make use of per-frame animation; this site may, at times, consume a bit more of your device's power than the average website.</p>
+        <p>It is driven by the React JavaScript framework and has live JavaScript demonstrations that make use of per-frame animation; this site may, at times, consume a bit more of your device's power than the average website.</p>
         <p>I try my best to use JavaScript responsibly.</p>
       </article>
     </div>
