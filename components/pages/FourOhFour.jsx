@@ -3,7 +3,7 @@ import Page from "components/Page";
 const $fourOhFour = "404";
 const { Fragment } = React;
 
-export default class About extends Page($fourOhFour) {
+export default class FourOhFour extends Page($fourOhFour) {
 
   content() {
     return (
