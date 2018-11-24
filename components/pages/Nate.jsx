@@ -2,6 +2,7 @@ import Page from "components/Page";
 import Jump from "components/Jump";
 import Lightbox from "components/Lightbox";
 import NateWidget from "components/Nate";
+import Work from "./Work";
 
 const $nate = "nate";
 const { Fragment } = React;
@@ -12,7 +13,7 @@ const Gallery = Lightbox.makeGallery($nate, [
   { i: "static/images/nate-game/4.jpg", d: "These early concept sketches of enemies show that Chie had some fun looking playmates for her \"pet\" in mind.  This artwork was done by my partner on this project, Tderek99." }
 ]);
 
-export default class Nate extends Page($nate) {
+export default class Nate extends Page($nate, Work) {
 
   content() {
     return (

@@ -1,6 +1,7 @@
 import Page from "components/Page";
 import Jump from "components/Jump";
 import Lightbox from "components/Lightbox";
+import Work from "./Work";
 
 const $solar = "solar";
 const { Fragment } = React;
@@ -12,7 +13,7 @@ const Gallery = Lightbox.makeGallery($solar, [
   { i: "static/images/3drenders/br5.png", d: "Another greenhouse concept; definitely a lot more detailed.  I think the idea here was to integrate a basic water desalination system into a greenhouse.  Salty water would be sprayed onto the curtains in the center and allowed to evaporate, while fresh water would condense on the plastic enclosing the greenhouse and drip down into collectors." }
 ]);
 
-export default class Solar extends Page($solar) {
+export default class Solar extends Page($solar, Work) {
 
   content() {
     return (

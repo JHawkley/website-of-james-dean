@@ -5,6 +5,7 @@ import stylesheet from "styles/main.scss";
 import lightboxStyle from "react-image-lightbox/style.css";
 import Modal from "react-modal";
 import { parse as parseUrl } from "url";
+import { extensions as objEx, dew } from "tools/common";
 import { extensions as strEx } from "tools/strings";
 import { extensions as maybe, nothing } from "tools/maybe";
 
@@ -14,7 +15,18 @@ import Main from "components/Main";
 import Footer from "components/Footer";
 import Page from "components/Page";
 
+// Making use of `babel-plugin-wildcard`.
+import * as pageIndex from "../components/pages";
+
 const { Fragment } = React;
+
+const [pageComponents, knownPages] = dew(() => {
+  const components = [];
+  pageIndex::objEx.forOwnProps((module) => {
+    if (Page.isPage(module)) components.push(module);
+  });
+  return [components, new Set(components.map(c => c.pageName))];
+});
 
 // Little component to help solve a hydration error in the version of React in use.
 // See: https://github.com/facebook/react/issues/11423#issuecomment-341760646
@@ -28,7 +40,7 @@ const hashToArticle = (articleHash) => {
   if (articleHash::strEx.isNullishOrEmpty()) return "";
   if (articleHash.startsWith("#")) {
     const article = articleHash.substring(1);
-    if (!Page.knownArticles.has(article)) return "404";
+    if (!knownPages.has(article)) return "404";
     return article;
   }
   return "";
@@ -154,10 +166,10 @@ class IndexPage extends React.Component {
             <div id="wrapper">
               <Header timeout={timeout} />
               <Main
-                isArticleVisible={isArticleVisible}
-                timeout={timeout}
-                articleTimeout={articleTimeout}
                 article={article}
+                articlePages={pageComponents}
+                articleTimeout={articleTimeout}
+                timeout={timeout}
               />
               <Footer timeout={timeout} />
             </div>

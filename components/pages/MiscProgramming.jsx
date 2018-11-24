@@ -1,10 +1,11 @@
 import Page from "components/Page";
 import Jump from "components/Jump";
+import Work from "./Work";
 
 const $miscprogramming = "miscprogramming";
 const { Fragment } = React;
 
-export default class MiscProgramming extends Page($miscprogramming) {
+export default class MiscProgramming extends Page($miscprogramming, Work) {
 
   content() {
     return (

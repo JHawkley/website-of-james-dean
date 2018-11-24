@@ -1,6 +1,7 @@
 import Page from "components/Page";
 import Jump from "components/Jump";
 import Lightbox from "components/Lightbox";
+import Work from "./Work";
 
 const $lithphoto = "lithphoto";
 const { Fragment } = React;
@@ -12,7 +13,7 @@ const Gallery = Lightbox.makeGallery($lithphoto, [
   { i: "static/images/lithologic-photo/5.jpg", d: "A render of the plate I designed.  A 3D printing company was used to produce a prototype, which we used internally to test the application." }
 ]);
 
-export default class LithologicPhoto extends Page($lithphoto) {
+export default class LithologicPhoto extends Page($lithphoto, Work) {
 
   content() {
     return (

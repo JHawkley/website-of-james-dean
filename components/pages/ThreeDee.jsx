@@ -1,6 +1,7 @@
 import Page from "components/Page";
 import Jump from "components/Jump";
 import Lightbox from "components/Lightbox";
+import Work from "./Work";
 
 const $threedee = "threedee";
 const { Fragment } = React;
@@ -10,7 +11,7 @@ const Gallery = Lightbox.makeGallery($threedee, [
   { i: "static/images/3drenders/icecave.jpg", d: "Everyone tells me this render would be right at home in a Myst-like game.  The internal reflections from the ice and the metal are quite neat.  I really love the atmosphere here." },
 ]);
 
-export default class ThreeDee extends Page($threedee) {
+export default class ThreeDee extends Page($threedee, Work) {
 
   content() {
     return (

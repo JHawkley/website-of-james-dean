@@ -1,6 +1,7 @@
 import Page from "components/Page";
 import Jump from "components/Jump";
 import Lightbox from "components/Lightbox";
+import Work from "./Work";
 
 const $lithologic = "lithologic";
 const { Fragment } = React;
@@ -10,7 +11,7 @@ const Gallery = Lightbox.makeGallery($lithologic, [
   { i: "static/images/lithologic/3.png", d: "Lithologic's original design concept (top) compared to the final product (bottom)." }
 ]);
 
-export default class Lithologic extends Page($lithologic) {
+export default class Lithologic extends Page($lithologic, Work) {
 
   content() {
     return (

@@ -1,6 +1,7 @@
 import Page from "components/Page";
 import Jump from "components/Jump";
 import Lightbox from "components/Lightbox";
+import Work from "./Work";
 
 const $terravu = "terravu";
 const { Fragment } = React;
@@ -10,7 +11,7 @@ const Gallery = Lightbox.makeGallery($terravu, [
   { i: "static/images/terravu/3.png", d: "The LAS loader is by far the most worked on component of this software.  My latest update to TerraVu was even a small bug-fix to the data-loader." }
 ]);
 
-export default class TerraVu extends Page($terravu) {
+export default class TerraVu extends Page($terravu, Work) {
 
   content() {
     return (
