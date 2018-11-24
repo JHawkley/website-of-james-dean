@@ -1,10 +1,5 @@
 import { extensions as maybe, nothing } from "./maybe";
 
-// function makeArray
-// function forZipped
-// function forPair
-// object extensions
-
 const { floor, random: randomNum } = Math;
 
 /**

@@ -1,8 +1,5 @@
 const { PI, abs, min, max, random } = Math;
 
-// function randomBetween
-// object extensions
-
 /**
  * @typedef ArrayLike
  * @property {number} length The length of the array-like.

@@ -1,7 +1,3 @@
-// function dew
-// function noop
-// object extensions
-
 function newObjectBasedOn(original) {
   const proto = Object.getPrototypeOf(original);
   if (proto == null) return Object.create(null);
