@@ -24,7 +24,7 @@ export default class Questions extends Page($questions) {
           <dt>Can you work in <code>&lt;javascript web framework&gt;</code>?</dt>
           <dd>Yes, I can work in <code>&lt;javascript web framework&gt;</code>, no problem.</dd>
           <dd>I've got experience in Backbone, Angular, Ember, and now React; I've been around and am pretty aware of how these frameworks are organized and operate.  JavaScript frameworks are a dime-a-dozen and it seems like a new one pops up every few months that is the new darling of the JavaScript community.  I have good generalized experience that should allow me to become effective in an unfamiliar framework in just a couple of days.</dd>
-          <dd>In fact, case in point is this website.  It uses React, which I had never used before, but in only a couple days, I was already building useful components for this site and had basic routing operating  ...which this template's developer apparently attempted, but gave up on finishing.</dd>
+          <dd>In fact, case in point is this website.  It uses React, which I had never used before, but in only a couple days, I was already building useful components for this site and had basic routing operating.</dd>
           <dd>As long as you're not looking to use something exotic, like <Jump href="https://elm-lang.org/" target="_blank">Elm</Jump>, I should be able to manage.</dd>
 
           <dt>How is your experience with back-end development?</dt>
