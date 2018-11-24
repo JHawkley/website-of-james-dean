@@ -21,7 +21,13 @@ export const base64 = {
   decode(str) { return atob(str) }
 }
 
-export function isNullishOrEmpty() {
+/**
+ * Determines if this string is `null` or the empty-string.
+ * 
+ * @this {string} This string.
+ * @returns {boolean} Whether this string is `null` or empty-string.
+ */
+function isNullishOrEmpty() {
   'use strict'; // Allows binding to `null`.
 
   if (this == null) return true;
@@ -30,3 +36,10 @@ export function isNullishOrEmpty() {
     throw new Error(`expected a string, but found \`${this}\` instead`);
   return false;
 }
+
+/** 
+ * An object containing extension-methods.  Use the ESNext bind operator `::` to make use of these.
+ * 
+ * @export
+ */
+export const extensions = Object.freeze({ isNullishOrEmpty });

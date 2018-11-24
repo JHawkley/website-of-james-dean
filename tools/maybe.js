@@ -1,122 +1,189 @@
-import { dew } from "./common";
+"use strict";
 
+/**
+ * Returns this value when the `condition` held true, otherwise returns `null`.
+ *
+ * @template T
+ * @param {?T} value This nullable value.
+ * @param {boolean} condition The condition.
+ * @returns {?T} This value if `condition` was true, otherwise `null`.
+ */
+function when(condition) {
+  return condition ? this : null;
+}
 
-const maybe = dew(() => {
-  const nothing = Object.freeze([]);
-  const one = (value) => Object.freeze([value]);
-  const some = (...values) => values.length > 0 ? Object.freeze(values) : nothing;
-  const from = (array) => array.length > 0 ? Object.freeze(array) : nothing;
+/**
+ * Determines if this value is empty, that is either `null` or `undefined`.
+ *
+ * @template T
+ * @this {?T} This nullable value.
+ * @returns {boolean} Whether the value is empty.
+ */
+function isEmpty() {
+  return this == null;
+}
 
-  const fn = (...values) => {
-    if (values.length === 0)
-      return nothing;
-    if (values.length === 1)
-      return values[0] != null ? Object.freeze(values) : nothing;
-    return some(...values.filter(v => v != null));
-  };
+/**
+ * Determines if this value is defined.
+ *
+ * @template T
+ * @this {?T} This nullable value.
+ * @returns {boolean} Whether the value is defined.
+ */
+function isDefined() {
+  return this != null;
+}
 
-  return Object.freeze(Object.assign(fn, { nothing, one, some, from }));
+/**
+ * Asserts that this value is defined.
+ *
+ * @template T
+ * @this {?T} This nullable value.
+ * @returns {!T} This value, which is definitely defined.
+ * @throws When this value was empty.
+ */
+function get() {
+  if (this::isEmpty())
+    throw new Error("cannot get a maybe value; it was not defined");
+  return this;
+}
+
+/**
+ * Returns this value when it is defined, otherwise it will return `defaultValue`.
+ *
+ * @template T
+ * @this {?T} This nullable value.
+ * @param {!T} alternative The alternative value.
+ * @returns {!T} Either this value or `alternative`.
+ * @throws When `alternative` is nullish.
+ */
+function orElse(alternative) {
+  return this ?? some(alternative);
+}
+
+/**
+ * Returns this value when it is defined, otherwise it will call `alternativeFn` and return its result.
+ *
+ * @template T
+ * @this {?T} This nullable value.
+ * @param {() => !T} alternativeFn A function to call to get an alternative value.
+ * @returns {!T} Either this value or the result of calling `alternativeFn`.
+ * @throws When the result of calling `alternativeFn` is nullish.
+ */
+function orFrom(alternativeFn) {
+  return this ?? some(alternativeFn());
+}
+
+/**
+ * Attempts to apply the given `transformationFn` to this value if it is defined and return the result, otherwise
+ * it will return `ifEmpty`.
+ *
+ * @template T,U
+ * @this {?T} This nullable value.
+ * @param {!U} ifEmpty The value to produce is this value is empty.
+ * @param {(definedValue: !T) => !U} transformationFn A function to apply if this value is defined.
+ * @returns {!U} The transformed value or `null`.
+ */
+function fold(ifEmpty, transformationFn) {
+  return some(this::isDefined() ? transformationFn(this) : ifEmpty);
+}
+
+/**
+ * Transforms this value, if it is defined.
+ *
+ * @template T,U
+ * @this {?T} This nullable value.
+ * @param {(definedValue: !T) => !U} transformationFn The transformation function.
+ * @returns {?U} The transformed value or `null`.
+ */
+function map(transformationFn) {
+  return this::isDefined() ? some(transformationFn(this)) : null;
+}
+
+/**
+ * Will return `null` when this value is either empty of fails the predicate defined by the `filterFn`.
+ *
+ * @template T
+ * @this {?T} This nullable value.
+ * @param {(definedValue: !T) => boolean} filterFn The filter function.
+ * @returns {?T} This value of `null`.
+ */
+function filter(filterFn) {
+  return this::isDefined() && filterFn(this) ? this : null;
+}
+
+/**
+ * Determines if this value satisfies the predicate of the given `predicateFn`.  If it is empty, it will always fail.
+ *
+ * @template T
+ * @this {?T} This nullable value.
+ * @param {(definedValue: !T) => boolean} predicateFn The predicate function.
+ * @returns {boolean} Whether the predicate was satisfied.
+ */
+function every(predicateFn) {
+  return this::isDefined() ? predicateFn(this) : false;
+}
+
+/**
+ * Transforms this value, but will coerce `undefined` into `null`.
+ *
+ * @template T,U
+ * @this {?T} This nullable value.
+ * @param {(definedValue: !T) => ?U} partialFn The collection function.
+ * @returns {?U} The transformed value or `null`.
+ */
+function collect(partialFn) {
+  return this::isDefined() ? option(partialFn(this)) : null;
+}
+
+/**
+ * Runs the given `iteratorFn` on this value if it is defined, otherwise does nothing.
+ *
+ * @template T
+ * @this {?T} This nullable value.
+ * @param {(definedValue: !T) => void} iteratorFn The iterator function.
+ */
+function forEach(iteratorFn) {
+  if (this::isDefined()) iteratorFn(this);
+}
+
+/**
+ * The empty value.
+ * 
+ * @type {null}
+*/
+export const nothing = null;
+
+/**
+ * Ensures a value is either a defined value or `null`.  This will convert `undefined` into `null`.
+ *
+ * @export
+ * @template T
+ * @param {?T} value The potentially-undefined, nullable value.
+ * @returns {?T} Either `value` or `null`.
+ */
+export const option = (value) => typeof value !== "undefined" ? value : null;
+
+/**
+ * Asserts that the value is something, returning it if it is and otherwise throwing an error.
+ *
+ * @template T
+ * @param {?T} value The value.
+ * @returns {!T} The value, which is definitely something.
+ * @throws When `value` is nullish.
+ */
+export const some = (value) => {
+  if (value::extensions.isEmpty())
+    throw new Error(`value cannot be \`some\` thing, since it was \`${value}\``);
+  return value;
+};
+
+/** 
+ * An object containing extension-methods.  Use the ESNext bind operator `::` to make use of these.
+ * 
+ * @export
+ */
+export const extensions = Object.freeze({
+  when, isEmpty, isDefined, get, orElse, orFrom,
+  fold, map, filter, every, collect, forEach
 });
-
-/**
- * Determines if this array is empty.
- *
- * @export
- * @template T
- * @this {Array<T>} This array.
- * @returns {boolean} Whether this array is empty.
- */
-export function isEmpty() {
-  return this === maybe.nothing || (Array.isArray(this) && this.length === 0);
-}
-
-/**
- * Determines if this array has at least one item in it.
- *
- * @export
- * @template T
- * @this {Array<T>} This array.
- * @returns {boolean} Whether this array has at least one item in it.
- */
-export function isNotEmpty() {
-  return Array.isArray(this) && this.length > 0;
-}
-
-/**
- * Produces the first value of an array, or else the `defaultValue`.  The `defaultValue` can be a function.
- *
- * @export
- * @template T
- * @this {Array<T>} This maybe object.
- * @param {T | (() => T)} defaultValue The value to use in case `this` is empty.
- * @returns {T} The value.
- */
-export function firstOrElse(defaultValue) {
-  if (this.length > 0) return this[0];
-  if (typeof defaultValue === "function") return defaultValue();
-  return defaultValue;
-}
-
-/**
- * Results in this array if it is not empty, otherwise it will produce a new maybe object from the given values
- * and return it instead.
- *
- * @export
- * @template T
- * @this {Array<T>} This maybe object.
- * @param {Array<T>} defaultValues The values to provide in case this array is empty.
- * @returns {ReadonlyArray<T>} A maybe object that contains the `defaultValues`.
- */
-export function orElse(...defaultValues) {
-  if (this.length > 0) return this;
-  return maybe.from(defaultValues);
-}
-
-/**
- * Results in this array if it is not empty, otherwise it will produce a new maybe object from the values returned
- * from the given function.
- *
- * @export
- * @template T
- * @this {Array<T>} This maybe object.
- * @param {() => Array<T>} defaultValuesFn A function that produces an array of default values.
- * @returns {ReadonlyArray<T>} A maybe object that contains the results of calling `defaultValuesFn`.
- */
-export function orElseFrom(defaultValuesFn) {
-  if (this.length > 0) return this;
-  return maybe.from(defaultValuesFn());
-}
-
-/**
- * Transforms this array with a function.  Unlike `Array..map`, the result is an immutable array.
- *
- * @export
- * @template T,U
- * @this {Array<T>} This array.
- * @param {(value: T) => U} xformFn The transformation function.
- * @returns {Array<U>} A new array, containing the results of the transformation.
- */
-export function map(xformFn) {
-  return this.length > 0 ? Object.freeze(this.map(xformFn)) : maybe.nothing;
-}
-
-/**
- * A helper for simple pattern-matching.  If `expr` evaluates to an array, it will be applied to `xformFn`.
- * If the result of that application is a non-empty array, it will be the result of the match.  This function
- * can be chained with the bind-operator `::`, and the bound object will be returned if it is not an empty-array.
- *
- * @export
- * @template T,U
- * @this {Array<U>} The bound object, which should be an array.
- * @param {Array<T>} expr An `Array` with at least one element; otherwise the match fails.
- * @param {(option: Array<T>) => Array<U>} xformFn A function to call in the case of a match; should return a `maybe`.
- * @returns {Array<U>} May be an object that was matched.
- */
-export function match(expr, xformFn) {
-  'use strict';
-  if (Array.isArray(this) && this.length > 0) return this;
-  if (Array.isArray(expr) && expr.length > 0) return xformFn(expr) ?? maybe.nothing;
-  return maybe.nothing;
-}
-
-export default maybe;

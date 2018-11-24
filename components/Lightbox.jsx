@@ -1,6 +1,7 @@
 import PropTypes from "prop-types";
-import { boundedBy } from "/tools/numbers";
-import { memoize } from "/tools/functions";
+import { extensions as numEx } from "tools/numbers";
+import { extensions as fnEx } from "tools/functions";
+import { extensions as maybe, nothing } from "tools/maybe";
 import ReactLightbox from "react-image-lightbox";
 import FontAwesomeIcon from "@fortawesome/react-fontawesome";
 import { faImages } from "@fortawesome/free-solid-svg-icons";
@@ -40,7 +41,7 @@ class Lightbox extends React.Component {
       for (const fn of openFns) fn(galleryName, index);
     };
 
-    Gallery.openCallback = ((index) => () => Gallery.forceOpen(index))::memoize();
+    Gallery.openCallback = ((index) => () => Gallery.forceOpen(index))::fnEx.memoize();
 
     Gallery.propTypes = {
       index: PropTypes.number,
@@ -90,27 +91,27 @@ class Lightbox extends React.Component {
   onMovePrevRequest() {
     const { galleryIndex, galleryName } = this.state;
     const images = galleries.get(galleryName);
-    if (!images) return null;
+    if (images::maybe.isEmpty()) return;
 
     this.setState({
-      galleryIndex: (galleryIndex - 1)::boundedBy(images)
+      galleryIndex: (galleryIndex - 1)::numEx.reflowBy(images)
     });
   }
 
   onMoveNextRequest() {
     const { galleryIndex, galleryName } = this.state;
     const images = galleries.get(galleryName);
-    if (!images) return null;
+    if (images::maybe.isEmpty()) return;
 
     this.setState({
-      galleryIndex: (galleryIndex + 1)::boundedBy(images)
+      galleryIndex: (galleryIndex + 1)::numEx.reflowBy(images)
     });
   }
 
   doOpenLightbox(galleryName, galleryIndex) {
     const images = galleries.get(galleryName);
-    const isOpen = images != null;
-    galleryIndex = isOpen ? galleryIndex::boundedBy(images) : 0;
+    const isOpen = images::maybe.isDefined();
+    galleryIndex = isOpen ? galleryIndex::numEx.reflowBy(images) : 0;
     this.setState({ isOpen, galleryName, galleryIndex });
   }
 
@@ -120,11 +121,11 @@ class Lightbox extends React.Component {
 
   render() {
     const { isOpen, galleryIndex, galleryName } = this.state;
-    if (!isOpen) return null;
+    if (!isOpen) return nothing;
     const images = galleries.get(galleryName);
-    if (!images) return null;
-    const image = (index) => (typeof images[index] === "object") ? images[index].i : images[index];
-    const desc = (index) => (typeof images[index] === "object") ? (<p>{images[index].d}</p>) : null;
+    if (images::maybe.isEmpty()) return nothing;
+    const image = (index) => typeof images[index] === "object" ? images[index].i : images[index];
+    const desc = (index) => typeof images[index] === "object" ? (<p>{images[index].d}</p>) : nothing;
     return (
       <ReactLightbox
         mainSrc={image(galleryIndex)}

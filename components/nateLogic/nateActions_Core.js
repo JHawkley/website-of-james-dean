@@ -1,5 +1,6 @@
-import { dew, copyOwn } from "/tools/common";
-import { setXY } from "/tools/vectorMath";
+import { extensions as objEx, dew } from "tools/common";
+import { extensions as vecEx } from "tools/vectorMath";
+import { extensions as maybe } from "tools/maybe";
 import { decrementTime, stokesDrag } from "./core";
 import { facings, aimings, movings, jumps, trajectories } from "./core";
 import { playSound } from "./nateCommon";
@@ -112,7 +113,7 @@ export function doShoot(nate, {bullets}) {
   const bullet = bullets.find((bullet) => !bullet.spawned);
   if (typeof bullet !== "undefined") {
     // If a shoot offset is defined for the current state of nate, shoot a bullet.
-    shootOffsets(brain.shooting, nate).forEach(({x: ox, y: oy}) => {
+    shootOffsets(brain.shooting, nate)::maybe.forEach(({x: ox, y: oy}) => {
       const { x: px, y: py } = physics.pos;
       const dir = brain.shooting === aimings.ahead ? brain.facing : brain.shooting;
       if (brain.facing === facings.left) ox *= -1;
@@ -124,8 +125,8 @@ export function doShoot(nate, {bullets}) {
 
       bullet.spawned = true;
       bullet.initialized = false;
-      bullet.nodePositions[0]::setXY(px + ox, py + oy);
-      bullet.trajectory = trajectories[dir]::copyOwn();
+      bullet.nodePositions[0]::vecEx.setXY(px + ox, py + oy);
+      bullet.trajectory = trajectories[dir]::objEx.copyOwn();
     });
   }
 }

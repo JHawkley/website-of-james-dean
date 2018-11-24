@@ -1,5 +1,6 @@
 import PropTypes from "prop-types";
 import Lightbox from "./Lightbox";
+import { extensions as maybe } from "tools/maybe";
 
 import IntroPage from "./pages/Intro";
 import WorkPage from "./pages/Work";
@@ -27,7 +28,7 @@ class Main extends React.Component {
   
   render() {
     const { article, timeout, articleTimeout } = this.props;
-    const klass = articleTimeout ? "article-timeout" : null;
+    const klass = "article-timeout"::maybe.when(articleTimeout);
 
     return (
       <div id="main" className={klass} style={{display: timeout ? "flex" : "none"}}>

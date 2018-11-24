@@ -1,5 +1,5 @@
-import { dew, randomBetween } from "/tools/common";
-import { inRange } from "/tools/numbers";
+import { dew } from "tools/common";
+import { extensions as numEx, randomBetween } from "tools/numbers";
 import { randomTime, decrementTime } from "./core";
 import { facings, aimings, movings, jumps } from "./core";
 import { bestAiming } from "./nateCommon";
@@ -178,10 +178,10 @@ export function retaliateJumpOver(nate, {cursor}, {actions, lanes}) {
     if (abs(horizDiff) > jumpOverDistance) return false;
 
     // ...or if the cursor is too high or too low.
-    if (!vertDiff::inRange(-comfortableRangeMax, hbHeight)) return false;
+    if (!vertDiff::numEx.inRange(-comfortableRangeMax, hbHeight)) return false;
 
     // Retaliate if the cursor is touching his hitbox...
-    if (abs(horizDiff) <= hbHalfWidth && horizDiff::inRange(0.0, hbHeight)) return true;
+    if (abs(horizDiff) <= hbHalfWidth && horizDiff::numEx.inRange(0.0, hbHeight)) return true;
 
     // ...or if moving toward the cursor.
     if (horizDiff > 0.0 && brain.facing === facings.right) return true;

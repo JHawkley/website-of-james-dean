@@ -1,5 +1,6 @@
 import PropTypes from "prop-types";
 import Link from "next/link";
+import { extensions as maybe, nothing } from "tools/maybe";
 
 const knownArticles = new Set();
 
@@ -22,13 +23,13 @@ const Page = (articleName) => {
     render() {
       const { parent, article: activeArticle } = this.props;
 
-      const back = parent != null
+      const back = parent::maybe.isDefined()
         ? (<Link href={`./#${parent}`}><div className="back"></div></Link>)
-        : null;
+        : nothing;
       
       const close = <Link href="./"><div className="close"></div></Link>;
       
-      const klass = articleName === activeArticle ? "active" : null;
+      const klass = "active"::maybe.when(articleName === activeArticle);
       
       return (
         <article id={articleName} className={klass} style={{display:'none'}}>
@@ -39,7 +40,7 @@ const Page = (articleName) => {
       );
     }
 
-    content() { return null; }
+    content() { return nothing; }
 
   }
 

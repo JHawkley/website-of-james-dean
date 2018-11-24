@@ -6,12 +6,11 @@
  * 
  * Note: based on the `memoize` function of lodash.
  *
- * @export
  * @this {Function} The function to have its output memoized.
  * @param {Function} resolver The function to resolve the cache key.
  * @returns {Function} The new memoized function.
  */
-export function memoize(resolver) {
+function memoize(resolver) {
   const func = this;
   if (typeof func != 'function' || (resolver != null && typeof resolver != 'function'))
     throw new TypeError('Expected a function');
@@ -31,3 +30,10 @@ export function memoize(resolver) {
   memoized.cache = new Map();
   return memoized;
 }
+
+/** 
+ * An object containing extension-methods.  Use the ESNext bind operator `::` to make use of these.
+ * 
+ * @export
+ */
+export const extensions = Object.freeze({ memoize });

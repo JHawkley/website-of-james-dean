@@ -1,7 +1,6 @@
-import { dew, copyOwn } from "/tools/common";
-import { map, sign } from "/tools/numbers";
-import { sub, unit, angleBetween, rotate, add, mul, set, makeLength } from "/tools/vectorMath";
-import { length as vLength }  from "/tools/vectorMath";
+import { extensions as objEx, dew } from "tools/common";
+import { extensions as numEx } from "tools/numbers";
+import { extensions as vecEx } from "tools/vectorMath";
 import { playSound } from "./nateCommon";
 import { decrementTime } from "./core";
 import * as bc from "./bulletConfig";
@@ -17,12 +16,12 @@ const { physics: { bulletVel, driftRemainingValue } } = bc;
 
 /** Draws a node into its leader, so that it maintains a maximum distance. */
 function doChase(leader, chaser, followDistance) {
-  const direction = chaser::copyOwn()::sub(leader);
-  const dist = direction::vLength();
+  const direction = chaser::objEx.copyOwn()::vecEx.sub(leader);
+  const dist = direction::vecEx.length();
   if (dist <= followDistance) return;
 
-  direction::makeLength(followDistance)::add(leader);
-  chaser::set(direction);
+  direction::vecEx.makeLength(followDistance)::vecEx.add(leader);
+  chaser::vecEx.set(direction);
 }
 
 function initialize(bullet, {nate}, {lanes}) {
@@ -30,9 +29,9 @@ function initialize(bullet, {nate}, {lanes}) {
   if (bullet.initialized) return;
   const { trajectory, sounds, nodePositions: [node1, node2, node3] } = bullet;
 
-  trajectory::unit();
-  node2::set(node1);
-  node3::set(node1);
+  trajectory::vecEx.unit();
+  node2::vecEx.set(node1);
+  node3::vecEx.set(node1);
   bullet.driftRemaining = driftRemainingValue;
   bullet.timeout = timeout;
   bullet.burst = 0.0;
@@ -48,7 +47,7 @@ function collideWithCursor(bullet, {cursor, nate}) {
   if (bullet.burst > 0.0) return;
 
   const { sounds, nodePositions: [bulletPos] } = bullet;
-  const distance = cursor.relPos::copyOwn()::sub(bulletPos)::vLength();
+  const distance = cursor.relPos::objEx.copyOwn()::vecEx.sub(bulletPos)::vecEx.length();
 
   if (distance > 4.0) return;
 
@@ -89,16 +88,16 @@ function homeOnCursor(bullet, {cursor}, {delta, lanes}) {
 
   const { relPos: cursorPos } = cursor;
   const { trajectory, nodePositions: [bulletPos] } = bullet;
-  const vector = cursorPos::copyOwn()::sub(bulletPos);
-  const distance = vector::vLength();
+  const vector = cursorPos::objEx.copyOwn()::vecEx.sub(bulletPos);
+  const distance = vector::vecEx.length();
   
   if (distance > homingRangeBegin) return;
 
   const driftAngle = dew(() => {
     const maxDriftAngle = min(maxDrift * delta, bullet.driftRemaining);
     const [angle, angleSign] = dew(() => {
-      const angle = vector::angleBetween(trajectory);
-      return [abs(angle), angle::sign()];
+      const angle = vector::vecEx.angleBetween(trajectory);
+      return [abs(angle), angle::numEx.sign()];
     });
 
     if (angle > fov * 0.5)
@@ -108,12 +107,12 @@ function homeOnCursor(bullet, {cursor}, {delta, lanes}) {
     
     // Falloff the homing strength based on distance.
     const nDist = distance - homingRangeFull;
-    const powerScalar = nDist::map(homingRangeBegin - homingRangeFull, 0.0, 0.0, 1.0);
+    const powerScalar = nDist::numEx.map(homingRangeBegin - homingRangeFull, 0.0, 0.0, 1.0);
     return angleSign * min(angle * powerScalar, maxDriftAngle);
   });
   
   bullet.driftRemaining = max(bullet.driftRemaining - abs(driftAngle), 0.0);
-  trajectory::rotate(driftAngle);
+  trajectory::vecEx.rotate(driftAngle);
 }
 
 function flyAhead(bullet, _, {delta, lanes}) {
@@ -122,7 +121,7 @@ function flyAhead(bullet, _, {delta, lanes}) {
   if (lanes.has(handledLogic)) return;
 
   const { trajectory, nodePositions: [node1Pos, node2Pos, node3Pos] } = bullet;
-  node1Pos::add(trajectory::copyOwn()::mul(bulletVel * delta));
+  node1Pos::vecEx.add(trajectory::objEx.copyOwn()::vecEx.mul(bulletVel * delta));
   doChase(node1Pos, node2Pos, chaseDistance.node2);
   doChase(node2Pos, node3Pos, chaseDistance.node3);
   lanes.add(handledLogic);

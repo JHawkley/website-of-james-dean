@@ -1,5 +1,5 @@
-import { dew, randomBetween } from "/tools/common";
-import { inRange } from "/tools/numbers";
+import { dew } from "tools/common";
+import { extensions as numEx, randomBetween } from "tools/numbers";
 import { aimings, facings, movings, jumps } from "./core";
 import { randomTime, decrementTime, subList } from "./core";
 import { bestAiming, makeRandomJump } from "./nateCommon";
@@ -43,7 +43,7 @@ export const shootFromBelow = dew(() => {
     const {left: boundsLeft, right: boundsRight, ground: groundLevel } = bounds;
     
     if (cursorPos.y <= attackFromBelowHeight + groundLevel) return false;
-    if (!cursorPos.x::inRange(boundsLeft, boundsRight)) return false;
+    if (!cursorPos.x::numEx.inRange(boundsLeft, boundsRight)) return false;
 
     const state = actions[$$shootFromBelow] ?? { doShooting: false };
     state.doShooting = bestAiming(nate, cursor.relPos, false) === aimings.up;
@@ -111,7 +111,7 @@ export const shootFromAbove = dew(() => {
     
     // Make sure we only attack if it won't cause us to flee.
     if (cursorPos.y >= groundLevel - willFleeAbove) return false;
-    if (!cursorPos.x::inRange(boundsLeft, boundsRight)) return false;
+    if (!cursorPos.x::numEx.inRange(boundsLeft, boundsRight)) return false;
 
     lanes.add(didAttack);
     return true;
@@ -239,7 +239,7 @@ export const comfortableShooting = dew(() => {
 
     const state = actions[$$stayComfortable] ?? { chosenSpot: randomBetween(minRange, maxRange) };
 
-    if (!state.chosenSpot::inRange(minRange, maxRange))
+    if (!state.chosenSpot::numEx.inRange(minRange, maxRange))
       state.chosenSpot = randomBetween(minRange, maxRange);
 
     const shootFacing = cursorPos.x > natePos.x ? facings.right : facings.left;
@@ -248,9 +248,9 @@ export const comfortableShooting = dew(() => {
       const hbLeft = natePos.x - hbHalfWidth;
       const hbRight = natePos.x + hbHalfWidth;
       // Don't move if we're in position.
-      if (state.chosenSpot::inRange(hbLeft, hbRight)) return false;
+      if (state.chosenSpot::numEx.inRange(hbLeft, hbRight)) return false;
       // Don't move if we'd have to cross the cursor in order to reach our chosen spot.
-      if (cursorPos.x::inRange(natePos.x, state.chosenSpot)) return false;
+      if (cursorPos.x::numEx.inRange(natePos.x, state.chosenSpot)) return false;
       // Don't move if we're up against the edge and chasing after the cursor.
       if (shootFacing === facings.left && hbLeft <= bounds.left) return;
       if (shootFacing === facings.right && hbRight >= bounds.right) return;

@@ -2,34 +2,34 @@ import Link from "next/link";
 import FontAwesomeIcon from "@fortawesome/react-fontawesome";
 import faImage from "@fortawesome/fontawesome-free-regular/faImage";
 import { faExternalLinkAlt, faFilm, faImages } from "@fortawesome/free-solid-svg-icons";
-import { forOwnProps } from "/tools/common";
+import { extensions as objEx, dew } from "tools/common";
+import { extensions as maybe, nothing } from "tools/maybe";
 
 const buildIcon = (props) => {
-  function _icon() {
+  const icon = dew(() => {
     switch (props.icon) {
-      case "none": return null;
+      case "none": return nothing;
       case "image": return faImage;
       case "images": return faImages;
       case "movie": return faFilm;
       case "link": return faExternalLinkAlt;
-      default: return props.target === "_blank" ? faExternalLinkAlt : null;
+      default: return faExternalLinkAlt::maybe.when(props.target === "_blank");
     }
-  }
-  const icon = _icon();
-  if (icon === null) return null;
-  return (
+  });
+
+  return icon::maybe.map(icon => (
     <span style={{'whiteSpace': 'nowrap'}}>
       &nbsp;
       <FontAwesomeIcon icon={icon} size="sm" />
       <span style={{'width': '0', 'display': 'inline-block'}}>&nbsp;</span>
     </span>
-  );
+  ));
 };
 
 const Jump = (props) => {
   const linkProps = {};
   const anchorProps = {};
-  props::forOwnProps((value, key) => {
+  props::objEx.forOwnProps((value, key) => {
     if (key === "children") return;
     if (key === "icon") return;
     if (key in Link.propTypes)

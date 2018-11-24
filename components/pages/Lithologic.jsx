@@ -1,6 +1,6 @@
-import Page from "/components/Page";
-import Jump from "/components/Jump";
-import Lightbox from "/components/Lightbox";
+import Page from "components/Page";
+import Jump from "components/Jump";
+import Lightbox from "components/Lightbox";
 
 const $lithologic = "lithologic";
 const { Fragment } = React;

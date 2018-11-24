@@ -1,5 +1,5 @@
-import Page from "/components/Page";
-import Jump from "/components/Jump";
+import Page from "components/Page";
+import Jump from "components/Jump";
 
 const $work = "work";
 const { Fragment } = React;

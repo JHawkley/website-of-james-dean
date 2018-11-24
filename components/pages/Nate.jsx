@@ -1,7 +1,7 @@
-import Page from "/components/Page";
-import Jump from "/components/Jump";
-import Lightbox from "/components/Lightbox";
-import NateWidget from "/components/Nate";
+import Page from "components/Page";
+import Jump from "components/Jump";
+import Lightbox from "components/Lightbox";
+import NateWidget from "components/Nate";
 
 const $nate = "nate";
 const { Fragment } = React;

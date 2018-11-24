@@ -1,4 +1,4 @@
-import { dew } from "/tools/common";
+import { dew } from "tools/common";
 import { decrementTime, randomTime } from "./core";
 import { facings, aimings, movings, jumps } from "./core";
 import { makeRandomJump } from "./nateCommon";

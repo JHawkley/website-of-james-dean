@@ -1,5 +1,6 @@
-import { dew, makeArray, forZipped, forOwnProps } from "/tools/common";
-import maybe from "/tools/maybe";
+import { extensions as objEx, dew } from "tools/common";
+import { makeArray, forZipped } from "tools/array";
+import { extensions as maybe, nothing, some } from "tools/maybe";
 import bulletActionList from "./nateLogic/bulletActionList";
 import nateActionList from "./nateLogic/nateActionList";
 import { behaviorModes, facings, aimings, movings, jumps } from "./nateLogic/core";
@@ -16,28 +17,28 @@ class Nate extends React.Component {
   containerRef = React.createRef();
 
   /**
-   * The div element for the Nate sprite; an array of zero or one elements.
+   * The div element for the Nate sprite.
    * 
-   * @type {HTMLDivElement[]}
+   * @type {?HTMLDivElement}
    * @memberof Nate
    */
-  nateDiv = maybe.nothing;
+  nateDiv = nothing;
 
   /**
    * The div elements for the bullets, first by bullet, then by node.
    *
-   * @type {HTMLDivElement[][]}
+   * @type {?HTMLDivElement[][]}
    * @memberof Nate
    */
-  bulletNodes = maybe.nothing;
+  bulletNodes = nothing;
 
   /**
-   * The current handle for the queued animation frame; an array of zero or one elements.
+   * The current handle for the queued animation frame.
    *
-   * @type {number[]}
+   * @type {?number}
    * @memberof Nate
    */
-  rafHandle = maybe.nothing;
+  rafHandle = nothing;
 
   /**
    * The game's world-state.
@@ -120,13 +121,13 @@ class Nate extends React.Component {
 
   componentDidMount() {
     this.timeLast = performance.now();
-    this.nateDiv = maybe.one(document.createElement("div"));
-    this.bulletNodes = maybe.some(...this.world.bullets.map(() => {
-        return Object.freeze(makeArray(3, () => document.createElement("div")));
+    this.nateDiv = some(document.createElement("div"));
+    this.bulletNodes = some(this.world.bullets.map(() => {
+        return makeArray(3, () => document.createElement("div"));
       })
     );
 
-    this.rafHandle = maybe.one(requestAnimationFrame(this.animationFrame));
+    this.rafHandle = requestAnimationFrame(this.animationFrame);
     document.addEventListener("mousemove", this.mouseMoveHandler);
     document.addEventListener("scroll", this.scrollHandler);
 
@@ -138,27 +139,29 @@ class Nate extends React.Component {
   }
 
   componentWillUnmount() {
-    this.rafHandle.forEach(cancelAnimationFrame);
+    this.rafHandle::maybe.forEach(cancelAnimationFrame);
     document.removeEventListener("mousemove", this.mouseMoveHandler);
     document.removeEventListener("scroll", this.scrollHandler);
+    this.nateDiv = nothing;
+    this.bulletNodes = nothing;
   }
 
   attachGameElements() {
     const container = this.containerRef.current;
-    if (container == null) return;
+    if (container::maybe.isEmpty()) return;
 
     // Attach the game elements.
-    this.nateDiv.forEach(div => container.appendChild(div));
-    this.bulletNodes.forEach(nodes => nodes.forEach(div => container.appendChild(div)));
+    this.nateDiv::maybe.forEach(div => container.appendChild(div));
+    this.bulletNodes?.forEach(nodes => nodes.forEach(div => container.appendChild(div)));
 
     // Set sound volume.
     const soundSetter = (sound) => {
-      if (sound.current == null) return;
+      if (sound.current::maybe.isEmpty()) return;
       sound.current.volume = 0.33;
     }
 
-    this.world.nate.sounds::forOwnProps(soundSetter);
-    this.world.bullets.forEach(bullet => bullet.sounds::forOwnProps(soundSetter));
+    this.world.nate.sounds::objEx.forOwnProps(soundSetter);
+    this.world.bullets.forEach(bullet => bullet.sounds::objEx.forOwnProps(soundSetter));
   }
 
   /**
@@ -188,7 +191,7 @@ class Nate extends React.Component {
   animationFrame(timeNow) {
     this.doGameUpdate(timeNow);
     this.timeLast = timeNow;
-    this.rafHandle = maybe.one(requestAnimationFrame(this.animationFrame));
+    this.rafHandle = requestAnimationFrame(this.animationFrame);
   }
 
   /**
@@ -200,7 +203,7 @@ class Nate extends React.Component {
     //const delta = (1000 / 60) / 10;
     const container = this.containerRef.current;
     if (delta <= 0.0) return;
-    if (container == null) return;
+    if (container::maybe.isEmpty()) return;
 
     // Update bounds.
     {
@@ -223,7 +226,7 @@ class Nate extends React.Component {
     }
     
     // Update Nate.
-    this.nateDiv.forEach(nateDiv => {
+    this.nateDiv::maybe.forEach(nateDiv => {
       const nate = this.world.nate;
       const listState = { delta, actions: nate.actions, lanes: new Set() };
       this.world.nate.actions = {};
@@ -235,7 +238,7 @@ class Nate extends React.Component {
     });
 
     // Update bullets.
-    forZipped(this.world.bullets, this.bulletNodes, (bullet, bulletNodeDivs) => {
+    forZipped(this.world.bullets, this.bulletNodes ?? [], (bullet, bulletNodeDivs) => {
       const listState = { delta, lanes: new Set() };
       bulletActionList.forEach(action => action(bullet, this.world, listState));
 

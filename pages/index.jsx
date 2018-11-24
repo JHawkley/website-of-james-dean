@@ -5,13 +5,14 @@ import stylesheet from "styles/main.scss";
 import lightboxStyle from "react-image-lightbox/style.css";
 import Modal from "react-modal";
 import { parse as parseUrl } from "url";
-import { isNullishOrEmpty } from "/tools/strings";
+import { extensions as strEx } from "tools/strings";
+import { extensions as maybe, nothing } from "tools/maybe";
 
-import NoJavaScript from "/components/NoJavaScript";
-import Header from "/components/Header";
-import Main from "/components/Main";
-import Footer from "/components/Footer";
-import Page from "/components/Page";
+import NoJavaScript from "components/NoJavaScript";
+import Header from "components/Header";
+import Main from "components/Main";
+import Footer from "components/Footer";
+import Page from "components/Page";
 
 const { Fragment } = React;
 
@@ -24,7 +25,7 @@ const NoScript = (props) => {
 }
 
 const hashToArticle = (articleHash) => {
-  if (articleHash::isNullishOrEmpty()) return "";
+  if (articleHash::strEx.isNullishOrEmpty()) return "";
   if (articleHash.startsWith("#")) {
     const article = articleHash.substring(1);
     if (!Page.knownArticles.has(article)) return "404";
@@ -39,7 +40,7 @@ class IndexPage extends React.Component {
 
   constructor(props) {
     super(props);
-    this.transitionTarget = null;
+    this.transitionTarget = nothing;
     this.state = {
       isArticleVisible: false,
       timeout: false,
@@ -77,14 +78,14 @@ class IndexPage extends React.Component {
 
     if (newArticle === oldArticle) return;
 
-    const canStartTransition = this.transitionTarget == null;
+    const canStartTransition = this.transitionTarget::maybe.isEmpty();
     this.transitionTarget = newArticle;
 
     if (canStartTransition) this.doStateUpdate();
   }
   
   doStateUpdate() {
-    const article = this.transitionTarget;
+    const article = this.transitionTarget::maybe.get();
     const finalState = !!article;
     
     if (this.state.timeout && !this.state.articleTimeout) {
@@ -115,7 +116,7 @@ class IndexPage extends React.Component {
       this.setState({ isArticleVisible: false }, this.doStateUpdate);
     }
     else {
-      this.transitionTarget = null;
+      this.transitionTarget = nothing;
     }
   }
   

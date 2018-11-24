@@ -1,7 +1,7 @@
 import { stokesDrag, aimings, movings } from "./core";
-import { dew } from "/tools/common";
-import { toRadians } from "/tools/numbers";
-import maybe from "/tools/maybe";
+import { dew } from "tools/common";
+import { extensions as numEx } from "tools/numbers";
+import { nothing } from "tools/maybe";
 
 /** Symbols identifying lanes in the action-list. */
 export const lanes = {
@@ -63,12 +63,12 @@ export const ranges = {
   /** The offset nate can have before he feels like he is close enough to the cursor to stare at it. */
   stareAtOffset: 100,
   /** The range of angles that wil cause Nate to look up at a cursor while staring at it. */
-  stareUpRange: { min: -45::toRadians(), max: 45::toRadians() },
+  stareUpRange: { min: -45::numEx.toRadians(), max: 45::numEx.toRadians() },
   /** The range of angles for each direction that the cursor should be in for Nate to spot it. */
   sightFOV: {
-    [aimings.ahead]: { min: 45::toRadians(), max: 125::toRadians() },
-    [aimings.up]: { min: -15::toRadians(), max: 60::toRadians() },
-    [aimings.down]: {min: 135:: toRadians(), max: 225::toRadians() }
+    [aimings.ahead]: { min: 45::numEx.toRadians(), max: 125::numEx.toRadians() },
+    [aimings.up]: { min: -15::numEx.toRadians(), max: 60::numEx.toRadians() },
+    [aimings.down]: {min: 135:: numEx.toRadians(), max: 225::numEx.toRadians() }
   }
 };
 
@@ -99,16 +99,8 @@ export const timing = {
   }
 };
 
-/**
- * The offsets from Nate's position that bullets should shoot from.
- * This assumes a right facing, so negate the `x` component if the facing is left.
- * 
- * @param {Symbol} aiming The desired aiming to fire by.
- * @param {*} nate Nate's current state.
- * @returns {Array<{ x: number, y: number }>} An array, that may contain a single element holding the offset.
- */
 export const shootOffsets = dew(() => {
-  const lock = (obj) => maybe.one(Object.freeze(obj));
+  const lock = (obj) => Object.freeze(obj);
   const offsets = Object.freeze([
     lock({ x: 18, y: 27 }), // ahead + in-air
     lock({ x: 20, y: 24 }), // ahead + running
@@ -119,6 +111,16 @@ export const shootOffsets = dew(() => {
     lock({ x: 10, y: 18 })  // down + in-air
   ]);
 
+  /**
+   * The offsets from Nate's position that bullets should shoot from.
+   * This assumes a right facing, so negate the `x` component if the facing is left.
+   * 
+   * @alias shootOffsets
+   * @export
+   * @param {Symbol} aiming The desired aiming to fire by.
+   * @param {Object} nate Nate's current state.
+   * @returns {?{ x: number, y: number }} Maybe an offset.
+   */
   return (aiming, nate) => {
     const { brain: { moving }, physics: { onGround } } = nate;
     if (aiming === aimings.ahead) {
@@ -133,6 +135,6 @@ export const shootOffsets = dew(() => {
     }
     if (aiming === aimings.down && !onGround)
       return offsets[6];
-    return maybe.nothing;
+    return nothing;
   };
 });

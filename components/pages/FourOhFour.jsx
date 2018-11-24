@@ -1,4 +1,4 @@
-import Page from "/components/Page";
+import Page from "components/Page";
 
 const $fourOhFour = "404";
 const { Fragment } = React;

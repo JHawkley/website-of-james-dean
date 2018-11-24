@@ -1,5 +1,5 @@
-import { isNotEmpty } from "/tools/maybe";
-import { clamp, inRange } from "/tools/numbers";
+import { extensions as maybe } from "tools/maybe";
+import { extensions as numEx } from "tools/numbers";
 import { behaviorModes, aimings, facings, jumps } from "./core";
 import { decrementTime, randomTime } from "./core";
 import * as nc from "./nateConfig";
@@ -28,29 +28,29 @@ export function bestAiming(nate, target, considerCooldown = true) {
   let shootOffset;
 
   shootOffset = shootOffsets(aimings.down, nate);
-  if (shootOffset::isNotEmpty()) {
-    const [{x: ox, y: oy}] = shootOffset;
+  if (shootOffset::maybe.isDefined()) {
+    const {x: ox, y: oy} = shootOffset;
     const xd = horizDiff - ox;
     const yd = vertDiff - oy;
-    if (yd <= 0.0 && abs(xd) <= (-yd)::clamp(firingField))
+    if (yd <= 0.0 && abs(xd) <= (-yd)::numEx.clamp(firingField))
       return aimings.down;
   }
 
   shootOffset = shootOffsets(aimings.up, nate);
-  if (shootOffset::isNotEmpty()) {
-    const [{x: ox, y: oy}] = shootOffset;
+  if (shootOffset::maybe.isDefined()) {
+    const {x: ox, y: oy} = shootOffset;
     const xd = horizDiff - ox;
     const yd = vertDiff - oy;
-    if (yd >= 0.0 && abs(xd) <= yd::clamp(firingField))
+    if (yd >= 0.0 && abs(xd) <= yd::numEx.clamp(firingField))
       return aimings.up;
   }
 
   shootOffset = shootOffsets(aimings.ahead, nate);
-  if (shootOffset::isNotEmpty()) {
-    const [{x: ox, y: oy}] = shootOffset;
+  if (shootOffset::maybe.isDefined()) {
+    const {x: ox, y: oy} = shootOffset;
     const xd = horizDiff - ox;
     const yd = vertDiff - oy;
-    if (xd >= 0.0 && abs(yd) <= xd::clamp(firingField))
+    if (xd >= 0.0 && abs(yd) <= xd::numEx.clamp(firingField))
       return aimings.ahead;
   }
 
@@ -72,8 +72,8 @@ export function isTargetReachableHorizontally(target, bounds) {
   const reachLeft = boundsLeft - maxTargetDistance;
   const reachRight = boundsRight + maxTargetDistance;
 
-  if (x::inRange(reachLeft, reachRight))
-    if (y::inRange(reachBottom + groundLevel, reachTop + groundLevel))
+  if (x::numEx.inRange(reachLeft, reachRight))
+    if (y::numEx.inRange(reachBottom + groundLevel, reachTop + groundLevel))
       return true;
   
   return false;
@@ -91,8 +91,8 @@ export function isTargetReachableVertically(target, bounds) {
   const { x, y } = target;
   const { left: boundsLeft, right: boundsRight } = bounds;
 
-  if (y::inRange(-maxTargetDistance, maxTargetDistance))
-    if (x::inRange(boundsLeft, boundsRight))
+  if (y::numEx.inRange(-maxTargetDistance, maxTargetDistance))
+    if (x::numEx.inRange(boundsLeft, boundsRight))
       return true;
   
   return false;

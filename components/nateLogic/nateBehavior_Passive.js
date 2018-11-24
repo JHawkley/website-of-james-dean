@@ -1,6 +1,6 @@
-import { dew, copyOwn } from "/tools/common";
-import { angleInRange } from "/tools/numbers";
-import { angle, length as vLength } from "/tools/vectorMath";
+import { extensions as objEx, dew } from "tools/common";
+import { extensions as numEx } from "tools/numbers";
+import { extensions as vecEx } from "tools/vectorMath";
 import { behaviorModes, facings, aimings, decrementTime, subList } from "./core";
 import { isTargetReachable, playSound } from './nateCommon';
 import * as actions from "./nateActions_Debug";
@@ -34,11 +34,11 @@ function getFaceAiming(nate) {
 function getCursorData(natePos, cursorPos, flipX) {
   let { x: nx, y: ny } = natePos;
   ny += hbHeight;
-  const v = cursorPos::copyOwn();
+  const v = cursorPos::objEx.copyOwn();
   v.x -= nx;
   v.y -= ny;
   if (flipX) v.x *= -1;
-  return [v::vLength(), v::angle()];
+  return [v::vecEx.length(), v::vecEx.angle()];
 }
 
 function lookForCursor(nate, {bounds, cursor}, {lanes}) {
@@ -56,7 +56,7 @@ function lookForCursor(nate, {bounds, cursor}, {lanes}) {
   if (cursorDistance > maxTargetDistance) return;
 
   const {min, max} = sightFOV[faceAiming];
-  const inSight = cursorAngle::angleInRange(min, max);
+  const inSight = cursorAngle::numEx.angleInRange(min, max);
 
   if (!inSight) return;
 

@@ -1,9 +1,10 @@
 import PropTypes from "prop-types";
 import ModalPopup from "./ModalPopup";
-import { dew } from "/tools/common";
-import { reflow } from "/tools/numbers";
-import { base64, isNullishOrEmpty } from "/tools/strings";
-import maybe, { isEmpty, orElse } from "/tools/maybe";
+import { dew } from "tools/common";
+import { base64 } from "tools/strings";
+import { extensions as numEx } from "tools/numbers";
+import { extensions as arrEx } from "tools/array";
+import { extensions as maybe, nothing } from "tools/maybe";
 
 const Fragment = React.Fragment;
 
@@ -60,19 +61,17 @@ function outs(str) {
   const vpfrLen = vpfr.length;
   const charsLen = chars.length;
   for (let i = 0; i < barrLen; i++) {
-    const offset = vpfr[i::reflow(vpfrLen - 1)];
+    const offset = vpfr[i::numEx.reflow(vpfrLen - 1)];
     const ci = charsToIndex[barr[i]];
     if (typeof ci === "undefined") continue;
-    const co = (ci - offset)::reflow(charsLen - 1);
+    const co = (ci - offset)::numEx.reflow(charsLen - 1);
     barr[i] = chars[co];
   }
   return base64.decode(barr.join(""));
 }
 
 function extractValue(ref) {
-  const value = ref.current?.value.trim();
-  if (value::isNullishOrEmpty()) return maybe.nothing;
-  return maybe.one(value);
+  return ref.current?.value.trim()::maybe.filter(str => str !== "");
 }
 
 class ContactForm extends React.Component {
@@ -91,7 +90,7 @@ class ContactForm extends React.Component {
 
     this.state = {
       isModalOpen: false,
-      validationErrors: maybe.nothing
+      validationErrors: nothing
     };
 
     this.handleSend = ::this.handleSend;
@@ -100,7 +99,7 @@ class ContactForm extends React.Component {
 
   handleSend() {
     const formEl = this.formRef.current;
-    if (formEl == null)
+    if (formEl::maybe.isEmpty())
       throw new Error("contact form's send-message handler activated before being rendered");
     
     const name = extractValue(this.nameRef);
@@ -109,19 +108,19 @@ class ContactForm extends React.Component {
 
     const errors = [];
 
-    if (name::isEmpty())
+    if (name::maybe.isEmpty())
       errors.push("The 'name' field contained no meaningful text.");
 
-    if (email::isEmpty())
+    if (email::maybe.isEmpty())
       errors.push("The 'email' field contained no meaningful text.");
-    else if (!email.every(str => emailValidator.test(str)))
+    else if (!email::maybe.every(str => emailValidator.test(str)))
       errors.push("The 'email' field did not validate as a proper e-mail address.");
 
-    if (msg::isEmpty())
+    if (msg::maybe.isEmpty())
       errors.push("The 'message' field contained no meaningful text.");
     
     if (errors.length > 0)
-      this.setState({ isModalOpen: true, validationErrors: maybe.from(errors) });
+      this.setState({ isModalOpen: true, validationErrors: errors });
     else {
       formEl.action = outs("NEQ2XkoymrJD+/q0L3rY6rbA0dT5lkbtghFe13NpRHSGd2plbsTfE0caNQA=");
       formEl.submit();
@@ -142,9 +141,10 @@ class ContactForm extends React.Component {
 
   render() {
     const isModalOpen = this.state.isModalOpen;
-    const validationErrors = this.state.validationErrors::orElse("There were no errors; this component is bugged.");
+    const validationErrors = this.state.validationErrors::arrEx.orNothing()
+      ?? ["There were no errors; this component is bugged."];
     const nextPath = dew(() => {
-      if (typeof location === "undefined") return null;
+      if (typeof location === "undefined") return nothing;
 
       const buffer = [location.origin, location.pathname, "#contacted"];
       return buffer.join("");

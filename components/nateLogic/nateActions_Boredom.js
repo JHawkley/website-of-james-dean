@@ -1,7 +1,8 @@
-import { dew, randomBetween, copyOwn } from "/tools/common";
-import { inRange, angleInRange, clamp } from "/tools/numbers";
-import { shuffle } from "/tools/array";
-import { angle } from "/tools/vectorMath";
+import { extensions as objEx, dew } from "tools/common";
+import { extensions as numEx, randomBetween } from "tools/numbers";
+import { extensions as arrEx } from "tools/array";
+import { extensions as vecEx } from "tools/vectorMath";
+import { extensions as maybe, nothing } from "tools/maybe";
 import { behaviorModes, aimings, facings, movings, jumps } from './core';
 import { randomTime, decrementTime } from './core';
 import { isTargetReachable, playSound } from './nateCommon';
@@ -49,26 +50,26 @@ export function qualificationFn(nate, {cursor, bounds}, {actions, lanes}) {
 }
 
 function hasOverlap(left1, right1, left2, right2) {
-  if (left1::inRange(left2, right2)) return true;
-  if (right1::inRange(left2, right2)) return true;
+  if (left1::numEx.inRange(left2, right2)) return true;
+  if (right1::numEx.inRange(left2, right2)) return true;
   return false;
 }
 
 function shouldLookUp(natePos, cursorPos, flipX) {
   let { x: nx, y: ny } = natePos;
   ny += hbHeight;
-  const v = cursorPos::copyOwn();
+  const v = cursorPos::objEx.copyOwn();
   v.x -= nx;
   v.y -= ny;
   if (flipX) v.x *= -1;
-  return v::angle()::angleInRange(stareUpAngleMin, stareUpAngleMax);
+  return v::vecEx.angle()::numEx.angleInRange(stareUpAngleMin, stareUpAngleMax);
 }
 
 function facingTowardFarBounds(natePos, bounds) {
   const { left, right } = bounds;
   const width = right - left;
   const midPoint = bounds.left + (width * 0.5);
-  return natePos.x::inRange(left, midPoint) ? facings.right : facings.left;
+  return natePos.x::numEx.inRange(left, midPoint) ? facings.right : facings.left;
 }
 
 function didBumpEdge(natePos, facing, bounds) {
@@ -240,13 +241,13 @@ const subActions = {
 
 function doSubAction(nate, world, listState, state) {
   // Continue an action, if it was requested.
-  if (state.lastResult === results.continue) {
+  if (state.lastResult === results.continue && state.subAction::maybe.isDefined()) {
     state.lastResult = subActions[state.subAction](nate, world, listState, state);
     return;
   }
 
   // Find a new sub-action.
-  const keys = Object.keys(subActions)::shuffle();
+  const keys = Object.keys(subActions)::arrEx.shuffle();
   for (const key of keys) {
     const result = subActions[key](nate, world, listState, state);
     if (result !== results.notApplicable) {
@@ -257,7 +258,7 @@ function doSubAction(nate, world, listState, state) {
   }
 
   // Fail and perform no action.
-  state.subAction = null;
+  state.subAction = nothing;
   state.lastResult = results.notApplicable;
 }
 
@@ -273,7 +274,7 @@ export function beFrustrated(nate, world, listState) {
     inPosition: false,
     repositionTimer: 0.0,
     stareTimer: randomTime(stareStartValue, stareAddedValue),
-    subAction: null,
+    subAction: nothing,
     lastResult: results.notApplicable,
     pretendedNotToCare: false
   };
@@ -295,8 +296,8 @@ export function beFrustrated(nate, world, listState) {
     const { left: boundsLeft, right: boundsRight } = world.bounds;
     const hbLeft = natePos.x - hbHalfWidth;
     const hbRight = natePos.x + hbHalfWidth;
-    const cursorRangeLeft = (cursorPos.x - stareAtOffset)::clamp(boundsLeft, boundsRight);
-    const cursorRangeRight = cursorPos.x + stareAtOffset::clamp(boundsLeft, boundsRight);
+    const cursorRangeLeft = (cursorPos.x - stareAtOffset)::numEx.clamp(boundsLeft, boundsRight);
+    const cursorRangeRight = cursorPos.x + stareAtOffset::numEx.clamp(boundsLeft, boundsRight);
     
     const horizDiff = cursorPos.x - natePos.x;
     const repositionNow = state.repositionTimer <= 0.0;
