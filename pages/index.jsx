@@ -61,8 +61,6 @@ class IndexPage extends React.Component {
       loading: "is-loading"
     };
     this.setState = ::this.setState;
-    this.onRouteChangeComplete = ::this.onRouteChangeComplete;
-    this.doStateUpdate = ::this.doStateUpdate;
   }
 
   componentDidMount() {
@@ -84,7 +82,7 @@ class IndexPage extends React.Component {
       clearTimeout(this.timeoutId);
   }
   
-  onRouteChangeComplete(as) {
+  onRouteChangeComplete = (as) => {
     const newArticle = hashToArticle(parseUrl(as).hash);
     const oldArticle = this.transitionTarget ?? this.state.article;
 
@@ -96,7 +94,7 @@ class IndexPage extends React.Component {
     if (canStartTransition) this.doStateUpdate();
   }
   
-  doStateUpdate() {
+  doStateUpdate = () => {
     const article = this.transitionTarget::maybe.get();
     const finalState = !!article;
     

@@ -66,12 +66,6 @@ class Lightbox extends React.Component {
       galleryName: "",
       galleryIndex: 0
     };
-
-    this.onCloseRequest = ::this.onCloseRequest;
-    this.onMovePrevRequest = ::this.onMovePrevRequest;
-    this.onMoveNextRequest = ::this.onMoveNextRequest;
-    this.doOpenLightbox = ::this.doOpenLightbox;
-    this.doCloseLightbox = ::this.doCloseLightbox;
   }
 
   componentDidMount() {
@@ -84,11 +78,11 @@ class Lightbox extends React.Component {
     closeFns.delete(this.doCloseLightbox);
   }
 
-  onCloseRequest() {
+  onCloseRequest = () => {
     this.setState({ isOpen: false });
   }
 
-  onMovePrevRequest() {
+  onMovePrevRequest = () => {
     const { galleryIndex, galleryName } = this.state;
     const images = galleries.get(galleryName);
     if (images::maybe.isEmpty()) return;
@@ -98,7 +92,7 @@ class Lightbox extends React.Component {
     });
   }
 
-  onMoveNextRequest() {
+  onMoveNextRequest = () => {
     const { galleryIndex, galleryName } = this.state;
     const images = galleries.get(galleryName);
     if (images::maybe.isEmpty()) return;
@@ -108,14 +102,14 @@ class Lightbox extends React.Component {
     });
   }
 
-  doOpenLightbox(galleryName, galleryIndex) {
+  doOpenLightbox = (galleryName, galleryIndex) => {
     const images = galleries.get(galleryName);
     const isOpen = images::maybe.isDefined();
     galleryIndex = isOpen ? galleryIndex::numEx.reflowBy(images) : 0;
     this.setState({ isOpen, galleryName, galleryIndex });
   }
 
-  doCloseLightbox() {
+  doCloseLightbox = () => {
     this.onCloseRequest();
   }
 

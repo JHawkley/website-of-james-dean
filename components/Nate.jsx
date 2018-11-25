@@ -111,14 +111,6 @@ class Nate extends React.Component {
     }))
   };
 
-  constructor(props) {
-    super(props);
-    this.setState = ::this.setState;
-    this.scrollHandler = ::this.scrollHandler;
-    this.mouseMoveHandler = ::this.mouseMoveHandler;
-    this.animationFrame = ::this.animationFrame;
-  }
-
   componentDidMount() {
     this.timeLast = performance.now();
     this.nateDiv = some(document.createElement("div"));
@@ -127,7 +119,7 @@ class Nate extends React.Component {
       })
     );
 
-    this.rafHandle = requestAnimationFrame(this.animationFrame);
+    this.rafHandle = requestAnimationFrame(this.animationFrameHandler);
     document.addEventListener("mousemove", this.mouseMoveHandler);
     document.addEventListener("scroll", this.scrollHandler);
 
@@ -168,14 +160,14 @@ class Nate extends React.Component {
    * @param {MouseEvent} e
    * @memberof Nate
    */
-  mouseMoveHandler(e) {
+  mouseMoveHandler = (e) => {
     const cursor = this.world.cursor;
     cursor.absPos.x = e.clientX;
     cursor.absPos.y = e.clientY;
     cursor.msSinceUpdate = 0;
   }
 
-  scrollHandler() {
+  scrollHandler = () => {
     // If the screen scrolls but the mouse doesn't move, then the absolute
     // client position hasn't changed.  In this case, we only need to update
     // the position relative to the container.
@@ -188,10 +180,10 @@ class Nate extends React.Component {
    * @param {Number} timeNow
    * @memberof Nate
    */
-  animationFrame(timeNow) {
+  animationFrameHandler = (timeNow) => {
     this.doGameUpdate(timeNow);
     this.timeLast = timeNow;
-    this.rafHandle = requestAnimationFrame(this.animationFrame);
+    this.rafHandle = requestAnimationFrame(this.animationFrameHandler);
   }
 
   /**

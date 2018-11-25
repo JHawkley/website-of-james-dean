@@ -92,12 +92,9 @@ class ContactForm extends React.Component {
       isModalOpen: false,
       validationErrors: nothing
     };
-
-    this.handleSend = ::this.handleSend;
-    this.closeModal = ::this.closeModal;
   }
 
-  handleSend() {
+  handleSend = () => {
     const formEl = this.formRef.current;
     if (formEl::maybe.isEmpty())
       throw new Error("contact form's send-message handler activated before being rendered");
@@ -128,7 +125,7 @@ class ContactForm extends React.Component {
     }
   }
 
-  closeModal() {
+  closeModal = () => {
     this.setState({ isModalOpen: false });
   }
 
