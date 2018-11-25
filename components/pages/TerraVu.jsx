@@ -36,8 +36,7 @@ export default class TerraVu extends Page($terravu, Work) {
         <p>User friendliness was quite important.  Most functionality could be accessed with a right-click on one of the charts and there was a help bar at the bottom of the window that always guided the user through the software's use.</p>
         <p>TerraVu's users are often roused from sleep at all hours to get an update done while a well is being drilled; this simple, concise design allowed them to get an update done and sent back to the rig in little more than 10 minutes.  We want them to be able to get right back to sleep as soon as possible!</p>
         <p>Perhaps the biggest challenge in producing this software was loading data from standardized LAS format files.  I use the term &quot;standardized&quot; loosely here; before LAS version 3, the standard was not very strongly defined, and what was defined wasn't always adhered to.</p>
-        <p>Early on, receiving files from customers that wouldn't load for one reason or another was common.  Over time, <Gallery index={2}>my data loader</Gallery> became more toned, more honed.  Now it is as experienced and battle-hardened as Geralt from The Witcher series.</p>
-        <p>Just try and kill it.  I dare ya.</p>
+        <p>Early on, receiving files from customers that wouldn't load for one reason or another was common.  Over time, <Gallery index={2}>my data loader</Gallery> became more toned, more honed.  It is exceptionally rare for it to fail on a file that isn't inherently flawed in some way.</p>
       </Fragment>
     );
   }
