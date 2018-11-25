@@ -7,6 +7,43 @@ import { behaviorModes, facings, aimings, movings, jumps } from "./nateLogic/cor
 
 const Fragment = React.Fragment;
 
+/* eslint-disable react/prop-types */
+const Sounds = ({nate, bullets}) => (
+  <Fragment>
+    <audio ref={nate.sounds.bark}>
+      <source src="static/sounds/nate-game/bow-wow.ogg" type="audio/ogg; codecs=vorbis" />
+      <source src="static/sounds/nate-game/bow-wow.mp3" type="audio/mpeg" />
+    </audio>
+    <audio ref={nate.sounds.aroo}>
+      <source src="static/sounds/nate-game/aroo.ogg" type="audio/ogg; codecs=vorbis" />
+      <source src="static/sounds/nate-game/aroo.mp3" type="audio/mpeg" />
+    </audio>
+    <audio ref={nate.sounds.land}>
+      <source src="static/sounds/nate-game/land.ogg" type="audio/ogg; codecs=vorbis" />
+      <source src="static/sounds/nate-game/land.mp3" type="audio/mpeg" />
+    </audio>
+    {bullets.map((bullet, i) => {
+      return (
+        <Fragment key={i}>
+          <audio ref={bullet.sounds.spawned}>
+            <source src="static/sounds/nate-game/pew.ogg" type="audio/ogg; codecs=vorbis" />
+            <source src="static/sounds/nate-game/pew.mp3" type="audio/mpeg" />
+          </audio>
+          <audio ref={bullet.sounds.hit}>
+            <source src="static/sounds/nate-game/pop1.ogg" type="audio/ogg; codecs=vorbis" />
+            <source src="static/sounds/nate-game/pop1.mp3" type="audio/mpeg" />
+          </audio>
+          <audio ref={bullet.sounds.timedOut}>
+            <source src="static/sounds/nate-game/pop2.ogg" type="audio/ogg; codecs=vorbis" />
+            <source src="static/sounds/nate-game/pop2.mp3" type="audio/mpeg" />
+          </audio>
+        </Fragment>
+      );
+    })}
+  </Fragment>
+);
+/* eslint-enable react/prop-types */
+
 class Nate extends React.Component {
 
   /**
@@ -238,6 +275,7 @@ class Nate extends React.Component {
         bulletNodeDivs.forEach(div => div.className = "despawned");
         return;
       }
+
       const bursting = bullet.burst > 0.0;
       const baseClassName = bursting ? "bullet-burst-sprite" : "bullet-sprite";
 
@@ -254,38 +292,10 @@ class Nate extends React.Component {
 
   render() {
     return (
-      <div className="nate-container" ref={this.containerRef}>
-        <audio ref={this.world.nate.sounds.bark}>
-          <source src="static/sounds/nate-game/bow-wow.ogg" type="audio/ogg; codecs=vorbis" />
-          <source src="static/sounds/nate-game/bow-wow.mp3" type="audio/mpeg" />
-        </audio>
-        <audio ref={this.world.nate.sounds.aroo}>
-          <source src="static/sounds/nate-game/aroo.ogg" type="audio/ogg; codecs=vorbis" />
-          <source src="static/sounds/nate-game/aroo.mp3" type="audio/mpeg" />
-        </audio>
-        <audio ref={this.world.nate.sounds.land}>
-          <source src="static/sounds/nate-game/land.ogg" type="audio/ogg; codecs=vorbis" />
-          <source src="static/sounds/nate-game/land.mp3" type="audio/mpeg" />
-        </audio>
-        {this.world.bullets.map((bullet, i) => {
-          return (
-            <Fragment key={i}>
-              <audio ref={bullet.sounds.spawned}>
-                <source src="static/sounds/nate-game/pew.ogg" type="audio/ogg; codecs=vorbis" />
-                <source src="static/sounds/nate-game/pew.mp3" type="audio/mpeg" />
-              </audio>
-              <audio ref={bullet.sounds.hit}>
-                <source src="static/sounds/nate-game/pop1.ogg" type="audio/ogg; codecs=vorbis" />
-                <source src="static/sounds/nate-game/pop1.mp3" type="audio/mpeg" />
-              </audio>
-              <audio ref={bullet.sounds.timedOut}>
-                <source src="static/sounds/nate-game/pop2.ogg" type="audio/ogg; codecs=vorbis" />
-                <source src="static/sounds/nate-game/pop2.mp3" type="audio/mpeg" />
-              </audio>
-            </Fragment>
-          );
-        })}
-      </div>
+      <Fragment>
+        <div className="nate-container" ref={this.containerRef} />
+        <Sounds nate={this.world.nate} bullets={this.world.bullets} />
+      </Fragment>
     );
   }
 
