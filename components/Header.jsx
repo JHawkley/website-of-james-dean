@@ -3,10 +3,9 @@ import Jump from "./Jump";
 import FontAwesomeIcon from "@fortawesome/react-fontawesome";
 import faGem from "@fortawesome/fontawesome-free-regular/faGem";
 
-const Header = (props) => (
-  <header id="header" style={props.timeout ? {display: 'none'} : {}}>
+const Header = ({timeout}) => (
+  <header id="header" style={timeout ? {display: 'none'} : {}}>
     <div className="logo">
-      {/*<span className="icon fa-diamond"></span>*/}
       <FontAwesomeIcon icon={faGem} transform="grow-18" />
     </div>
     <div className="content">
