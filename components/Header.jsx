@@ -21,7 +21,6 @@ const Header = ({timeout}) => (
         <li><Jump href="./#work">Work</Jump></li>
         <li><Jump href="./#questions">Q&amp;A</Jump></li>
         <li><Jump href="./#contact">Contact</Jump></li>
-        <li><Jump href="./#about">About</Jump></li>
       </ul>
     </nav>
   </header>
