@@ -3,7 +3,8 @@ import Jump from "./Jump";
 
 const Footer = ({timeout}) => (
   <footer id="footer" style={timeout ? {display: "none"} : {}}>
-    <p className="copyright">&copy; Next.js Starter - Dimension. Design: <Jump href="https://html5up.net">HTML5 UP</Jump>. Built with: <a href="https://github.com/zeit/next.js">Next.js</a></p>
+    <p className="copyright">Template: &copy; <Jump href="https://github.com/codebushi/nextjs-starter-dimension" target="_blank" icon="none">Next.js Starter - Dimension</Jump>.  Content: &copy; James Dean</p>
+    <p className="copyright">Design: <Jump href="https://html5up.net" target="_blank" icon="none">HTML5 UP</Jump>.  Built with: <Jump href="https://github.com/zeit/next.js" target="_blank" icon="none">Next.js</Jump></p>
   </footer>
 );
 
