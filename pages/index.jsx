@@ -5,7 +5,7 @@ import stylesheet from "styles/main.scss";
 import lightboxStyle from "react-image-lightbox/style.css";
 import Modal from "react-modal";
 import { parse as parseUrl } from "url";
-import { extensions as objEx, dew } from "tools/common";
+import { extensions as objEx, dew, delayFor } from "tools/common";
 import { extensions as strEx } from "tools/strings";
 import { extensions as maybe, nothing } from "tools/maybe";
 
@@ -17,6 +17,9 @@ import Page from "components/Page";
 
 // Making use of `babel-plugin-wildcard`.
 import * as pageIndex from "../components/pages";
+
+// Setup the modal dialog system.  This should probably be in a custom app component.
+Modal.setAppElement('#__next');
 
 const { Fragment } = React;
 
@@ -46,21 +49,28 @@ const hashToArticle = (articleHash) => {
   return "";
 }
 
-Modal.setAppElement('#__next');
-
 class IndexPage extends React.Component {
 
-  constructor(props) {
-    super(props);
-    this.transitionTarget = nothing;
-    this.state = {
-      isArticleVisible: false,
-      timeout: false,
-      articleTimeout: false,
-      article: "",
-      loading: "is-loading"
-    };
-    this.setState = ::this.setState;
+  transitionTarget = nothing;
+
+  transitionTimeout = nothing;
+
+  loadingTimeout = nothing;
+
+  state = {
+    isArticleVisible: false,
+    timeout: false,
+    articleTimeout: false,
+    article: "",
+    loading: "is-loading"
+  };
+
+  setLoadingTimeout = (id) => this.loadingTimeout = id;
+
+  setTransitionTimeout = (id) => this.transitionTimeout = id;
+
+  pushState(newState) {
+    return new Promise(resolve => this.setState(newState, resolve));
   }
 
   componentDidMount() {
@@ -68,8 +78,12 @@ class IndexPage extends React.Component {
       window.history.scrollRestoration = "manual";
     Router.events.on("hashChangeComplete", this.onRouteChangeComplete);
     Router.events.on("routeChangeComplete", this.onRouteChangeComplete);
-    
-    this.timeoutId = setTimeout(this.setState, 100, { loading: "" });
+
+    dew(async () => {
+      await delayFor(100, this.setLoadingTimeout);
+      this.setState({ loading: "" });
+    });
+
     // Restore location.
     this.onRouteChangeComplete(Router.router.asPath);
   }
@@ -77,9 +91,11 @@ class IndexPage extends React.Component {
   componentWillUnmount() {
     Router.events.off("hashChangeComplete", this.onRouteChangeComplete);
     Router.events.off("routeChangeComplete", this.onRouteChangeComplete);
-    
-    if (this.timeoutId)
-      clearTimeout(this.timeoutId);
+
+    // Cancel asynchronous transitions.
+    this.transitionTarget = nothing;
+    this.transitionTimeout::maybe.forEach(clearTimeout);
+    this.loadingTimeout::maybe.forEach(clearTimeout);
   }
   
   onRouteChangeComplete = (as) => {
@@ -88,45 +104,43 @@ class IndexPage extends React.Component {
 
     if (newArticle === oldArticle) return;
 
-    const canStartTransition = this.transitionTarget::maybe.isEmpty();
+    const canBeginTransition = this.transitionTarget::maybe.isEmpty();
     this.transitionTarget = newArticle;
 
-    if (canStartTransition) this.doStateUpdate();
+    if (canBeginTransition) this.beginRouteTransition();
   }
   
-  doStateUpdate = () => {
-    const article = this.transitionTarget::maybe.get();
-    const finalState = !!article;
-    
-    if (this.state.timeout && !this.state.articleTimeout) {
-      // Middle transition state.
-      this.setState({ article }, () => {
+  async beginRouteTransition() {
+    while (this.transitionTarget::maybe.isDefined()) {
+      const { transitionTarget: nextArticle, state: { timeout, articleTimeout } } = this;
+      const finalState = !!nextArticle;
+
+      if (timeout && !articleTimeout) {
+        // Middle transition state.
+        await this.pushState({ article: nextArticle });
         // Fixes a small presentation issue on narrow-screen devices.
         window.scrollTo(window.scrollX, 0);
-        // Transition to our final, desired state.
-        this.setState(
-          { timeout: finalState, articleTimeout: finalState },
-          () => setTimeout(this.doStateUpdate, 25)
-        );
-      });
-    }
-    else if (finalState && !this.state.timeout) {
-      // Transitioning from header.
-      this.setState(
-        { isArticleVisible: true },
-        () => setTimeout(this.setState, 325, { timeout: true }, this.doStateUpdate)
-      );
-    }
-    else if (this.state.article !== article && this.state.articleTimeout) {
-      // Transitioning from article.
-      this.setState({ articleTimeout: false }, () => setTimeout(this.doStateUpdate, 325));
-    }
-    else if (!finalState && this.state.isArticleVisible) {
-      // Finish transition into header.
-      this.setState({ isArticleVisible: false }, this.doStateUpdate);
-    }
-    else {
-      this.transitionTarget = nothing;
+        await this.pushState({ timeout: finalState, articleTimeout: finalState });
+        await delayFor(25, this.setTransitionTimeout);
+      }
+      else if (finalState && !timeout) {
+        // Transitioning from header.
+        await this.pushState({ isArticleVisible: true });
+        await delayFor(325, this.setTransitionTimeout);
+        await this.pushState({ timeout: true });
+      }
+      else if (this.state.article !== nextArticle && articleTimeout) {
+        // Transitioning from article.
+        await this.pushState({ articleTimeout: false });
+        await delayFor(325, this.setTransitionTimeout);
+      }
+      else if (!finalState && this.state.isArticleVisible) {
+        // Finish transition into header.
+        await this.pushState({ isArticleVisible: false });
+      }
+      else {
+        this.transitionTarget = nothing;
+      }
     }
   }
   

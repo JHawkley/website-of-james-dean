@@ -79,6 +79,22 @@ export function dew(fn) {
  */
 export function noop() { return; }
 
+
+/**
+ * Creates a promise that will resolve once a timer has elapsed.
+ *
+ * @export
+ * @param {number} [delay=0] The number of milliseconds to wait.
+ * @param {function(number)} [timeoutSetter] A function that will be provided the timeout ID for cancelation.
+ * @returns A promise that will resolve when the timeout is complete.
+ */
+export function delayFor(delay = 0, timeoutSetter = null) {
+  return new Promise(resolve => {
+    const timeoutId = setTimeout(resolve, delay);
+    timeoutSetter?.(timeoutId);
+  });
+}
+
 /** 
  * An object containing extension-methods.  Use the ESNext bind operator `::` to make use of these.
  * 
