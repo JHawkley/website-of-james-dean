@@ -77,6 +77,28 @@ function randomElement() {
 }
 
 /**
+ * Performs a combination filter + map on each element of the array.  The `collectFn` should return `undefined`
+ * for values that should be filtered out.  Any other value will be added to the result array.
+ *
+ * @template T,U
+ * @this {T[]} This array.
+ * @param {function(T, number, T[]): (U|undefined)} partialFn The collection partial-function.
+ * @returns {U[]} A new array.
+ */
+function collect(partialFn) {
+  const length = this.length;
+  if (length === 0) return [];
+
+  const resultArray = [];
+  for (let i = 0; i < length; i++) {
+    const collectedValue = partialFn(this[i], i, this);
+    if (typeof collectedValue === "undefined") continue;
+    resultArray.push(collectedValue);
+  }
+  return resultArray;
+}
+
+/**
  * Creates an array with the specified count, calling the given function for each element and populating the element
  * with its return value.
  * 
@@ -127,5 +149,5 @@ export const forPair = (arr, fn) => {
  * @export
  */
 export const extensions = Object.freeze({
-  isEmpty, isNonEmpty, orNothing, shuffle, randomElement
+  isEmpty, isNonEmpty, orNothing, shuffle, randomElement, collect
 });

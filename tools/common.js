@@ -25,7 +25,7 @@ function forOwnProps(fn) {
  *
  * @template T,U
  * @this {Object.<string, T>} The object to collect the properties from.
- * @param {function(string, T): U} fn The transformation function.
+ * @param {function(string, T): (U|undefined)} fn The transformation function.
  * @returns {Object.<string, U>} A new object.
  * @throws When this object is not a simple object.
  */

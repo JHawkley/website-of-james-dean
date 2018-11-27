@@ -66,7 +66,7 @@ function orElse(alternative) {
  *
  * @template T
  * @this {?T} This nullable value.
- * @param {() => !T} alternativeFn A function to call to get an alternative value.
+ * @param {function(): !T} alternativeFn A function to call to get an alternative value.
  * @returns {!T} Either this value or the result of calling `alternativeFn`.
  * @throws When the result of calling `alternativeFn` is nullish.
  */
@@ -81,7 +81,7 @@ function orFrom(alternativeFn) {
  * @template T,U
  * @this {?T} This nullable value.
  * @param {!U} ifEmpty The value to produce is this value is empty.
- * @param {(definedValue: !T) => !U} transformationFn A function to apply if this value is defined.
+ * @param {function(!T): !U} transformationFn A function to apply if this value is defined.
  * @returns {!U} The transformed value or `null`.
  */
 function fold(ifEmpty, transformationFn) {
@@ -93,7 +93,7 @@ function fold(ifEmpty, transformationFn) {
  *
  * @template T,U
  * @this {?T} This nullable value.
- * @param {(definedValue: !T) => !U} transformationFn The transformation function.
+ * @param {function(!T): !U} transformationFn The transformation function.
  * @returns {?U} The transformed value or `null`.
  */
 function map(transformationFn) {
@@ -105,7 +105,7 @@ function map(transformationFn) {
  *
  * @template T
  * @this {?T} This nullable value.
- * @param {(definedValue: !T) => boolean} filterFn The filter function.
+ * @param {function(!T): boolean} filterFn The filter function.
  * @returns {?T} This value of `null`.
  */
 function filter(filterFn) {
@@ -117,7 +117,7 @@ function filter(filterFn) {
  *
  * @template T
  * @this {?T} This nullable value.
- * @param {(definedValue: !T) => boolean} predicateFn The predicate function.
+ * @param {function(!T): boolean} predicateFn The predicate function.
  * @returns {boolean} Whether the predicate was satisfied.
  */
 function every(predicateFn) {
@@ -129,7 +129,7 @@ function every(predicateFn) {
  *
  * @template T,U
  * @this {?T} This nullable value.
- * @param {(definedValue: !T) => ?U} partialFn The collection function.
+ * @param {function(!T): ?U} partialFn The collection partial-function.
  * @returns {?U} The transformed value or `null`.
  */
 function collect(partialFn) {
@@ -141,7 +141,7 @@ function collect(partialFn) {
  *
  * @template T
  * @this {?T} This nullable value.
- * @param {(definedValue: !T) => void} iteratorFn The iterator function.
+ * @param {function(!T): void} iteratorFn The iterator function.
  */
 function forEach(iteratorFn) {
   if (this::isDefined()) iteratorFn(this);
