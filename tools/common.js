@@ -85,7 +85,7 @@ export function noop() { return; }
  *
  * @export
  * @param {number} [delay=0] The number of milliseconds to wait.
- * @param {function(number)} [timeoutSetter] A function that will be provided the timeout ID for cancelation.
+ * @param {function(number)} [timeoutSetter] A function that will be provided the timeout ID for cancellation.
  * @returns A promise that will resolve when the timeout is complete.
  */
 export function delayFor(delay = 0, timeoutSetter = null) {
