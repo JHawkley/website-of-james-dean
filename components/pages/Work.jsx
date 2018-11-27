@@ -1,10 +1,14 @@
 import Page from "components/Page";
 import Jump from "components/Jump";
 
-// Making use of `babel-plugin-wildcard`.
-import { TerraVu, Lithologic, LithologicPhoto } from "./*";
-import { Solar, ThreeDee } from "./*";
-import { Nate, MiscProgramming } from "./*";
+// Our work pages.
+import TerraVu from "./TerraVu";
+import Lithologic from "./Lithologic";
+import LithologicPhoto from "./LithologicPhoto";
+import Solar from "./Solar";
+import ThreeDee from "./ThreeDee";
+import Nate from "./Nate";
+import MiscProgramming from "./MiscProgramming";
 
 const $work = "work";
 const { Fragment } = React;

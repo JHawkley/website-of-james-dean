@@ -5,8 +5,9 @@ import stylesheet from "styles/main.scss";
 import lightboxStyle from "react-image-lightbox/style.css";
 import Modal from "react-modal";
 import { parse as parseUrl } from "url";
-import { extensions as objEx, dew, delayFor } from "tools/common";
+import { dew, delayFor } from "tools/common";
 import { extensions as strEx } from "tools/strings";
+import { extensions as arrEx } from "tools/array";
 import { extensions as maybe, nothing } from "tools/maybe";
 
 import NoJavaScript from "components/NoJavaScript";
@@ -15,8 +16,10 @@ import Main from "components/Main";
 import Footer from "components/Footer";
 import Page from "components/Page";
 
-// Making use of `babel-plugin-wildcard`.
-import * as pageIndex from "../components/pages";
+// Require all page-components and dump them into an array.
+// This is making use of a special feature of webpack.
+const context = require.context("../components/pages", false, /\.(js|jsx)$/);
+const pageIndex = context.keys().map(file => context(file));
 
 // Setup the modal dialog system.  This should probably be in a custom app component.
 Modal.setAppElement('#__next');
@@ -24,11 +27,24 @@ Modal.setAppElement('#__next');
 const { Fragment } = React;
 
 const [pageComponents, knownPages] = dew(() => {
-  const components = [];
-  pageIndex::objEx.forOwnProps((module) => {
-    if (Page.isPage(module)) components.push(module);
+  const components = pageIndex::arrEx.collect(({"default": module = nothing}) => {
+    if (module::maybe.isEmpty()) return void 0;
+    if (!Page.isPage(module)) return void 0;
+    return module;
   });
-  return [components, new Set(components.map(c => c.pageName))];
+
+  const nameSet = new Set();
+  const collisions = [];
+  components.forEach(comp => {
+    const { pageName } = comp;
+    if (nameSet.has(pageName)) collisions.push(pageName);
+    else nameSet.add(pageName);
+  });
+
+  if (collisions::arrEx.isNonEmpty())
+    throw new Error(`there were multiple page-components with the same name: ${collisions.join(", ")}`);
+
+  return [components, nameSet];
 });
 
 // Little component to help solve a hydration error in the version of React in use.
