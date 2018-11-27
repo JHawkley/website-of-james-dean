@@ -99,6 +99,31 @@ function collect(partialFn) {
 }
 
 /**
+ * Partitions this array into two arrays, based on the result of a predicate.  The returned value is a tuple,
+ * where the first element contains an array of values where the predicate held true, and the second element
+ * contains values where the predicate was false.
+ *
+ * @template T
+ * @this {T[]} This array.
+ * @param {function(T, number, T[]): boolean} predicateFn The predicate function.
+ * @returns {[T[], T[]]} A tuple; element 1 has values that held true, while element 2 all held false.
+ */
+function partition(predicateFn) {
+  const length = this.length;
+  const whenTrue = [];
+  const whenFalse = [];
+  if (length === 0) return [whenTrue, whenFalse];
+
+  for (let i = 0; i < length; i++) {
+    const value = this[i];
+    const resultArr = predicateFn(value, i, this) ? whenTrue : whenFalse;
+    resultArr.push(value);
+  }
+
+  return [whenTrue, whenFalse];
+}
+
+/**
  * Creates an array with the specified count, calling the given function for each element and populating the element
  * with its return value.
  * 
@@ -149,5 +174,5 @@ export const forPair = (arr, fn) => {
  * @export
  */
 export const extensions = Object.freeze({
-  isEmpty, isNonEmpty, orNothing, shuffle, randomElement, collect
+  isEmpty, isNonEmpty, orNothing, shuffle, randomElement, collect, partition
 });
