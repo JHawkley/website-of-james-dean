@@ -11,7 +11,7 @@ const Gallery = Lightbox.makeGallery($terravu, [
   { i: "static/images/terravu/3.png", d: "The LAS loader is by far the most worked on component of this software.  My latest update to TerraVu was even a small bug-fix to the data-loader." }
 ]);
 
-export default class TerraVu extends Page($terravu, Work) {
+export default class TerraVu extends Page($terravu, () => Work) {
 
   content() {
     return (

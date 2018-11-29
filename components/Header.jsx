@@ -3,8 +3,13 @@ import Jump from "./Jump";
 import FontAwesomeIcon from "@fortawesome/react-fontawesome";
 import faGem from "@fortawesome/fontawesome-free-regular/faGem";
 
+import Intro from "./pages/Intro";
+import Work from "./pages/Work";
+import Questions from "./pages/Questions";
+import Contact from "./pages/Contact";
+
 const Header = ({timeout}) => (
-  <header id="header" style={timeout ? {display: 'none'} : {}}>
+  <header id="header" style={timeout ? {display: 'none'} : null}>
     <div className="logo">
       <FontAwesomeIcon icon={faGem} transform="grow-18" />
     </div>
@@ -17,10 +22,10 @@ const Header = ({timeout}) => (
     </div>
     <nav>
       <ul>
-        <li><Jump href="./#intro">Intro</Jump></li>
-        <li><Jump href="./#work">Work</Jump></li>
-        <li><Jump href="./#questions">Q&amp;A</Jump></li>
-        <li><Jump href="./#contact">Contact</Jump></li>
+        <li><Jump page={Intro}>Intro</Jump></li>
+        <li><Jump page={Work}>Work</Jump></li>
+        <li><Jump page={Questions}>Q&amp;A</Jump></li>
+        <li><Jump page={Contact}>Contact</Jump></li>
       </ul>
     </nav>
   </header>

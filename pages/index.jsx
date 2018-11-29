@@ -1,11 +1,11 @@
+import PropTypes from "prop-types";
 import ReactDOMServer from "react-dom/server";
-import Router from "next/router";
 import Head from "next/head";
 import stylesheet from "styles/main.scss";
 import lightboxStyle from "react-image-lightbox/style.css";
-import Modal from "react-modal";
-import { parse as parseUrl } from "url";
-import { dew, delayFor } from "tools/common";
+
+import { dew } from "tools/common";
+import { wait, frameSync } from "tools/async";
 import { extensions as strEx } from "tools/strings";
 import { extensions as arrEx } from "tools/array";
 import { extensions as maybe, nothing } from "tools/maybe";
@@ -20,9 +20,6 @@ import Page from "components/Page";
 // This is making use of a special feature of webpack.
 const context = require.context("../components/pages", false, /\.(js|jsx)$/);
 const pageIndex = context.keys().map(file => context(file));
-
-// Setup the modal dialog system.  This should probably be in a custom app component.
-Modal.setAppElement('#__next');
 
 const { Fragment } = React;
 
@@ -55,17 +52,19 @@ const NoScript = (props) => {
   return (<noscript {...otherProps} dangerouslySetInnerHTML={{ __html: staticMarkup }} />);
 }
 
-const hashToArticle = (articleHash) => {
-  if (articleHash::strEx.isNullishOrEmpty()) return "";
-  if (articleHash.startsWith("#")) {
-    const article = articleHash.substring(1);
-    if (!knownPages.has(article)) return "404";
-    return article;
-  }
-  return "";
+const resolvePageToArticle = (page = null) => {
+  if (page::strEx.isNullishOrEmpty()) return "";
+  if (!knownPages.has(page)) return "404";
+  return page;
 }
 
 class IndexPage extends React.Component {
+
+  static propTypes = {
+    page: PropTypes.string.isRequired,
+    transitionsSupported: PropTypes.bool,
+    notifyPageReady: PropTypes.func.isRequired
+  };
 
   transitionTarget = nothing;
 
@@ -73,12 +72,14 @@ class IndexPage extends React.Component {
 
   loadingTimeout = nothing;
 
+  didUnmount = false;
+
   state = {
     isArticleVisible: false,
     timeout: false,
     articleTimeout: false,
     article: "",
-    loading: "is-loading"
+    loading: true
   };
 
   setLoadingTimeout = (id) => this.loadingTimeout = id;
@@ -86,82 +87,122 @@ class IndexPage extends React.Component {
   setTransitionTimeout = (id) => this.transitionTimeout = id;
 
   pushState(newState) {
-    return new Promise(resolve => this.setState(newState, resolve));
+    if (this.didUnmount)
+      return new Promise.reject(new Error("component has dismounted during async operation"));
+    return new Promise(resolve => this.setState(newState, resolve)).then(frameSync);
   }
 
   componentDidMount() {
-    if (typeof window.history.scrollRestoration !== "undefined")
-      window.history.scrollRestoration = "manual";
-    Router.events.on("hashChangeComplete", this.onRouteChangeComplete);
-    Router.events.on("routeChangeComplete", this.onRouteChangeComplete);
-
     dew(async () => {
-      await delayFor(100, this.setLoadingTimeout);
-      this.setState({ loading: "" });
+      await wait(100, this.setLoadingTimeout);
+      this.setState({ loading: false });
     });
 
     // Restore location.
-    this.onRouteChangeComplete(Router.router.asPath);
+    this.transitionToPage();
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.page !== prevProps.page)
+      this.transitionToPage();
   }
 
   componentWillUnmount() {
-    Router.events.off("hashChangeComplete", this.onRouteChangeComplete);
-    Router.events.off("routeChangeComplete", this.onRouteChangeComplete);
-
     // Cancel asynchronous transitions.
     this.transitionTarget = nothing;
     this.transitionTimeout::maybe.forEach(clearTimeout);
     this.loadingTimeout::maybe.forEach(clearTimeout);
+    this.didUnmount = true;
   }
-  
-  onRouteChangeComplete = (as) => {
-    const newArticle = hashToArticle(parseUrl(as).hash);
+
+  transitionToPage() {
+    const { page, transitionsSupported } = this.props;
+    const newArticle = resolvePageToArticle(page);
     const oldArticle = this.transitionTarget ?? this.state.article;
 
     if (newArticle === oldArticle) return;
 
-    const canBeginTransition = this.transitionTarget::maybe.isEmpty();
-    this.transitionTarget = newArticle;
-
-    if (canBeginTransition) this.beginRouteTransition();
+    if (!transitionsSupported)
+      this.hardTransition(newArticle);
+    else {
+      const canBeginTransition = this.transitionTarget::maybe.isEmpty();
+      this.transitionTarget = newArticle;
+      if (!canBeginTransition) return;
+      this.beginSoftTransition().catch((error) => {
+        // An error is thrown if the component was unmounted during transition.
+        // We can ignore this circumstance.
+        if (this.didUnmount) return;
+        console.error(error);
+        // Otherwise, we need to recover; we'll do so by hard transitioning.
+        this.hardTransition(this.transitionTarget ?? this.state.article ?? "");
+      });
+    }
   }
   
-  async beginRouteTransition() {
+  async beginSoftTransition() {
     while (this.transitionTarget::maybe.isDefined()) {
-      const { transitionTarget: nextArticle, state: { timeout, articleTimeout } } = this;
+      const {
+        transitionTarget: nextArticle,
+        state: { timeout, articleTimeout }
+      } = this;
       const finalState = !!nextArticle;
 
       if (timeout && !articleTimeout) {
-        // Middle transition state.
+        // Middle transition state; nothing is currently displayed.
         await this.pushState({ article: nextArticle });
-        // Fixes a small presentation issue on narrow-screen devices.
-        window.scrollTo(window.scrollX, 0);
+        // If we're transitioning into an article, it should now be displayed.
+        if (finalState) await this.doNotifyPageReady();
+        // Finalize transition.
         await this.pushState({ timeout: finalState, articleTimeout: finalState });
-        await delayFor(25, this.setTransitionTimeout);
+        await wait(25, this.setTransitionTimeout);
       }
       else if (finalState && !timeout) {
-        // Transitioning from header.
+        // Start transitioning from header.
         await this.pushState({ isArticleVisible: true });
-        await delayFor(325, this.setTransitionTimeout);
+        await wait(325, this.setTransitionTimeout);
         await this.pushState({ timeout: true });
       }
       else if (this.state.article !== nextArticle && articleTimeout) {
-        // Transitioning from article.
+        // Start transitioning from article.
         await this.pushState({ articleTimeout: false });
-        await delayFor(325, this.setTransitionTimeout);
+        await wait(325, this.setTransitionTimeout);
       }
       else if (!finalState && this.state.isArticleVisible) {
         // Finish transition into header.
         await this.pushState({ isArticleVisible: false });
+        // The header should be now be displayed.
+        await this.doNotifyPageReady();
       }
       else {
         this.transitionTarget = nothing;
       }
     }
   }
+
+  hardTransition(nextPage) {
+    const finalState = !!nextPage;
+    const newState = {
+      article: nextPage,
+      timeout: finalState,
+      articleTimeout: finalState,
+      isArticleVisible: finalState
+    };
+    this.setState(newState, this.props.notifyPageReady);
+  }
+
+  doNotifyPageReady() {
+    this.props.notifyPageReady();
+    return frameSync();
+  }
   
   render() {
     const { loading, isArticleVisible, timeout, articleTimeout, article } = this.state;
+    const { transitionsSupported } = this.props;
+
+    const klass = ["body", "js-only", ];
+    if (loading) klass.push("is-loading");
+    if (isArticleVisible) klass.push("is-article-visible");
+    if (transitionsSupported) klass.push("with-transitions");
   
     return (
       <Fragment>
@@ -189,17 +230,18 @@ class IndexPage extends React.Component {
         </NoScript>
 
         {/* The normal version of the website. */}
-        <div className={`body js-only ${loading} ${isArticleVisible ? "is-article-visible" : ""}`}>
+        <div className={klass.join(" ")}>
           <div className="prevent-scroll">
             <div id="wrapper">
-              <Header timeout={timeout} />
+              <Header timeout={timeout} transition={transitionsSupported} />
               <Main
                 article={article}
                 articlePages={pageComponents}
                 articleTimeout={articleTimeout}
                 timeout={timeout}
+                transition={transitionsSupported}
               />
-              <Footer timeout={timeout} />
+              <Footer timeout={timeout} transition={transitionsSupported} />
             </div>
             <div id="bg" />
           </div>

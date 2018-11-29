@@ -14,13 +14,12 @@ const $work = "work";
 const { Fragment } = React;
 
 const workItem = (description, title, page) => (
-  <Jump href={`#${page.pageName}`} className="work-item">
+  <Jump page={page} className="work-item">
     <dl><dt>{description}</dt><dd>{title}</dd></dl>
   </Jump>
 );
 
 export default class Work extends Page($work) {
-
   content() {
     return (
       <Fragment>

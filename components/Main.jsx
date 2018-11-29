@@ -1,5 +1,4 @@
 import PropTypes from "prop-types";
-import { extensions as maybe } from "tools/maybe";
 import Lightbox from "./Lightbox";
 import Page from "./Page";
 
@@ -21,10 +20,12 @@ export default class Main extends React.Component {
   
   render() {
     const { article, timeout, articleTimeout, articlePages } = this.props;
-    const klass = "article-timeout"::maybe.when(articleTimeout);
+
+    const display = timeout ? "flex" : "none";
+    const klass = articleTimeout ? "article-timeout" : null;
 
     return (
-      <div id="main" className={klass} style={{display: timeout ? "flex" : "none"}}>
+      <div id="main" className={klass} style={{display}}>
         {articlePages.map(SomePage => {
           const pageName = SomePage.pageName;
           return <SomePage key={pageName} active={article === pageName} />;
