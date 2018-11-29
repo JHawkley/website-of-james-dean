@@ -1,4 +1,4 @@
-import "patch/router";
+import { hashScroll } from "patch/router";
 
 import App, { createUrl } from "next/app";
 import Modal from "react-modal";
@@ -17,6 +17,8 @@ export default class PaginatedApp extends App {
   };
 
   canScrollRestore = typeof window === "undefined" ? false : typeof window.history.scrollRestoration === "string";
+
+  hashBlockID = null;
 
   onRouteChangeStart = () => {
     if (!this.canScrollRestore) return;
@@ -60,6 +62,7 @@ export default class PaginatedApp extends App {
     if (this.canScrollRestore) window.history.scrollRestoration = "manual";
     
     Modal.setAppElement('#__next');
+    this.hashBlockID = hashScroll.block();
     window.addEventListener("beforeunload", this.onRouteChangeStart);
     router.events.on("routeChangeStart", this.onRouteChangeStart);
     router.events.on("routeChangeComplete", this.onRouteChangeComplete);
@@ -75,6 +78,7 @@ export default class PaginatedApp extends App {
     router.events.off("routeChangeStart", this.onRouteChangeStart);
     router.events.off("routeChangeComplete", this.onRouteChangeComplete);
     router.events.off("hashChangeComplete", this.restoreScrollPosition);
+    if (this.hashBlockID != null) hashScroll.release(this.hashBlockID);
   }
 
   scrollToHash() {

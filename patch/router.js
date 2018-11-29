@@ -1,6 +1,7 @@
 import SingletonRouter, { Router as NextRouter } from "next/router";
-import { noop } from "tools/common";
 
+const scrollBlockRegistrar = new Set();
+let nextRegistrationID = 0;
 let doneOnce = false;
 
 if (!doneOnce) {
@@ -18,8 +19,17 @@ if (!doneOnce) {
 
   NextRouter.prototype.changeState = patch_changeState;
 
-  // Disable the `scrollToHash` method.  The application will handle this instead.
-  NextRouter.prototype.scrollToHash = noop;
+  // Patch the `scrollToHash` method so that it can be disabled.  Use `hashScroll.block` to begin
+  // blocking.  Use `hashScroll.release` to restore normal functionality.  These should be called
+  // in your component's `componentDidMount` and `componentWillUnmount` methods, respectively.
+  const oldScrollToHash = NextRouter.prototype.scrollToHash;
+
+  const patch_scrollToHash = function(as) {
+    if (scrollBlockRegistrar.size > 0) return;
+    return this::oldScrollToHash(as);
+  }
+
+  NextRouter.prototype.scrollToHash = patch_scrollToHash;
 
   SingletonRouter.ready(() => {
     // Restore the original `changeState` method after the router has initialized.
@@ -27,3 +37,17 @@ if (!doneOnce) {
   });
   
 }
+
+export const hashScroll = {
+  block() {
+    const id = nextRegistrationID;
+    scrollBlockRegistrar.add(id);
+    nextRegistrationID += 1;
+    return id;
+  },
+  release(id) {
+    if (!scrollBlockRegistrar.has(id))
+      throw new Error(`the ID \`${id}\` was not found in the scroll-block registrar`);
+    scrollBlockRegistrar.delete(id);
+  }
+};
