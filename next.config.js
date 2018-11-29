@@ -2,7 +2,7 @@ const path = require('path')
 const glob = require('glob')
 
 module.exports = {
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
     config.module.rules.push(
       {
         test: /\.(css|scss)$/,
@@ -31,15 +31,17 @@ module.exports = {
       }
     );
 
-    const originalEntry = config.entry;
-    config.entry = async () => {
-      const entries = await originalEntry();
+    if (!isServer) {
+      const originalEntry = config.entry;
+      config.entry = async () => {
+        const entries = await originalEntry();
 
-      if (entries['main.js'] && !entries['main.js'].includes('./client/polyfills.js'))
-        entries['main.js'].unshift('./client/polyfills.js');
+        if (entries['main.js'] && !entries['main.js'].includes('./client/polyfills.js'))
+          entries['main.js'].unshift('./client/polyfills.js');
 
-      return entries;
-    };
+        return entries;
+      };
+    }
 
     return config;
   },
