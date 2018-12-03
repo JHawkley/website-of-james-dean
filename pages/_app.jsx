@@ -1,39 +1,89 @@
 import { hashScroll } from "patch/router";
 
 import App, { createUrl } from "next/app";
+import { getUrl } from "next/dist/lib/utils";
 import Modal from "react-modal";
+import { dew } from "tools/common";
+import { extensions as maybe } from "tools/maybe";
+
+const updateState = (fn) => {
+  const { url = getUrl(), as = url, options: oldOptions = {} } = window.history.state ?? {};
+  const newOptions = fn(oldOptions) ?? oldOptions;
+  if (newOptions === oldOptions) return;
+  window.history.replaceState({ url, as, options: newOptions }, null, as);
+};
+
+const getState = (key) => window.history.state?.options?.[key];
 
 export default class PaginatedApp extends App {
-
-  // TODO:
-  // Instead of storing the `scrollPosition` on the `options`, instead store it in local storage.
-  // Create a unique session ID.
-  // Give each history entry this session ID as well as an entry ID to identify it uniquely.
-  // If we keep track of the last entry ID encountered, we should be able to know which entry in
-  // local storage we need to update the `scrollPosition` during the `beforePopState` router callback.
 
   state = {
     currentPage: ""
   };
 
-  canScrollRestore = typeof window === "undefined" ? false : typeof window.history.scrollRestoration === "string";
+  canScrollRestore = dew(() => {
+    if (typeof window === "undefined") return false;
+    if (typeof window.sessionStorage === "undefined") return false;
+    return typeof window.history.scrollRestoration === "string";
+  });
+
+  originalScrollRestorationValue = "auto";
+
+  scrollRestoreData = null;
+
+  scrollRestoreEntry = 0;
 
   hashBlockID = null;
 
+  optionsForEntryId = (oldOptions) => {
+    let newOptions = oldOptions;
+    let entryId = oldOptions?.entryId;
+    if (entryId == null) {
+      // We need to truncate the scroll-restore data.
+      this.scrollRestoreData = this.scrollRestoreData.slice(0, this.scrollRestoreEntry + 1);
+      entryId = this.scrollRestoreData.length;
+      newOptions = Object.assign({}, oldOptions, { entryId });
+    }
+    this.scrollRestoreEntry = entryId;
+    return newOptions;
+  }
+
+  optionsForEntryScroll = (oldOptions) => {
+    return Object.assign({}, oldOptions, { didEntryScroll: true });
+  }
+
+  restoreScrollPosition = () => {
+    if (this.canScrollRestore) {
+      let scrollPosition = this.scrollRestoreData[this.scrollRestoreEntry];
+      if (scrollPosition == null) {
+        if (this.scrollToHash()) return;
+        scrollPosition = [0, 0];
+      }
+      
+      const [scorllX, scrollY] = scrollPosition;
+      window.scrollTo(scorllX, scrollY);
+    }
+    else if (!getState("didEntryScroll")) {
+      updateState(this.optionsForEntryScroll);
+      if (this.scrollToHash()) return;
+      window.scrollTo(0, 0);
+    }
+  }
+
   onRouteChangeStart = () => {
     if (!this.canScrollRestore) return;
-
-    // Save scroll position data before the route changes.
-    const { url, as, options: oldOptions } = window.history.state;
-    const { scrollY, scrollX } = window;
-    const newOptions = Object.assign({}, oldOptions, { scrollPosition: { top: scrollY, left: scrollX } });
-
-    window.history.replaceState({ url, as, options: newOptions }, null, as);
+    this.updateScrollPosition();
+    this.persistScrollRestoreData();
   }
 
   onRouteChangeComplete = () => {
     const { state: { currentPage }, props: { router } } = this;
     const newPage = router.query?.page ?? "";
+
+    if (this.canScrollRestore) {
+      updateState(this.optionsForEntryId);
+      this.persistScrollRestoreData();
+    }
 
     if (newPage === currentPage) {
       // No page change, however the hash may have changed.
@@ -45,21 +95,13 @@ export default class PaginatedApp extends App {
     }
   }
 
-  restoreScrollPosition = () => {
-    let scrollPosition = window.history.state?.options?.scrollPosition;
-    if (!scrollPosition) {
-      if (this.scrollToHash()) return;
-      if (!this.canScrollRestore) return;
-      scrollPosition = { left: 0, top: 0 };
-    }
-    
-    const { left, top } = scrollPosition;
-    window.scrollTo(left, top);
-  }
-
   componentDidMount() {
     const { router } = this.props;
-    if (this.canScrollRestore) window.history.scrollRestoration = "manual";
+    if (this.canScrollRestore) {
+      this.originalScrollRestorationValue = window.history.scrollRestoration;
+      window.history.scrollRestoration = "manual";
+      this.recallScrollRestoreData();
+    }
     
     Modal.setAppElement('#__next');
     this.hashBlockID = hashScroll.block();
@@ -79,6 +121,27 @@ export default class PaginatedApp extends App {
     router.events.off("routeChangeComplete", this.onRouteChangeComplete);
     router.events.off("hashChangeComplete", this.restoreScrollPosition);
     if (this.hashBlockID != null) hashScroll.release(this.hashBlockID);
+    if (this.canScrollRestore) {
+      this.persistScrollRestoreData();
+      window.history.scrollRestoration = this.originalScrollRestorationValue;
+    }
+  }
+
+  updateScrollPosition() {
+    const scrollX = window.scrollX | 0;
+    const scrollY = window.scrollY | 0;
+    this.scrollRestoreData[this.scrollRestoreEntry] = [scrollX, scrollY];
+  }
+
+  persistScrollRestoreData() {
+    window.sessionStorage.setItem("scrollRestoreData", JSON.stringify(this.scrollRestoreData));
+  }
+
+  recallScrollRestoreData() {
+    const json = window.sessionStorage?.getItem("scrollRestoreData");
+    this.scrollRestoreData = json::maybe.tryMap(JSON.parse) ?? [];
+    const options = window.history.state?.options;
+    this.scrollRestoreEntry = options?.entryId ?? this.scrollRestoreData.length;
   }
 
   scrollToHash() {
