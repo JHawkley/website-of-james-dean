@@ -11,7 +11,7 @@ const Gallery = Lightbox.makeGallery($lithologic, [
   { i: "static/images/lithologic/3.png", d: "Lithologic's original design concept (top) compared to the final product (bottom)." }
 ]);
 
-export default class Lithologic extends Page($lithologic, Work) {
+export default class Lithologic extends Page($lithologic, () => Work) {
 
   content() {
     return (

@@ -5,7 +5,7 @@ import Work from "./Work";
 const $miscprogramming = "miscprogramming";
 const { Fragment } = React;
 
-export default class MiscProgramming extends Page($miscprogramming, Work) {
+export default class MiscProgramming extends Page($miscprogramming, () => Work) {
 
   content() {
     return (
@@ -14,7 +14,7 @@ export default class MiscProgramming extends Page($miscprogramming, Work) {
         <span className="image main"><img src="/static/images/miscprogramming/header.png" alt="" /></span>
         <p>For the following projects, I have less to show, but they're still worth mentioning.</p>
 
-        <h3>Platter</h3>
+        <h3 id="platter">Platter</h3>
         <p>Platter was an attempt to create a collision detection engine that was specially suited for creating 2D retro-style games.  It started out being programmed in CoffeeScript but was shifted to TypeScript later on.</p>
         <p>Platter's code is available for viewing on <Jump href="https://github.com/JHawkley/platter" target="_blank">GitHub</Jump>.  It is a recent and decent example of my coding ability, however it is not presently functional.</p>
         <p>I was not having much luck attracting collaborators on my other game-dev projects, so I decided to focus on building an open-source collision detection library in the meantime while I considered my future plans.  I also took this as an opportunity to cut my teeth on test-driven development.  I felt that a collision-detection engine would be well suited for this method of development, since its domain should be quite testable.</p>
@@ -24,7 +24,7 @@ export default class MiscProgramming extends Page($miscprogramming, Work) {
         <p>TypeScript also has very few language features that make programming in it terse and expressive; it's just a more-restricted sub-set of JavaScript with few added language features over ECMAScript 2015.  I know this was a design goal of the language, but it is regrettable that the language won't do more to support the programmer.  You sometimes just have to accept that you can't make DRY code that is also clear and readable.</p>
         <p>In the end, I made the mistake of trying to fight TypeScript; it has a particular way it wants you to do things and deviating from that will cause you nothing but grief.  Now I know better.</p>
 
-        <h3>Scala Game Engine</h3>
+        <h3 id="sge">Scala Game Engine</h3>
         <p>While I was working with Impact, I actually re-wrote and enhanced it a few times as my needs changed, getting pretty intimate with it; added things like <Jump href="http://www.pixijs.com/" target="_blank">PixiJS</Jump> integration to modernize it a bit, an entity-component system, etc.  It helped me understand how game engines functioned, and with other influences, that understanding evolved.</p>
         <p>This eventually led into this project, to create a game engine in Scala from scratch.</p>
         <p>Unfortunately, I don't have too much to show in regards to this project, aside from <Jump href="/static/sge/index-dev.html" target="_blank">a bouncing-box benchmark</Jump> (based on <Jump href="https://pixijs.io/bunny-mark/" target="_blank">Pixi.js' Bunnymark</Jump>), but it is my most recent project.  Much of the work has so far been under-the-hood; laying the foundation of the engine and all that.</p>

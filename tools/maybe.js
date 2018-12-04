@@ -101,6 +101,21 @@ function map(transformationFn) {
 }
 
 /**
+ * Transforms this value, if it is defined.  If the `transformationFn` throws an exception, the result will
+ * be `null`.
+ *
+ * @template T,U
+ * @this {?T} This nullable value.
+ * @param {function(!T): !U} transformationFn The transformation function.
+ * @returns {?U} The transformed value or `null`.
+ */
+function tryMap(transformationFn) {
+  if (this::isEmpty()) return nothing;
+  try { return transformationFn(this) }
+  catch { return nothing; }
+}
+
+/**
  * Will return `null` when this value is either empty of fails the predicate defined by the `filterFn`.
  *
  * @template T
@@ -185,5 +200,5 @@ export const some = (value) => {
  */
 export const extensions = Object.freeze({
   when, isEmpty, isDefined, get, orElse, orFrom,
-  fold, map, filter, every, collect, forEach
+  fold, map, tryMap, filter, every, collect, forEach
 });

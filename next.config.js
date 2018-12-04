@@ -36,8 +36,8 @@ module.exports = {
       config.entry = async () => {
         const entries = await originalEntry();
 
-        if (entries['main.js'] && !entries['main.js'].includes('./client/polyfills.js'))
-          entries['main.js'].unshift('./client/polyfills.js');
+        if (entries['main.js'] && !entries['main.js'].includes('./patch/polyfills.js'))
+          entries['main.js'].unshift('./patch/polyfills.js');
 
         return entries;
       };
@@ -49,5 +49,6 @@ module.exports = {
     return {
       '/': { page: '/' }
     };
-  }
+  },
+  pageExtensions: ['jsx', 'js']
 }

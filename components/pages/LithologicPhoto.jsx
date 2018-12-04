@@ -13,7 +13,7 @@ const Gallery = Lightbox.makeGallery($lithphoto, [
   { i: "static/images/lithologic-photo/5.jpg", d: "A render of the plate I designed.  A 3D printing company was used to produce a prototype, which we used internally to test the application." }
 ]);
 
-export default class LithologicPhoto extends Page($lithphoto, Work) {
+export default class LithologicPhoto extends Page($lithphoto, () => Work) {
 
   content() {
     return (
