@@ -30,6 +30,49 @@ export function delayToNextFrame(handleSetter) {
 }
 
 /**
+ * Creates an object that contains a promise, plus its `resolve` and `reject` methods broken out of the closure.
+ * If `promiseDecorator` is not provided, it will default to the identity function.
+ *
+ * @export
+ * @template T,U
+ * @param {function(Promise<T>):Promise<U>} [promiseDecorator]
+ *   A function that can transform the synchronization promise into a new promise.
+ * @returns {BreakOutPromise<U>} The broken-out promise.
+ */
+export function breakOutPromise(promiseDecorator = identityFn) {
+  let resolveFn = null;
+  let rejectFn = null;
+  let didComplete = false;
+
+  function acquireCallbacks(resolve, reject) {
+    resolveFn = resolve;
+    rejectFn = reject;
+  }
+
+  const promise = promiseDecorator(new Promise(acquireCallbacks));
+
+  return {
+    promise,
+    resolve(value) {
+      if (didComplete) return;
+      didComplete = true;
+      dew(async () => {
+        while (resolveFn == null) await frameSync();
+        resolveFn(value);
+      });
+    },
+    reject(reason) {
+      if (didComplete) return;
+      didComplete = true;
+      dew(async () => {
+        while (rejectFn == null) await frameSync();
+        rejectFn(reason);
+      });
+    }
+  }
+}
+
+/**
  * Creates a object that can be used to synchronize various asynchronous tasks to a single function call.
  * If `promiseDecorator` is not provided, it will default to the identity function.
  *
@@ -40,36 +83,23 @@ export function delayToNextFrame(handleSetter) {
  * @returns {CallSync<U>} An object that can be used to synchronize with.
  */
 export function callSync(promiseDecorator = identityFn) {
-  let promise = null;
-  let resolveFn = null;
-  let rejectFn = null;
-
-  function acquireCallbacks(resolve, reject) {
-    resolveFn = resolve;
-    rejectFn = reject;
-  }
+  let nextSync = null;
   
   return {
     sync() {
-      if (promise == null)
-        promise = promiseDecorator(new Promise(acquireCallbacks));
-      return promise;
+      if (nextSync == null)
+        nextSync = breakOutPromise(promiseDecorator);
+      return nextSync.promise;
     },
     resolve(value) {
-      if (promise == null) return;
-      dew(async () => {
-        while (resolveFn == null) await frameSync();
-        resolveFn(value);
-        promise = resolveFn = rejectFn = null;
-      });
+      if (nextSync == null) return;
+      nextSync.resolve(value);
+      nextSync = null;
     },
     reject(reason) {
-      if (promise == null) return;
-      dew(async () => {
-        while (rejectFn == null) await frameSync();
-        rejectFn(reason);
-        promise = resolveFn = rejectFn = null;
-      });
+      if (nextSync == null) return;
+      nextSync.reject(reason);
+      nextSync = null;
     }
   };
 }
@@ -111,6 +141,15 @@ export function delayFor(delay = 0, timeoutIdSetter) {
  * @template T
  * @typedef {Object} CallSync<T>
  * @property {function():Promise<T>} sync A function to call to obtain the promise to synchronize on.
+ * @property {function(?T):void} resolve A function to call when the promise needs to be resolved.
+ * @property {function(?any):void} reject A function to call when the promise needs to be rejected.
+ */
+
+/**
+ * An object that exposes the `resolve` and `reject` functions of a `promise`.
+ * @template T
+ * @typedef {Object} BreakOutPromise<T>
+ * @property {Promise<T>} promise The promise that is being wrapped.
  * @property {function(?T):void} resolve A function to call when the promise needs to be resolved.
  * @property {function(?any):void} reject A function to call when the promise needs to be rejected.
  */
