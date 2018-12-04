@@ -1,11 +1,12 @@
 import PropTypes from "prop-types";
 import ReactDOMServer from "react-dom/server";
 import Head from "next/head";
+import getConfig from "next/config";
 import stylesheet from "styles/main.scss";
 import lightboxStyle from "react-image-lightbox/style.css";
 
 import { dew } from "tools/common";
-import { wait, frameSync } from "tools/async";
+import { wait, delayToNextFrame } from "tools/async";
 import { extensions as strEx } from "tools/strings";
 import { extensions as arrEx } from "tools/array";
 import { extensions as maybe, nothing } from "tools/maybe";
@@ -21,6 +22,7 @@ import Page from "components/Page";
 const context = require.context("../components/pages", false, /\.(js|jsx)$/);
 const pageIndex = context.keys().map(file => context(file));
 
+const isProduction = getConfig().publicRuntimeConfig?.isProduction ?? true;
 const { Fragment } = React;
 
 const [pageComponents, knownPages] = dew(() => {
@@ -70,7 +72,7 @@ class IndexPage extends React.Component {
 
   transitionTimeout = nothing;
 
-  loadingTimeout = nothing;
+  animationHandle = nothing;
 
   didUnmount = false;
 
@@ -85,24 +87,30 @@ class IndexPage extends React.Component {
       article: havePage ? props.page : "",
       loading: true
     };
-  } 
-
-  setLoadingTimeout = (id) => this.loadingTimeout = id;
+  }
 
   setTransitionTimeout = (id) => this.transitionTimeout = id;
+
+  frameSync = delayToNextFrame((handle) => this.animationHandle = handle);
 
   pushState(newState) {
     if (this.didUnmount)
       return new Promise.reject(new Error("component has dismounted during async operation"));
-    return new Promise(resolve => this.setState(newState, resolve)).then(frameSync);
+    return new Promise(resolve => this.setState(newState, resolve)).then(this.frameSync);
   }
 
   componentDidMount() {
-    dew(async () => {
-      await frameSync();
+    const finishLoading = () => {
       if (this.didUnmount) return;
       this.setState({ loading: false });
-    });
+    }
+    // Synchronize on when the CSS background image has loaded.
+    const img = new Image();
+    img.onload = finishLoading;
+    img.onerror = isProduction ? finishLoading : () => {
+      throw new Error(`failed to detect loaded state via image at: ${img.src}`);
+    };
+    img.src = "/static/images/placeholder_bg.jpg";
   }
 
   componentDidUpdate(prevProps) {
@@ -114,7 +122,7 @@ class IndexPage extends React.Component {
     // Cancel asynchronous transitions.
     this.transitionTarget = nothing;
     this.transitionTimeout::maybe.forEach(clearTimeout);
-    this.loadingTimeout::maybe.forEach(clearTimeout);
+    this.animationHandle::maybe.forEach(cancelAnimationFrame);
     this.didUnmount = true;
   }
 
@@ -195,7 +203,7 @@ class IndexPage extends React.Component {
 
   doNotifyPageReady() {
     this.props.notifyPageReady();
-    return frameSync();
+    return this.frameSync();
   }
   
   render() {

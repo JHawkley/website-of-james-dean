@@ -2,19 +2,31 @@ import { dew, identityFn } from "tools/common";
 
 /**
  * Creates a promise that will resolve when the next `requestAnimationFrame` event fires.
- * The promise will resolve with the given value, if provided.
+ * Resolves to the time, according to the rules of `requestAnimationFrame`.
+ *
+ * @export
+ * @returns {Promise<number>} A promise, to resolve at the next animation frame.
+ */
+export function frameSync() {
+  return new Promise(window.requestAnimationFrame);
+}
+
+/**
+ * Creates a function that creates a promise that will resolve with the given `value` on the next frame.
+ * Use this function in a `Promise..then` call to delay its resolution.
  *
  * @export
  * @template T
- * @param {?T} [value] A value to be resolved to.
- * @returns {Promise<T>} A promise, to resolve at the next animation frame.
+ * @param {function(number)} [handleSetter] A function that will be provided the RAF handle for cancellation.
+ * @returns {function(?T): Promise<?T>} A function that will produce a promise which will resolve on the next frame.
  */
-export function frameSync(value) {
-  return new Promise(resolve => {
-    window.requestAnimationFrame(() => {
-      resolve(value);
+export function delayToNextFrame(handleSetter) {
+  return (value) => {
+    return new Promise(resolve => {
+      const handle = window.requestAnimationFrame(() => resolve(value));
+      handleSetter?.(handle);
     });
-  });
+  };
 }
 
 /**
@@ -67,13 +79,13 @@ export function callSync(promiseDecorator = identityFn) {
  *
  * @export
  * @param {number} [delay=0] The number of milliseconds to wait.
- * @param {function(number)} [timeoutSetter] A function that will be provided the timeout ID for cancellation.
+ * @param {function(number)} [timeoutIdSetter] A function that will be provided the timeout ID for cancellation.
  * @returns {Promise<void>} A promise that will resolve when the timeout is complete.
  */
-export function wait(delay = 0, timeoutSetter = null) {
+export function wait(delay = 0, timeoutIdSetter = null) {
   return new Promise(resolve => {
     const timeoutId = setTimeout(resolve, delay);
-    timeoutSetter?.(timeoutId);
+    timeoutIdSetter?.(timeoutId);
   });
 }
 
@@ -84,12 +96,12 @@ export function wait(delay = 0, timeoutSetter = null) {
  * @export
  * @template T
  * @param {number} [delay=0] The number of milliseconds to wait.
- * @param {function(number)} [timeoutSetter] A function that will be provided the timeout ID for cancellation.
+ * @param {function(number)} [timeoutIdSetter] A function that will be provided the timeout ID for cancellation.
  * @returns {function(?T): Promise<?T>} A function that will produce a promise which will resolve after a delay.
  */
-export function delayFor(delay = 0, timeoutSetter) {
+export function delayFor(delay = 0, timeoutIdSetter) {
   return async (value) => {
-    await wait(delay, timeoutSetter);
+    await wait(delay, timeoutIdSetter);
     return value;
   };
 }
