@@ -1,4 +1,5 @@
-import { atob, btoa } from "abab";
+import atob from "babel-loader?{'presets':['next/babel']}!abab/lib/atob";
+import btoa from "babel-loader?{'presets':['next/babel']}!abab/lib/btoa";
 
 /**
  * Contains functions to encode and decode Base64 strings.
