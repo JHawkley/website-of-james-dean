@@ -76,7 +76,7 @@ class IndexPage extends React.Component {
 
   constructor(props) {
     super(props);
-    
+
     const havePage = !props.page::strEx.isNullishOrEmpty();
     this.state = {
       isArticleVisible: havePage,
@@ -100,6 +100,7 @@ class IndexPage extends React.Component {
   componentDidMount() {
     dew(async () => {
       await frameSync();
+      if (this.didUnmount) return;
       this.setState({ loading: false });
     });
   }
