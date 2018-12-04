@@ -10,24 +10,17 @@
     @include vendor('display', 'flex');
     @include vendor('flex-direction', 'column');
     @include vendor('align-items', 'center');
+    @include vendor('transition', (
+      'transform #{_duration(article)} ease-in-out',
+      'filter #{_duration(article)} ease-in-out',
+      'opacity #{_duration(article)} ease-in-out'
+    ));
     background-image: -moz-radial-gradient(rgba(0,0,0,0.25) 25%, rgba(0,0,0,0) 55%);
     background-image: -webkit-radial-gradient(rgba(0,0,0,0.25) 25%, rgba(0,0,0,0) 55%);
     background-image: -ms-radial-gradient(rgba(0,0,0,0.25) 25%, rgba(0,0,0,0) 55%);
     background-image: radial-gradient(rgba(0,0,0,0.25) 25%, rgba(0,0,0,0) 55%);
     max-width: 100%;
     text-align: center;
-
-    .body.with-transitions & {
-      @include vendor('transition', (
-        'transform #{_duration(article)} ease-in-out',
-        'filter #{_duration(article)} ease-in-out',
-        'opacity #{_duration(article)} ease-in-out',
-      ));
-
-      > * {
-        @include vendor('transition', 'opacity #{_duration(article)} ease-in-out');
-      }
-    }
 
     > * {
       position: relative;
@@ -166,9 +159,7 @@
     }
 
     .body.is-loading & {
-      > * {
-        opacity: 0;
-      }
+      opacity: 0;
 
       @include vendor('filter', 'blur(0.125rem)');
 

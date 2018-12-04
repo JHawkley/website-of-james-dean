@@ -17,10 +17,6 @@ const getState = (key) => window.history.state?.options?.[key];
 
 export default class PaginatedApp extends App {
 
-  state = {
-    currentPage: ""
-  };
-
   canScrollRestore = dew(() => {
     if (typeof window === "undefined") return false;
     if (typeof window.sessionStorage === "undefined") return false;
@@ -34,6 +30,12 @@ export default class PaginatedApp extends App {
   scrollRestoreEntry = 0;
 
   hashBlockID = null;
+
+  constructor(props) {
+    super(props);
+    const initialPage = props.router.query?.page ?? "";
+    this.state = { currentPage: initialPage };
+  }
 
   optionsForEntryId = (oldOptions) => {
     let newOptions = oldOptions;

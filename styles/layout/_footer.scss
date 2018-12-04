@@ -7,6 +7,11 @@
 /* Footer */
 
   #footer {
+    @include vendor('transition', (
+      'transform #{_duration(article)} ease-in-out',
+      'filter #{_duration(article)} ease-in-out',
+      'opacity #{_duration(article)} ease-in-out'
+    ));
     width: 100%;
     max-width: 100%;
     margin-top: 2rem;
@@ -18,14 +23,6 @@
       opacity: 0.75;
       margin-bottom: 0;
       text-transform: uppercase;
-    }
-
-    .body.with-transitions & {
-      @include vendor('transition', (
-        'transform #{_duration(article)} ease-in-out',
-        'filter #{_duration(article)} ease-in-out',
-        'opacity #{_duration(article)} ease-in-out',
-      ));
     }
 
     .body.with-transitions.is-article-visible & {

@@ -40,7 +40,7 @@ class BasePage extends React.PureComponent {
     const klass = "active"::maybe.when(active);
     
     return (
-      <article id={pageName} className={klass} style={{display: "none"}}>
+      <article id={pageName} className={klass}>
         {back}
         {close}
         {this.content()}

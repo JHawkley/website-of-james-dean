@@ -74,13 +74,18 @@ class IndexPage extends React.Component {
 
   didUnmount = false;
 
-  state = {
-    isArticleVisible: false,
-    timeout: false,
-    articleTimeout: false,
-    article: "",
-    loading: true
-  };
+  constructor(props) {
+    super(props);
+    
+    const havePage = !props.page::strEx.isNullishOrEmpty();
+    this.state = {
+      isArticleVisible: havePage,
+      timeout: havePage,
+      articleTimeout: havePage,
+      article: havePage ? props.page : "",
+      loading: true
+    };
+  } 
 
   setLoadingTimeout = (id) => this.loadingTimeout = id;
 
@@ -94,12 +99,9 @@ class IndexPage extends React.Component {
 
   componentDidMount() {
     dew(async () => {
-      await wait(100, this.setLoadingTimeout);
+      await frameSync();
       this.setState({ loading: false });
     });
-
-    // Restore location.
-    this.transitionToPage();
   }
 
   componentDidUpdate(prevProps) {
@@ -199,7 +201,7 @@ class IndexPage extends React.Component {
     const { loading, isArticleVisible, timeout, articleTimeout, article } = this.state;
     const { transitionsSupported } = this.props;
 
-    const klass = ["body", "js-only", ];
+    const klass = ["body", "js-only"];
     if (loading) klass.push("is-loading");
     if (isArticleVisible) klass.push("is-article-visible");
     if (transitionsSupported) klass.push("with-transitions");
