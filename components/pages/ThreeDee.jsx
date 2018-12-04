@@ -18,7 +18,7 @@ export default class ThreeDee extends Page($threedee, () => Work) {
       <Fragment>
         <h2 className="major">Miscellaneous 3D</h2>
         <span className="image main javascript-link" onClick={Gallery.openCallback(0)}>
-          <img src="/static/images/3drenders/misc_header.jpg" alt="Misc 3D Gallery" />
+          <img src="/static/images/3drenders/misc_header.jpg" alt="Miscellaneous 3D Modeling Gallery" />
           <div className="label-right">Gallery</div>
         </span>
         <p>Along with the Solar Bio-Reactor, I had a few other 3D projects as well.</p>

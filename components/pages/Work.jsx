@@ -24,7 +24,7 @@ export default class Work extends Page($work) {
     return (
       <Fragment>
         <h2 className="major">Work</h2>
-        <span className="image main"><img src="/static/images/pic_work.png" alt="" /></span>
+        <span className="image main"><img src="/static/images/pic_work.png" alt="Variety of Work" /></span>
         <p>Much of my work was done at my previous employer, <strong><Jump href="http://www.terradomain.us/">TerraDom Corporation</Jump></strong> (formerly Terra Domain Consulting).  My best and biggest software projects were done there.  You can read about them from the selection below:</p>
         {workItem("Enterprise Geosteering", "TerraVu 2", TerraVu)}
         {workItem("Mud-Logger's Tool", "Lithologic", Lithologic)}
