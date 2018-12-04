@@ -50,7 +50,7 @@ export default class ThreeDee extends Page($threedee, () => Work) {
         <p>It would basically fall through the atmosphere as this blindingly hot ball of swirling gas before punching clean through the Earth leaving a molten scar.</p>
         <p>Was gonna be this big, epic thing where you see the initial strike, then the blackhole erupt out the other side of the planet.  It would fly far enough out to eventually strike the moon before drifting back in again.  This landscape was going to be the setting of the initial blast.</p>
         <span className="image right javascript-link" onClick={Gallery.openCallback(0)}>
-          <img src="/static/images/3drenders/landscape1.jpg" alt="Blackhole Landscape Render" />
+          <img src="/static/images/3drenders/landscape1_inset.jpg" alt="Blackhole Landscape Render" />
           <div className="label-right">Image</div>
         </span>
         <p>As you can see, I was aiming for photo-realism.  It features some 35,000 pine tree facades.  The original trees were created using this impressive procedurally-generated plant/tree plugin for 3DSMax called <Jump href="https://exlevel.com/features/">GrowFX</Jump>, then rendered to a 2D sprite and distributed all over the scene using a distribution map.</p>
@@ -59,7 +59,7 @@ export default class ThreeDee extends Page($threedee, () => Work) {
 
         <h3>Ice Cavern</h3>
         <span className="image right javascript-link" onClick={Gallery.openCallback(2)}>
-          <img src="/static/images/3drenders/icecave.jpg" alt="Ice Cavern Render" />
+          <img src="/static/images/3drenders/icecave_inset.jpg" alt="Ice Cavern Render" />
           <div className="label-right">Image</div>
         </span>
         <p>A lot of landscapes and other macro-scale objects.  How about a scene that is a little more intimate?</p>
