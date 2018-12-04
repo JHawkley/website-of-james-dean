@@ -79,6 +79,16 @@ export function dew(fn) {
  */
 export function noop() { return; }
 
+/**
+ * Represents the identity function.
+ *
+ * @export
+ * @template T
+ * @param {T} v Some value.
+ * @returns {T} The same value as `v`.
+ */
+export function identityFn(v) { return v; }
+
 /** 
  * An object containing extension-methods.  Use the ESNext bind operator `::` to make use of these.
  * 

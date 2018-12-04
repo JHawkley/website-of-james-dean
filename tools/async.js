@@ -1,3 +1,4 @@
+import { dew, identityFn } from "tools/common";
 
 /**
  * Creates a promise that will resolve when the next `requestAnimationFrame` event fires.
@@ -6,7 +7,7 @@
  * @export
  * @template T
  * @param {?T} [value] A value to be resolved to.
- * @returns {Promise<T|number>} A promise, to resolve at the next animation frame.
+ * @returns {Promise<T>} A promise, to resolve at the next animation frame.
  */
 export function frameSync(value) {
   return new Promise(resolve => {
@@ -14,6 +15,51 @@ export function frameSync(value) {
       resolve(value);
     });
   });
+}
+
+/**
+ * Creates a object that can be used to synchronize various asynchronous tasks to a single function call.
+ * If `promiseDecorator` is not provided, it will default to the identity function.
+ *
+ * @export
+ * @template T,U
+ * @param {function(Promise<T>):Promise<U>} [promiseDecorator]
+ *   A function that can transform the synchronization promise into a new promise.
+ * @returns {CallSync<U>} An object that can be used to synchronize with.
+ */
+export function callSync(promiseDecorator = identityFn) {
+  let promise = null;
+  let resolveFn = null;
+  let rejectFn = null;
+
+  function acquireCallbacks(resolve, reject) {
+    resolveFn = resolve;
+    rejectFn = reject;
+  }
+  
+  return {
+    sync() {
+      if (promise == null)
+        promise = promiseDecorator(new Promise(acquireCallbacks));
+      return promise;
+    },
+    resolve(value) {
+      if (promise == null) return;
+      dew(async () => {
+        while (resolveFn == null) await frameSync();
+        resolveFn(value);
+        promise = resolveFn = rejectFn = null;
+      });
+    },
+    reject(reason) {
+      if (promise == null) return;
+      dew(async () => {
+        while (rejectFn == null) await frameSync();
+        rejectFn(reason);
+        promise = resolveFn = rejectFn = null;
+      });
+    }
+  };
 }
 
 /**
@@ -47,3 +93,12 @@ export function delayFor(delay = 0, timeoutSetter) {
     return value;
   };
 }
+
+/**
+ * An object that provides synchronization services.
+ * @template T
+ * @typedef {Object} CallSync<T>
+ * @property {function():Promise<T>} sync A function to call to obtain the promise to synchronize on.
+ * @property {function(?T):void} resolve A function to call when the promise needs to be resolved.
+ * @property {function(?any):void} reject A function to call when the promise needs to be rejected.
+ */
