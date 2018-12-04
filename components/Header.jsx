@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import Jump from "./Jump";
 import FontAwesomeIcon from "@fortawesome/react-fontawesome";
-import faGem from "@fortawesome/fontawesome-free-regular/faGem";
+import { faCode } from "@fortawesome/free-solid-svg-icons/faCode";
 
 import Intro from "./pages/Intro";
 import Work from "./pages/Work";
@@ -11,7 +11,7 @@ import Contact from "./pages/Contact";
 const Header = ({timeout}) => (
   <header id="header" style={timeout ? {display: 'none'} : null}>
     <div className="logo">
-      <FontAwesomeIcon icon={faGem} transform="grow-18" />
+      <FontAwesomeIcon icon={faCode} transform="grow-18" />
     </div>
     <div className="content">
       <div className="inner">
