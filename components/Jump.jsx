@@ -54,20 +54,16 @@ const doesItScroll = (href, router) => {
   return true;
 };
 
+const ownPropKeys = new Set(["children", "icon", "page", "href", "scroll", "router"]);
+const linkPropKeys = new Set(["as", "prefetch", "replace", "shallow", "passHref"]);
+
 const Jump = (props) => {
   const linkProps = {};
   const anchorProps = {};
   props::objEx.forOwnProps((value, key) => {
-    if (key === "children") return;
-    if (key === "icon") return;
-    if (key === "page") return;
-    if (key === "href") return;
-    if (key === "scroll") return;
-    if (key === "router") return;
-    if (key in Link.propTypes)
-      linkProps[key] = value;
-    else
-      anchorProps[key] = value;
+    if (ownPropKeys.has(key)) return;
+    const pool = linkPropKeys.has(key) ? linkProps : anchorProps;
+    pool[key] = value;
   });
 
   const href = buildHref(props);
