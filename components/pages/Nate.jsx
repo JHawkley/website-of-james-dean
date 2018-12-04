@@ -24,7 +24,7 @@ export default class Nate extends Page($nate, () => Work) {
           <img src="/static/images/nate-game/header.png" alt="Nate Game Gallery" />
           <div className="label-right">Gallery</div>
         </span>
-        <p>A jump'n'shoot side-scroller game targeting JavaScript platforms and using the <Jump href="https://impactjs.com/" target="_blank">Impact game engine</Jump>.  I was coding everything in <Jump href="https://coffeescript.org/" target="_blank">CoffeeScript</Jump> at the time and <Jump href="https://box2d.org/about/" target="_blank">Box2D</Jump> was being used to provide physics.  A friend of mine, an artist who goes by Tderek99, was doing the graphics while I was doing the programming.</p>
+        <p>A jump'n'shoot side-scroller game targeting JavaScript platforms and using the <Jump href="https://impactjs.com/">Impact game engine</Jump>.  I was coding everything in <Jump href="https://coffeescript.org/">CoffeeScript</Jump> at the time and <Jump href="https://box2d.org/about/">Box2D</Jump> was being used to provide physics.  A friend of mine, an artist who goes by Tderek99, was doing the graphics while I was doing the programming.</p>
 
         <h3>Details</h3>
         <span className="image right javascript-link" onClick={Gallery.openCallback(1)}>
@@ -58,7 +58,7 @@ export default class Nate extends Page($nate, () => Work) {
         <p>If he is left bored for too long, he'll make a sad, confused whine and return to his passive behaviors.  Be nice and give him some fun!  It gets boring on that blue platform...</p>
         {this.isCurrentPage && NateWidget.supported && <NateWidget />}
         {!NateWidget.supported && <p>(Unfortunately, your browser does not support the features of the interactive component.  Please revisit this page with a different browser if you would like to play with Nate.)</p>}
-        <p>All of this was made using a combination of HTML, JavaScript (with ESNext features via <Jump href="https://babeljs.io/" target="_blank">Babel</Jump>), and CSS (via <Jump href="https://sass-lang.com/" target="_blank">SASS</Jump>).  The sounds were created using <Jump href="http://github.grumdrig.com/jsfxr/" target="_blank">jsfxr</Jump> and hopefully the sounds he makes when he changes between his behavior states are recognized as sounds a dog might make.</p>
+        <p>All of this was made using a combination of HTML, JavaScript (with ESNext features via <Jump href="https://babeljs.io/">Babel</Jump>), and CSS (via <Jump href="https://sass-lang.com/">SASS</Jump>).  The sounds were created using <Jump href="http://github.grumdrig.com/jsfxr/">jsfxr</Jump> and hopefully the sounds he makes when he changes between his behavior states are recognized as sounds a dog might make.</p>
         <p>While the Canvas API would probably have been the more performant option, an HTML-element based solution is fine for such a simple interactive piece.  His animations are all driven and controlled by CSS, and an action-list coded in a data-driven style drives his rather complicated behavior, made up of around 50 individual actions spread across 4 major behaviors.</p>
         <p>This was actually the most complex AI that I have made to date, in terms of behavioral complexity.</p>
       </Fragment>

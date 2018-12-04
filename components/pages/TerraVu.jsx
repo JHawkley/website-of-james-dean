@@ -21,7 +21,7 @@ export default class TerraVu extends Page($terravu, () => Work) {
           <img src="/static/images/terravu/header.png" alt="TerraVu Gallery" />
           <div className="label-right">Gallery</div>
         </span>
-        <p>TerraVu 2 is a geosteering software package that I first started development on in 2002, programmed in C# using .NET's <Jump href="https://docs.microsoft.com/en-us/dotnet/framework/winforms/" target="_blank">Windows Forms API</Jump>.  It was my very first professional project.  It was used internally by Terra Domain until 2004 or so, when licenses began to be sold to other businesses in the Oil &amp; Gas industry.</p>
+        <p>TerraVu 2 is a geosteering software package that I first started development on in 2002, programmed in C# using .NET's <Jump href="https://docs.microsoft.com/en-us/dotnet/framework/winforms/">Windows Forms API</Jump>.  It was my very first professional project.  It was used internally by Terra Domain until 2004 or so, when licenses began to be sold to other businesses in the Oil &amp; Gas industry.</p>
         <p>It is not inaccurate to say that for every well that TerraVu was deployed on, millions of dollars of our customer's capital rode on its successful function.  It was a big money-maker for Terra Domain, selling for over $20,000 a license.</p>
         <p>Along with building the application and maintaining its code, I also tended to provide technical support to customers.  I still do work on TerraVu on a contractor basis.</p>
 

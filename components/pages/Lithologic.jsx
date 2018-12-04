@@ -21,7 +21,7 @@ export default class Lithologic extends Page($lithologic, () => Work) {
           <img src="/static/images/lithologic/header.png" alt="Lithologic Gallery" />
           <div className="label-right">Gallery</div>
         </span>
-        <p>Lithologic is a tool to assist mud-loggers in their task of producing rock descriptions.  It was my second major application coded in C# using .NET's <Jump href="https://docs.microsoft.com/en-us/dotnet/framework/winforms/" target="_blank">Windows Forms API</Jump>.  I believe this project started in 2011 when someone came to us with the idea and was seeking a software developer to make it a reality.</p>
+        <p>Lithologic is a tool to assist mud-loggers in their task of producing rock descriptions.  It was my second major application coded in C# using .NET's <Jump href="https://docs.microsoft.com/en-us/dotnet/framework/winforms/">Windows Forms API</Jump>.  I believe this project started in 2011 when someone came to us with the idea and was seeking a software developer to make it a reality.</p>
 
         <h3>Purpose &amp; Use</h3>
         <p>Lithologic has all the cold, focused functionality of <Gallery index={0}>a calculator strapped to a digital encyclopedia</Gallery>.  It is given a very flat layout and presentation, intended to allow its users to very quickly find the option they need and input it.</p>

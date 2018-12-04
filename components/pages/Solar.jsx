@@ -28,13 +28,13 @@ export default class Solar extends Page($solar, () => Work) {
         <p>However, I had nothing to do with the design of the concept.  I was merely hired to make the pretty pictures.</p>
 
         <h3>Details</h3>
-        <Jump href="https://drive.google.com/open?id=1Yj7qHMptjpBB9uTfc1dLBvsXy34srr_5" target="_blank" icon="none" className="image right">
+        <Jump href="https://drive.google.com/open?id=1Yj7qHMptjpBB9uTfc1dLBvsXy34srr_5" icon="none" className="image right">
           <img src="/static/images/3drenders/br_anim_inset.jpg" alt="Bioreactor Flyby Animation" />
           <div className="label-right">Video</div>
         </Jump>
-        <p>Pretty much all the modeling in this project was done in <Jump href="https://www.autodesk.com/products/3ds-max/overview" target="_blank">3D Studio Max</Jump>.  It relied heavily on ray-tracing to demonstrate some <Gallery index={2}>interesting ideas involving the mirrors</Gallery>.  They were capable of both focusing on the power-tower and de-focusing to cast softer light on the algae tank.</p>
-        <p>These mirrors were <Jump icon="movie" href="https://drive.google.com/open?id=1cCztyiDUtS8LZbiBiOI7l1c81v5QEMcf" target="_blank">all rigged up using inverse-kinematics</Jump> to be realistically aimed in order to bounce light onto their respective targets.  I had to create a control script to <Gallery index={1}>populate the scene with mirrors</Gallery>, as well as aim them according to the current position of the sun in the scene.</p>
-        <p>A really fun piece of software called <Jump href="https://www.world-machine.com/" target="_blank">World Machine</Jump> was used to generate a Tibetan-style landscape, which was apparently one of the locations this idea was thought to be practical.  The various texture maps it produced were used to add variation to the terrain; little touches like erosion and snow all played a part.</p>
+        <p>Pretty much all the modeling in this project was done in <Jump href="https://www.autodesk.com/products/3ds-max/overview">3D Studio Max</Jump>.  It relied heavily on ray-tracing to demonstrate some <Gallery index={2}>interesting ideas involving the mirrors</Gallery>.  They were capable of both focusing on the power-tower and de-focusing to cast softer light on the algae tank.</p>
+        <p>These mirrors were <Jump href="https://drive.google.com/open?id=1cCztyiDUtS8LZbiBiOI7l1c81v5QEMcf" icon="movie">all rigged up using inverse-kinematics</Jump> to be realistically aimed in order to bounce light onto their respective targets.  I had to create a control script to <Gallery index={1}>populate the scene with mirrors</Gallery>, as well as aim them according to the current position of the sun in the scene.</p>
+        <p>A really fun piece of software called <Jump href="https://www.world-machine.com/">World Machine</Jump> was used to generate a Tibetan-style landscape, which was apparently one of the locations this idea was thought to be practical.  The various texture maps it produced were used to add variation to the terrain; little touches like erosion and snow all played a part.</p>
         <span className="image right javascript-link" onClick={Gallery.openCallback(4)}>
           <img src="/static/images/3drenders/br5_inset.jpg" alt="Greenhouse Render" />
           <div className="label-right">Image</div>

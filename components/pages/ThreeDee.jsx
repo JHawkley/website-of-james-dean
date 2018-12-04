@@ -26,14 +26,14 @@ export default class ThreeDee extends Page($threedee, () => Work) {
         <h3>Geo-Steering Concepts</h3>
         <p>Some of my first animations were to help explain geo-steering and related concepts to others.  These started as really quite poorly done Flash animations (which I'm not gonna be showing here), but I eventually got my hands on a copy of 3D Studio Max and did...  better?</p>
         <span className="span-across align-center">
-          <Jump href="https://drive.google.com/open?id=15BXfXkI4uh-wPY9NWNtcDm-uPQQHAJ0x" target="_blank" icon="none" className="image contain">
+          <Jump href="https://drive.google.com/open?id=15BXfXkI4uh-wPY9NWNtcDm-uPQQHAJ0x" icon="none" className="image contain">
             <img src="/static/images/3drenders/geo_bar.jpg" alt="Geo-Steering Correlation Animation" />
             <div className="label-right">Video</div>
           </Jump>
         </span>
         <p>Anyways, the one above is a basic explanation of how the offset well relates to the horizontal well, showing the similarities between the two wells' gamma-ray logs.  A correlation is shown explicitly and then a few more later in.</p>
         <span className="span-across align-center">
-          <Jump href="https://drive.google.com/open?id=15qAXg7Y2k-j4UGEe3tKq12YFyqN-tBiQ" target="_blank" icon="none" className="image contain">
+          <Jump href="https://drive.google.com/open?id=15qAXg7Y2k-j4UGEe3tKq12YFyqN-tBiQ" icon="none" className="image contain">
             <img src="/static/images/3drenders/oilsands_bar.jpg" alt="Oil Sands Animation" />
             <div className="label-right">Video</div>
           </Jump>
@@ -42,7 +42,7 @@ export default class ThreeDee extends Page($threedee, () => Work) {
         <p>Gosh, this camera work is real bad...  Well, these might not be much, but they got their point across.</p>
 
         <h3>Blackhole Animation</h3>
-        <Jump href="https://drive.google.com/open?id=1X8FK2cpaQxLQLB2M7UHaOVgFco98uup9" target="_blank" icon="none" className="image right">
+        <Jump href="https://drive.google.com/open?id=1X8FK2cpaQxLQLB2M7UHaOVgFco98uup9" icon="none" className="image right">
           <img src="/static/images/3drenders/blackhole_anim_inset.jpg" alt="Blackhole Atmosphere Animation" />
           <div className="label-right">Video</div>
         </Jump>
