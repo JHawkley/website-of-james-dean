@@ -133,9 +133,13 @@ a.work-item {
 }
 
 .image {
-  &.contain img {
+  &.contain {
     max-width: 100%;
-    height: auto;
+
+    img {
+      max-width: 100%;
+      height: auto;
+    }
   }
 
   .label-right {
@@ -178,5 +182,6 @@ a.work-item {
     left: 0px !important;
     width: 100% !important;
     height: 100% !important;
+    max-width: inherit !important;
   }
 }
