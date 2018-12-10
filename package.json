@@ -9,6 +9,9 @@
     "start": "next start --hostname 0.0.0.0",
     "export": "next build && next export"
   },
+  "sideEffects": [
+    "./patch/*.js"
+  ],
   "keywords": [],
   "author": "James Dean",
   "dependencies": {
@@ -44,6 +47,7 @@
     "babel-eslint": "^9.0.0",
     "eslint-plugin-react": "^7.11.1",
     "image-size": "^0.6.3",
-    "loader-utils": "^1.1.0"
+    "loader-utils": "^1.1.0",
+    "webpack-bundle-analyzer": "^3.0.3"
   }
 }
