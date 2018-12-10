@@ -31,9 +31,40 @@ function memoize(resolver) {
   return memoized;
 }
 
+/**
+ * Tries to call this function, wrapping its execution in a try-catch.  If the function throws, `undefined`
+ * will be returned instead.
+ *
+ * @template T,U
+ * @this {function(...U): T} The function to have its output memoized.
+ * @param {*} [thisArg=null] The object to bind to the function.
+ * @param {...U} args The arguments to supply to the function.
+ * @returns {T|undefined} The result of this function or `undefined`.
+ */
+function tryCall(thisArg = null, ...args) {
+  try { return args.length === 0 ? thisArg::this() : thisArg::this(...args); }
+  catch { return void 0; }
+}
+
+/**
+ * Creates a new function that wraps `fn` in a try-catch.  If `fn` throws an error, it will return `undefined`.
+ *
+ * @export
+ * @template T,U
+ * @param {function(...U): T} fn The function to wrap in a try-catch.
+ * @param {*} [thisArg=null] The object to bind to `fn`, when it is called.
+ * @returns {function(...U): T|undefined} A new function.
+ */
+export function trial(fn, thisArg = null) {
+  return function(...args) {
+    try { return args.length === 0 ? thisArg::fn() : thisArg::fn(...args); }
+    catch { return void 0; }
+  }
+}
+
 /** 
  * An object containing extension-methods.  Use the ESNext bind operator `::` to make use of these.
  * 
  * @export
  */
-export const extensions = Object.freeze({ memoize });
+export const extensions = Object.freeze({ memoize, tryCall });

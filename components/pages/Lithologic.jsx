@@ -3,6 +3,8 @@ import Jump from "components/Jump";
 import Lightbox from "components/Lightbox";
 import Work from "./Work";
 
+import ImgHeader from "static/images/lithologic/header.png";
+
 const $lithologic = "lithologic";
 const { Fragment } = React;
 const Gallery = Lightbox.makeGallery($lithologic, [
@@ -14,11 +16,13 @@ const Gallery = Lightbox.makeGallery($lithologic, [
 export default class Lithologic extends Page($lithologic, () => Work) {
 
   content() {
+    const { imageSync, active } = this.props;
+    const phase = active ? 0 : 1;
     return (
       <Fragment>
         <h2 className="major">Lithologic</h2>
         <span className="image main javascript-link" onClick={Gallery.openCallback(0)}>
-          <img src="/static/images/lithologic/header.png" alt="Lithologic Gallery" />
+          <ImgHeader fluid phase={phase} imageSync={imageSync} alt="Lithologic Gallery" />
           <div className="label-right">Gallery</div>
         </span>
         <p>Lithologic is a tool to assist mud-loggers in their task of producing rock descriptions.  It was my second major application coded in C# using .NET's <Jump href="https://docs.microsoft.com/en-us/dotnet/framework/winforms/">Windows Forms API</Jump>.  I believe this project started in 2011 when someone came to us with the idea and was seeking a software developer to make it a reality.</p>

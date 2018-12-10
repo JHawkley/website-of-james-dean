@@ -1,7 +1,8 @@
 import Page from "components/Page";
 import Jump from "components/Jump";
-
 import Work from "./Work";
+
+import ImgPlaceholderPhoto from "static/images/placeholder_photo.jpg";
 
 const $intro = "intro";
 const { Fragment } = React;
@@ -9,10 +10,14 @@ const { Fragment } = React;
 export default class Intro extends Page($intro) {
 
   content() {
+    const { imageSync, active } = this.props;
+    const headerPhase = active ? 0 : 1;
     return (
       <Fragment>
         <h2 className="major">Intro</h2>
-        <span className="image main"><img src="/static/images/pic01.jpg" alt="" /></span>
+        <span className="image right">
+          <ImgPlaceholderPhoto fluid phase={headerPhase} imageSync={imageSync} alt="A Photo of James Dean" />
+        </span>
         <p>Welcome!  I'm James!  I'm a software developer from Texas, USA.</p>
         <p>I have been working professionally since 2002.  In that time, I've put together and maintained three big applications for my former employer.  You can read all about it in the <Jump page={Work}>work section of the site</Jump>.</p>
         <p>My first serious programming was in C#, which I primarily used until 2010, when I decided to shift much of my focus on to JavaScript and related technologies.  I consider web services and applications to pretty much be the future of end-user software, a universal platform that spans all devices across the planet.</p>

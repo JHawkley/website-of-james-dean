@@ -1,4 +1,4 @@
-const { PI, abs, min, max, random } = Math;
+const { PI, abs, min, max, round, random } = Math;
 
 /**
  * @typedef ArrayLike
@@ -14,6 +14,17 @@ function modulo(a, b) {
 
 function normalizeAngle_Rad(input) {
   return modulo(input, PI2);
+}
+
+/**
+ * Rounds the number to the number of `decimals` specified.
+ *
+ * @param {number} decimals The number of decimals to round to.
+ * @returns {number} The number, rounded to the number of significant digits.
+ */
+function roundTo(decimals) {
+  if (!decimals) return round(this);
+  return +(this.toFixed(decimals));
 }
 
 /**
@@ -246,6 +257,6 @@ export function randomBetween(min, max) {
  * @export
  */
 export const extensions = Object.freeze({
-  tolerantCompare, lerp, map, clamp, clampBy, reflow, reflowRange, reflowBy,
-  inRange, sign, toDegrees, toRadians, compareAngle, angleInRange
+  roundTo, tolerantCompare, lerp, map, clamp, clampBy, reflow, reflowRange,
+  reflowBy, inRange, sign, toDegrees, toRadians, compareAngle, angleInRange
 });

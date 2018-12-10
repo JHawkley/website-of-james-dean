@@ -4,7 +4,15 @@ import App, { createUrl } from "next/app";
 import { getUrl } from "next/dist/lib/utils";
 import Modal from "react-modal";
 import { dew } from "tools/common";
-import { extensions as maybe } from "tools/maybe";
+
+// Reimplementation of `tools/maybe.extensions.tryMap`.
+// Used here to prevent use of extensions that rely on `use strict`
+// and the way it allows binding to null.
+const tryMapMaybe = (value, fn) => {
+  if (value == null) return void 0;
+  try { return fn(value); }
+  catch { return void 0; }
+}
 
 const updateState = (fn) => {
   const { url = getUrl(), as = url, options: oldOptions = {} } = window.history.state ?? {};
@@ -141,7 +149,7 @@ export default class PaginatedApp extends App {
 
   recallScrollRestoreData() {
     const json = window.sessionStorage?.getItem("scrollRestoreData");
-    this.scrollRestoreData = json::maybe.tryMap(JSON.parse) ?? [];
+    this.scrollRestoreData = tryMapMaybe(json, JSON.parse) ?? [];
     const options = window.history.state?.options;
     this.scrollRestoreEntry = options?.entryId ?? this.scrollRestoreData.length;
   }

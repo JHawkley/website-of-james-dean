@@ -19,19 +19,42 @@ function forOwnProps(fn) {
 }
 
 /**
+ * Uses a function to filter a simple object's own-properties into a new object.  If the function returns
+ * `true`, that property will be added to the result object.  A "simple object" is one that has a prototype
+ * that is `Object.prototype` or `null`.
+ *
+ * @template T,U
+ * @this {Object.<string, T>} The object to collect the properties from.
+ * @param {function(string, T): boolean} fn The filter function.
+ * @returns {Object.<string, T>} A new object.
+ * @throws When this object is not a simple object.
+ */
+function filterProps(fn) {
+  'use strict'; // Allows binding to `null`.
+  if (this == null) return this;
+  const result = newObjectBasedOn(this);
+  Object.keys(this).forEach(k => {
+    const val = this[k];
+    if (fn(k, val) !== true) return;
+    result[k] = val;
+  });
+  return result;
+}
+
+/**
  * Uses a function to filter and map a simple object's own-properties into a new object.  If the function
  * returns `undefined`, then that property will be dropped from the result.  A "simple object" is one that
  * has a prototype that is `Object.prototype` or `null`.
  *
  * @template T,U
  * @this {Object.<string, T>} The object to collect the properties from.
- * @param {function(string, T): (U|undefined)} fn The transformation function.
+ * @param {function(string, T): (U|undefined)} fn The collector function.
  * @returns {Object.<string, U>} A new object.
  * @throws When this object is not a simple object.
  */
 function collectProps(fn) {
   'use strict'; // Allows binding to `null`.
-  if (this == null) return null;
+  if (this == null) return this;
   const result = newObjectBasedOn(this);
   Object.keys(this).forEach(k => {
     const val = fn(k, this[k]);
@@ -56,8 +79,32 @@ function copyOwn() {
   if (typeof this !== "object")
     throw new Error("the bound value must be an object reference");
   
-  if (this === null) return null;
+  if (this == null) return this;
   return Object.assign(newObjectBasedOn(this), this);
+}
+
+/**
+ * Compares the own-properties of two objects.
+ *
+ * @export
+ * @param {!Object} left The first object.
+ * @param {!Object} right The second object.
+ * @returns {boolean} Whether the objects have equivalent own-properties.
+ * @throws When any argument provided is not an object.
+ * @throws When any argument provided was `null`.
+ */
+export function compareOwnProps(left, right) {
+  if (left === null || typeof left !== "object")
+    throw new Error("the `left` value must be an object reference");
+  if (right === null || typeof right !== "object")
+    throw new Error("the `right` value must be an object reference");
+  if (left === right) return true;
+
+  const keys = new Set([...Object.keys(left), ...Object.keys(right)]);
+  for (const key of keys)
+    if (left[key] !== right[key])
+      return false;
+  return true;
 }
 
 /**
@@ -70,6 +117,21 @@ function copyOwn() {
  */
 export function dew(fn) {
   return fn();
+}
+
+/**
+ * Executes the given function and returns its result.  If the function throws an exception, `undefined`
+ * will be returned instead.
+ *
+ * @export
+ * @template T,U
+ * @param {function(...U): T} fn The function that may throw an exception.
+ * @param {...U} args The arguments to provide to the function.
+ * @returns {T|undefined} The result of `fn` or `undefined`.
+ */
+export function tryDew(fn, ...args) {
+  try { return args.length === 0 ? fn() : fn(...args); }
+  catch { return void 0; }
 }
 
 /**
@@ -95,5 +157,5 @@ export function identityFn(v) { return v; }
  * @export
  */
 export const extensions = Object.freeze({
-  forOwnProps, collectProps, copyOwn
+  forOwnProps, filterProps, collectProps, copyOwn
 });

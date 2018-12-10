@@ -3,6 +3,8 @@ import Jump from "components/Jump";
 import Lightbox from "components/Lightbox";
 import Work from "./Work";
 
+import ImgHeader from "static/images/terravu/header.png";
+
 const $terravu = "terravu";
 const { Fragment } = React;
 const Gallery = Lightbox.makeGallery($terravu, [
@@ -14,11 +16,13 @@ const Gallery = Lightbox.makeGallery($terravu, [
 export default class TerraVu extends Page($terravu, () => Work) {
 
   content() {
+    const { imageSync, active } = this.props;
+    const phase = active ? 0 : 1;
     return (
       <Fragment>
         <h2 className="major">TerraVu 2</h2>
         <span className="image main javascript-link" onClick={Gallery.openCallback(0)}>
-          <img src="/static/images/terravu/header.png" alt="TerraVu Gallery" />
+          <ImgHeader fluid phase={phase} imageSync={imageSync} alt="TerraVu Gallery" />
           <div className="label-right">Gallery</div>
         </span>
         <p>TerraVu 2 is a geosteering software package that I first started development on in 2002, programmed in C# using .NET's <Jump href="https://docs.microsoft.com/en-us/dotnet/framework/winforms/">Windows Forms API</Jump>.  It was my very first professional project.  It was used internally by Terra Domain until 2004 or so, when licenses began to be sold to other businesses in the Oil &amp; Gas industry.</p>

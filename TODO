@@ -1,0 +1,4 @@
+* Make a loading throbber for before the page has displayed.
+* Add more accessible `alt` descriptions for images.
+* Extract the tool extensions into their own modules, and re-export them instead.
+  This should allow Webpack to cull unused extensions.

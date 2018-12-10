@@ -1,13 +1,15 @@
 import PropTypes from "prop-types";
 import Link from "next/link";
 import { parse as parseUrl } from "url";
+import { ImageSync } from "./AsyncImage";
 import { dew } from "tools/common";
 import { extensions as maybe, nothing } from "tools/maybe";
 
 class BasePage extends React.PureComponent {
 
   static propTypes = {
-    active: PropTypes.bool
+    active: PropTypes.bool,
+    imageSync: PropTypes.instanceOf(ImageSync)
   };
 
   static defaultProps = {

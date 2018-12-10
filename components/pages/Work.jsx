@@ -1,6 +1,8 @@
 import Page from "components/Page";
 import Jump from "components/Jump";
 
+import ImgHeader from "static/images/pic_work.png";
+
 // Our work pages.
 import TerraVu from "./TerraVu";
 import Lithologic from "./Lithologic";
@@ -21,10 +23,12 @@ const workItem = (description, title, page) => (
 
 export default class Work extends Page($work) {
   content() {
+    const { imageSync, active } = this.props;
+    const phase = active ? 0 : 1;
     return (
       <Fragment>
         <h2 className="major">Work</h2>
-        <span className="image main"><img src="/static/images/pic_work.png" alt="Variety of Work" /></span>
+        <span className="image main"><ImgHeader fluid phase={phase} imageSync={imageSync} alt="Variety of Work" /></span>
         <p>Much of my work was done at my previous employer, <strong><Jump href="http://www.terradomain.us/">TerraDom Corporation</Jump></strong> (formerly Terra Domain Consulting).  My best and biggest software projects were done there.  You can read about them from the selection below:</p>
         {workItem("Enterprise Geosteering", "TerraVu 2", TerraVu)}
         {workItem("Mud-Logger's Tool", "Lithologic", Lithologic)}

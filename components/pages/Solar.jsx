@@ -3,6 +3,10 @@ import Jump from "components/Jump";
 import Lightbox from "components/Lightbox";
 import Work from "./Work";
 
+import ImgHeader from "static/images/3drenders/br_header.jpg";
+import ImgAnimInset from "static/images/3drenders/br_anim_inset.jpg";
+import ImgFiveInset from "static/images/3drenders/br5_inset.jpg";
+
 const $solar = "solar";
 const { Fragment } = React;
 const Gallery = Lightbox.makeGallery($solar, [
@@ -16,11 +20,14 @@ const Gallery = Lightbox.makeGallery($solar, [
 export default class Solar extends Page($solar, () => Work) {
 
   content() {
+    const { imageSync, active } = this.props;
+    const headerPhase = active ? 0 : 1;
+    const bodyPhase = active ? 0 : 2;
     return (
       <Fragment>
         <h2 className="major">Solar Bio-Reactor</h2>
         <span className="image main javascript-link" onClick={Gallery.openCallback(0)}>
-          <img src="/static/images/3drenders/br_header.jpg" alt="Bioreactor Gallery" />
+          <ImgHeader fluid phase={headerPhase} imageSync={imageSync} alt="Bioreactor Gallery" />
           <div className="label-right">Gallery</div>
         </span>
         <p>My former employer, Terra Domain, had ambitions beyond oil &amp; gas exploration services and software.  One of these was creating a <Gallery index={0}>hybrid power generator</Gallery> for remote locations with abundant solar energy.  I was tasked to create 3D renders and animations to help explain the concept.</p>
@@ -29,14 +36,14 @@ export default class Solar extends Page($solar, () => Work) {
 
         <h3>Details</h3>
         <Jump href="https://drive.google.com/open?id=1Yj7qHMptjpBB9uTfc1dLBvsXy34srr_5" icon="none" className="image right">
-          <img src="/static/images/3drenders/br_anim_inset.jpg" alt="Bioreactor Flyby Animation" />
+          <ImgAnimInset fluid phase={bodyPhase} imageSync={imageSync} alt="Bioreactor Flyby Animation" />
           <div className="label-right">Video</div>
         </Jump>
         <p>Pretty much all the modeling in this project was done in <Jump href="https://www.autodesk.com/products/3ds-max/overview">3D Studio Max</Jump>.  It relied heavily on ray-tracing to demonstrate some <Gallery index={2}>interesting ideas involving the mirrors</Gallery>.  They were capable of both focusing on the power-tower and de-focusing to cast softer light on the algae tank.</p>
         <p>These mirrors were <Jump href="https://drive.google.com/open?id=1cCztyiDUtS8LZbiBiOI7l1c81v5QEMcf" icon="movie">all rigged up using inverse-kinematics</Jump> to be realistically aimed in order to bounce light onto their respective targets.  I had to create a control script to <Gallery index={1}>populate the scene with mirrors</Gallery>, as well as aim them according to the current position of the sun in the scene.</p>
         <p>A really fun piece of software called <Jump href="https://www.world-machine.com/">World Machine</Jump> was used to generate a Tibetan-style landscape, which was apparently one of the locations this idea was thought to be practical.  The various texture maps it produced were used to add variation to the terrain; little touches like erosion and snow all played a part.</p>
         <span className="image right javascript-link" onClick={Gallery.openCallback(4)}>
-          <img src="/static/images/3drenders/br5_inset.jpg" alt="Greenhouse Render" />
+          <ImgFiveInset fluid phase={bodyPhase} imageSync={imageSync} alt="Greenhouse Render" />
           <div className="label-right">Image</div>
         </span>
         <p>There were also ideas to use the installation for food and water production, so a couple of greenhouse designs were also included in the renders.  One greenhouse had <Gallery index={3}>a more mundane design</Gallery> to it, while another was <Gallery index={4}>much more complex</Gallery> with the idea of integrating a water desalination system into it.</p>

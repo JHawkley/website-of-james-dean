@@ -3,7 +3,7 @@
         "browser": true,
         "es6": true
     },
-    "globals": { "React": false, "require": false },
+    "globals": { "React": false, "require": false, "setImmediate": true },
     "parser": "babel-eslint",
     "parserOptions": {
         "ecmaVersion": 6,

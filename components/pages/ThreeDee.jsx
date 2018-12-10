@@ -3,6 +3,13 @@ import Jump from "components/Jump";
 import Lightbox from "components/Lightbox";
 import Work from "./Work";
 
+import ImgHeader from "static/images/3drenders/misc_header.jpg";
+import ImgGeoBar from "static/images/3drenders/geo_bar.jpg";
+import ImgOilSandsBar from "static/images/3drenders/oilsands_bar.jpg";
+import ImgBlackholeInset from "static/images/3drenders/blackhole_anim_inset.jpg";
+import ImgLandscapeInset from "static/images/3drenders/landscape1_inset.jpg";
+import ImgIceCaveInset from "static/images/3drenders/icecave_inset.jpg";
+
 const $threedee = "threedee";
 const { Fragment } = React;
 const Gallery = Lightbox.makeGallery($threedee, [
@@ -14,11 +21,14 @@ const Gallery = Lightbox.makeGallery($threedee, [
 export default class ThreeDee extends Page($threedee, () => Work) {
 
   content() {
+    const { imageSync, active } = this.props;
+    const headerPhase = active ? 0 : 1;
+    const bodyPhase = active ? 0 : 2;
     return (
       <Fragment>
         <h2 className="major">Miscellaneous 3D</h2>
         <span className="image main javascript-link" onClick={Gallery.openCallback(0)}>
-          <img src="/static/images/3drenders/misc_header.jpg" alt="Miscellaneous 3D Modeling Gallery" />
+          <ImgHeader fluid phase={headerPhase} imageSync={imageSync} alt="Miscellaneous 3D Modeling Gallery" />
           <div className="label-right">Gallery</div>
         </span>
         <p>Along with the Solar Bio-Reactor, I had a few other 3D projects as well.</p>
@@ -27,14 +37,14 @@ export default class ThreeDee extends Page($threedee, () => Work) {
         <p>Some of my first animations were to help explain geo-steering and related concepts to others.  These started as really quite poorly done Flash animations (which I'm not gonna be showing here), but I eventually got my hands on a copy of 3D Studio Max and did...  better?</p>
         <span className="span-across align-center">
           <Jump href="https://drive.google.com/open?id=15BXfXkI4uh-wPY9NWNtcDm-uPQQHAJ0x" icon="none" className="image contain">
-            <img src="/static/images/3drenders/geo_bar.jpg" alt="Geo-Steering Correlation Animation" />
+            <ImgGeoBar fluid phase={bodyPhase} imageSync={imageSync} alt="Geo-Steering Correlation Animation" />
             <div className="label-right">Video</div>
           </Jump>
         </span>
         <p>Anyways, the one above is a basic explanation of how the offset well relates to the horizontal well, showing the similarities between the two wells' gamma-ray logs.  A correlation is shown explicitly and then a few more later in.</p>
         <span className="span-across align-center">
           <Jump href="https://drive.google.com/open?id=15qAXg7Y2k-j4UGEe3tKq12YFyqN-tBiQ" icon="none" className="image contain">
-            <img src="/static/images/3drenders/oilsands_bar.jpg" alt="Oil Sands Animation" />
+            <ImgOilSandsBar fluid phase={bodyPhase} imageSync={imageSync} alt="Oil Sands Animation" />
             <div className="label-right">Video</div>
           </Jump>
         </span>
@@ -43,14 +53,14 @@ export default class ThreeDee extends Page($threedee, () => Work) {
 
         <h3>Blackhole Animation</h3>
         <Jump href="https://drive.google.com/open?id=1X8FK2cpaQxLQLB2M7UHaOVgFco98uup9" icon="none" className="image right">
-          <img src="/static/images/3drenders/blackhole_anim_inset.jpg" alt="Blackhole Atmosphere Animation" />
+          <ImgBlackholeInset fluid phase={bodyPhase} imageSync={imageSync} alt="Blackhole Atmosphere Animation" />
           <div className="label-right">Video</div>
         </Jump>
         <p>A long while ago, I had it in my mind that I wanted to do a big animation of Earth trapping a minor blackhole in its orbit and the slow, horrendous destruction of the world as it slowly fell into the core.</p>
         <p>It would basically fall through the atmosphere as this blindingly hot ball of swirling gas before punching clean through the Earth leaving a molten scar.</p>
         <p>Was gonna be this big, epic thing where you see the initial strike, then the blackhole erupt out the other side of the planet.  It would fly far enough out to eventually strike the moon before drifting back in again.  This landscape was going to be the setting of the initial blast.</p>
         <span className="image right javascript-link" onClick={Gallery.openCallback(0)}>
-          <img src="/static/images/3drenders/landscape1_inset.jpg" alt="Blackhole Landscape Render" />
+          <ImgLandscapeInset fluid phase={bodyPhase} imageSync={imageSync} alt="Blackhole Landscape Render" />
           <div className="label-right">Image</div>
         </span>
         <p>As you can see, I was aiming for photo-realism.  It features some 35,000 pine tree facades.  The original trees were created using this impressive procedurally-generated plant/tree plugin for 3DSMax called <Jump href="https://exlevel.com/features/">GrowFX</Jump>, then rendered to a 2D sprite and distributed all over the scene using a distribution map.</p>
@@ -59,7 +69,7 @@ export default class ThreeDee extends Page($threedee, () => Work) {
 
         <h3>Ice Cavern</h3>
         <span className="image right javascript-link" onClick={Gallery.openCallback(2)}>
-          <img src="/static/images/3drenders/icecave_inset.jpg" alt="Ice Cavern Render" />
+          <ImgIceCaveInset fluid phase={bodyPhase} imageSync={imageSync} alt="Ice Cavern Render" />
           <div className="label-right">Image</div>
         </span>
         <p>A lot of landscapes and other macro-scale objects.  How about a scene that is a little more intimate?</p>

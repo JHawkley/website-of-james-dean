@@ -3,6 +3,10 @@ import Jump from "components/Jump";
 import Lightbox from "components/Lightbox";
 import Work from "./Work";
 
+import ImgHeader from "static/images/lithologic-photo/header.png";
+import ImgFourInset from "static/images/lithologic-photo/4_inset.jpg";
+import ImgFiveInset from "static/images/lithologic-photo/5_inset.jpg";
+
 const $lithphoto = "lithphoto";
 const { Fragment } = React;
 const Gallery = Lightbox.makeGallery($lithphoto, [
@@ -16,11 +20,14 @@ const Gallery = Lightbox.makeGallery($lithphoto, [
 export default class LithologicPhoto extends Page($lithphoto, () => Work) {
 
   content() {
+    const { imageSync, active } = this.props;
+    const headerPhase = active ? 0 : 1;
+    const bodyPhase = active ? 0 : 2;
     return (
       <Fragment>
         <h2 className="major">Lithologic Photo</h2>
         <span className="image main javascript-link" onClick={Gallery.openCallback(0)}>
-          <img src="/static/images/lithologic-photo/header.png" alt="Lithologic Photo Gallery" />
+          <ImgHeader fluid phase={headerPhase} imageSync={imageSync} alt="Lithologic Photo Gallery" />
           <div className="label-right">Gallery</div>
         </span>
         <p>Lithologic Photo was a big project intended to create a database of rock sample photography, extracting quantifiable information for other uses.  I worked on the front-end of this project while a second programmer specifically handled the back-end.</p>
@@ -30,7 +37,7 @@ export default class LithologicPhoto extends Page($lithphoto, () => Work) {
         <p>The idea with Lithologic Photo was to provide a simple means for mud-loggers to catalog photography of a well's rock samples in as close to real-time as possible and make it dead simple for decision makers to get access to that information.</p>
         <p>To put it more simply, it was an image database system specializing in tiny, ground-up rocks.</p>
         <span className="image right javascript-link" onClick={Gallery.openCallback(3)}>
-          <img src="/static/images/lithologic-photo/4_inset.jpg" alt="Micro-Photography Sample" />
+          <ImgFourInset fluid phase={bodyPhase} imageSync={imageSync} alt="Micro-Photography Sample" />
           <div className="label-right">Image</div>
         </span>
         <p>The photography was to be done using a special photography plate; simple image detection was used to pin-point color swatches on the plate to use as guides in the color correction.  Combined with Lithologic, a standardized, high-quality description of the rock would also be provided.</p>
@@ -41,7 +48,7 @@ export default class LithologicPhoto extends Page($lithphoto, () => Work) {
         <p>In all honesty, the programming was the easy part.  The API provided by my back-end developer just worked and flowed beautifully into the front-end.  It all worked exactly as I needed it and Ember interacted with it swimmingly.  Aside from a few performance problems concerning rendering lists of thousands of samples, it was all smooth on the programming front.</p>
         <p>No, the hard part was all the stuff that <em>wasn't</em> programming.</p>
         <span className="image right javascript-link" onClick={Gallery.openCallback(4)}>
-          <img src="/static/images/lithologic-photo/5_inset.jpg" alt="Plate Image" />
+          <ImgFiveInset fluid phase={bodyPhase} imageSync={imageSync} alt="Plate Image" />
           <div className="label-right">Image</div>
         </span>
         <p>As I said before, the software relied on the photography being done on special plates.  These plates needed to be designed and manufactured, so I had to break out a copy of <Jump href="https://www.autodesk.com/products/inventor/overview">Autodesk Inventor</Jump> and produce a CAD drawing which could be 3D printed for testing and later used in mass-production.</p>

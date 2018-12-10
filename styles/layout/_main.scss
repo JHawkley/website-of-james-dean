@@ -78,12 +78,14 @@
 
     }
 
-    .body.with-transitions &,
+    .body.with-transitions & article,
+    .body.is-loading & article {
+      @include vendor('transform', 'translateY(0.25rem)');
+      opacity: 0;
+    }
+
     .body.is-loading & {
-      article {
-        @include vendor('transform', 'translateY(0.25rem)');
-        opacity: 0;
-      }
+      visibility: hidden;
     }
 
     .body.with-transitions & {

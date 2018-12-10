@@ -4,7 +4,8 @@ const glob = require('glob');
 const isProduction = process.env.NODE_ENV === 'production';
 
 module.exports = {
-  webpack: (config, { isServer }) => {
+  webpack: (config, { dir, isServer, defaultLoaders }) => {
+    config.resolveLoader.modules.push(path.join(dir, "webpack"));
     config.module.rules.push(
       {
         test: /\.(css|scss)$/,
@@ -29,6 +30,13 @@ module.exports = {
                 .reduce((a, c) => a.concat(c), [])
             }
           }
+        ]
+      },
+      {
+        test: /\.(gif|jpeg|jpg|png|svg)$/,
+        use: [
+          defaultLoaders.babel,
+          'async-image-loader'
         ]
       }
     );

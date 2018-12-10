@@ -5,6 +5,10 @@ import NateWidget from "components/Nate";
 import Work from "./Work";
 import MiscProgramming from "./MiscProgramming";
 
+import ImgHeader from "static/images/nate-game/header.png";
+import ImgTwo from "static/images/nate-game/2.jpg";
+import ImgThreeInset from "static/images/nate-game/3_inset.jpg";
+
 const $nate = "nate";
 const { Fragment } = React;
 const Gallery = Lightbox.makeGallery($nate, [
@@ -17,18 +21,21 @@ const Gallery = Lightbox.makeGallery($nate, [
 export default class Nate extends Page($nate, () => Work) {
 
   content() {
+    const { imageSync, active } = this.props;
+    const headerPhase = active ? 0 : 1;
+    const bodyPhase = active ? 0 : 2;
     return (
       <Fragment>
         <h2 className="major">Nate Game</h2>
         <span className="image main javascript-link" onClick={Gallery.openCallback(0)}>
-          <img src="/static/images/nate-game/header.png" alt="Nate Game Gallery" />
+          <ImgHeader fluid phase={headerPhase} imageSync={imageSync} alt="Nate Game Gallery" />
           <div className="label-right">Gallery</div>
         </span>
         <p>A jump'n'shoot side-scroller game targeting JavaScript platforms and using the <Jump href="https://impactjs.com/">Impact game engine</Jump>.  I was coding everything in <Jump href="https://coffeescript.org/">CoffeeScript</Jump> at the time and <Jump href="https://box2d.org/about/">Box2D</Jump> was being used to provide physics.  A friend of mine, an artist who goes by Tderek99, was doing the graphics while I was doing the programming.</p>
 
         <h3>Details</h3>
         <span className="image right javascript-link" onClick={Gallery.openCallback(1)}>
-          <img src="/static/images/nate-game/2.jpg" alt="Nate Concepts" />
+          <ImgTwo fluid phase={bodyPhase} imageSync={imageSync} alt="Nate Concepts" />
           <div className="label-right">Image</div>
         </span>
         <p>This game was pitched as: Binding of Isaac, but plays like MegaMan and has a dash of Metroid.</p>
@@ -38,7 +45,7 @@ export default class Nate extends Page($nate, () => Work) {
         <p>In the same fashion as Binding of Isaac, these powers could combine and interact, giving every play-through the potential for something unexpected and exciting.</p>
         <p>The world was gonna rely on procedural generation to make every game different.  The map would generate in such a way that some of the items sprinkled in the world would be used as keys for progressing into new areas, adding a little bit of Metroidvania mechanics into the mix.</p>
         <span className="image right javascript-link" onClick={Gallery.openCallback(2)}>
-          <img src="/static/images/nate-game/3_inset.jpg" alt="Chie Concepts" />
+          <ImgThreeInset fluid phase={bodyPhase} imageSync={imageSync} alt="Chie Concepts" />
           <div className="label-right">Image</div>
         </span>
         <p>Each of the four or so areas was going to have a boss fight, and upon defeating all the bosses, Nate would escape the pocket dimension and face Chie herself, who'd try to do the demonic equivalent of smacking his nose with a newspaper for trying to bite.</p>

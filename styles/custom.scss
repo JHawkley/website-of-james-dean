@@ -160,3 +160,23 @@ a.work-item {
   max-width: 100%;
   margin: 0 0 _size(element-margin) 0;
 }
+
+.fluid-container {
+  /* Styling for `padding-bottom` and `width` must be set on the element. */
+  display: block !important;
+  position: relative !important;
+  max-width: 100% !important;
+
+  .image & {
+    /* Ensures the noise overlay appears as intended. */
+    z-index: -1;
+  }
+
+  .fluid {
+    position: absolute !important;
+    top: 0px !important;
+    left: 0px !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+}

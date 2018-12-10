@@ -2,16 +2,20 @@ import Page from "components/Page";
 import Jump from "components/Jump";
 import Work from "./Work";
 
+import ImgHeader from "static/images/miscprogramming/header.png";
+
 const $miscprogramming = "miscprogramming";
 const { Fragment } = React;
 
 export default class MiscProgramming extends Page($miscprogramming, () => Work) {
 
   content() {
+    const { imageSync, active } = this.props;
+    const phase = active ? 0 : 1;
     return (
       <Fragment>
         <h2 className="major">Misc Programming</h2>
-        <span className="image main"><img src="/static/images/miscprogramming/header.png" alt="" /></span>
+        <span className="image main"><ImgHeader fluid phase={phase} imageSync={imageSync} alt="Misc Programming" /></span>
         <p>For the following projects, I have less to show, but they're still worth mentioning.</p>
 
         <h3 id="platter">Platter</h3>
