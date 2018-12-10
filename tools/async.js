@@ -1,29 +1,8 @@
 import { dew, identityFn } from "tools/common";
+import { orUndefined } from "tools/extensions/async";
 
-const alwaysTrue = () => true;
-const alwaysFalse = () => false;
-const alwaysUndefined = () => void 0;
-
-/**
- * Creates a promise that will resolve with a boolean value, indicating whether this promise resolved or rejected.
- *
- * @this {Promise<any>} This promise.
- * @returns {Promise<boolean>} A new promise that will resolve with `true` if the promise resolved successfully.
- */
-function didComplete() {
-  return this.then(alwaysTrue, alwaysFalse);
-}
-
-/**
- * Creates a promise that will resolve with `undefined` if this promise rejects.
- *
- * @template T
- * @this {Promise<T>} This promise.
- * @returns {Promise<T|undefined} A promise that cannot reject, but may produce `undefined`.
- */
-function orUndefined() {
-  return this.catch(alwaysUndefined);
-}
+// Re-export extension methods.
+export * as extensions from "tools/extensions/async";
 
 /**
  * A class that represents a promise that is resolved or rejected elsewhere.
@@ -251,13 +230,6 @@ export function wait(delay = 0, timeoutIdSetter = null) {
 export function delayFor(delay = 0, timeoutIdSetter) {
   return (value) => wait(delay, timeoutIdSetter).finally(value);
 }
-
-/** 
- * An object containing extension-methods.  Use the ESNext bind operator `::` to make use of these.
- * 
- * @export
- */
-export const extensions = { didComplete, orUndefined };
 
 /**
  * An object that provides synchronization services.

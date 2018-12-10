@@ -1,8 +1,13 @@
 import atob from "babel-loader?{'presets':['next/babel']}!abab/lib/atob";
 import btoa from "babel-loader?{'presets':['next/babel']}!abab/lib/btoa";
 
+// Re-export extension methods.
+export * as extensions from "tools/extensions/strings";
+
 /**
  * Contains functions to encode and decode Base64 strings.
+ * 
+ * @export
  */
 export const base64 = {
   /**
@@ -20,27 +25,4 @@ export const base64 = {
    * @returns {string} The decoded string.
    */
   decode(str) { return atob(str) }
-}
-
-/**
- * Determines if this string is `null` or the empty-string.
- * 
- * @this {string} This string.
- * @returns {boolean} Whether this string is `null` or empty-string.
- */
-function isNullishOrEmpty() {
-  'use strict'; // Allows binding to `null`.
-
-  if (this == null) return true;
-  if (this === "") return true;
-  if (typeof this !== "string")
-    throw new Error(`expected a string, but found \`${this}\` instead`);
-  return false;
-}
-
-/** 
- * An object containing extension-methods.  Use the ESNext bind operator `::` to make use of these.
- * 
- * @export
- */
-export const extensions = Object.freeze({ isNullishOrEmpty });
+};
