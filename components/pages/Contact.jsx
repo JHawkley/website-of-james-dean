@@ -1,8 +1,7 @@
 import Page from "components/Page";
 import ContactForm from "components/ContactForm";
-import FontAwesomeIcon from "@fortawesome/react-fontawesome";
-import faLinkedin from "@fortawesome/fontawesome-free-brands/faLinkedin";
-import faGithub from "@fortawesome/fontawesome-free-brands/faGithub";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faLinkedin, faGithub } from "@fortawesome/free-brands-svg-icons";
 
 const $contact = "contact";
 const { Fragment } = React;

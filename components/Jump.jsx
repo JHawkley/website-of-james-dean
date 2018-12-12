@@ -1,10 +1,10 @@
 import { withRouter } from "next/router";
 import Link from "next/link";
 import Page from "components/Page";
-import FontAwesomeIcon from "@fortawesome/react-fontawesome";
-import faImage from "@fortawesome/fontawesome-free-regular/faImage";
-import { parse as parseUrl } from "url";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faImage } from "@fortawesome/free-regular-svg-icons";
 import { faExternalLinkAlt, faFilm, faImages } from "@fortawesome/free-solid-svg-icons";
+import { parse as parseUrl } from "url";
 import { extensions as objEx, dew } from "tools/common";
 import { extensions as maybe, nothing } from "tools/maybe";
 

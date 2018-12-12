@@ -3,7 +3,7 @@ import { extensions as numEx } from "tools/numbers";
 import { extensions as fnEx } from "tools/functions";
 import { extensions as maybe, nothing } from "tools/maybe";
 import ReactLightbox from "react-image-lightbox";
-import FontAwesomeIcon from "@fortawesome/react-fontawesome";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faImages } from "@fortawesome/free-solid-svg-icons";
 
 const galleries = new Map();

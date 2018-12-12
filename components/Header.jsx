@@ -1,8 +1,8 @@
 import PropTypes from "prop-types";
 import Jump from "./Jump";
 import { ImageSync } from "./AsyncImage";
-import FontAwesomeIcon from "@fortawesome/react-fontawesome";
-import { faCode } from "@fortawesome/free-solid-svg-icons/faCode";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCode } from "@fortawesome/free-solid-svg-icons";
 
 import Intro from "./pages/Intro";
 import Work from "./pages/Work";
