@@ -6,7 +6,15 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 module.exports = {
   webpack: (config, { dir, isServer, defaultLoaders }) => {
-    config.resolveLoader.modules.push(path.join(dir, "webpack"));
+
+    config.resolve.alias['~'] = dir;
+    config.resolve.alias['components'] = '~/components';
+    config.resolve.alias['pages'] = '~/pages';
+    config.resolve.alias['tools'] = '~/tools';
+    config.resolve.alias['styles'] = '~/styles';
+
+    config.resolveLoader.modules.unshift('webpack');
+
     config.module.rules.push(
       {
         test: /\.(css|scss)$/,
@@ -26,7 +34,7 @@ module.exports = {
             options: {
               outputStyle: 'compressed', // These options are from node-sass: https://github.com/sass/node-sass
               includePaths: ['styles', 'node_modules']
-                .map((d) => path.join(__dirname, d))
+                .map((d) => path.join(dir, d))
                 .map((g) => glob.sync(g))
                 .reduce((a, c) => a.concat(c), [])
             }
@@ -39,6 +47,28 @@ module.exports = {
           defaultLoaders.babel,
           'async-image-loader'
         ]
+      },
+      {
+        enforce: 'post',
+        resourceQuery: /^\?name(-of|Of)?$/,
+        use: ({ issuer }) => {
+          return {
+            loader: 'name-of-loader',
+            rules: [defaultLoaders.babel],
+            options: { issuer }
+          };
+        }
+      },
+      {
+        enforce: 'post',
+        resourceQuery: /^\?env$/,
+        use: () => {
+          return {
+            loader: 'environment-loader',
+            rules: [defaultLoaders.babel],
+            options: { isServer, isProduction }
+          };
+        }
       }
     );
 
@@ -58,16 +88,21 @@ module.exports = {
         plugins.push(new BundleAnalyzerPlugin());
         config.plugins = plugins;
       }
-      
     }
 
     return config;
   },
-  exportPathMap: function(defaultPathMap) {
-    return {
-      '/': { page: '/' }
-    };
+  exportPathMap: () => {
+    const articlesGlob = path.join(__dirname, 'pages/articles') + '/*.@(js|jsx)';
+    return glob.sync(articlesGlob).reduce(
+      (map, p) => {
+        const ext = path.extname(p);
+        const name = path.basename(p, ext);
+        map[`/${name}`] = { page: '/', query: { page: name } };
+        return map;
+      },
+      { '/': { page: '/' } }
+    );
   },
-  pageExtensions: ['jsx', 'js'],
-  publicRuntimeConfig: { isProduction }
+  pageExtensions: ['jsx', 'js']
 }

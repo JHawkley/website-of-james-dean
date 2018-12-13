@@ -1,53 +1,28 @@
 import PropTypes from "prop-types";
 import ReactDOMServer from "react-dom/server";
 import Head from "next/head";
-import getConfig from "next/config";
+import environment from "?env";
+
 import stylesheet from "styles/main.scss";
 import lightboxStyle from "react-image-lightbox/style.css";
-import { ImageSync } from "components/AsyncImage";
 
 import { dew } from "tools/common";
-import { wait, delayToNextFrame, awaitAll } from "tools/async";
+import { extensions as promiseEx, wait, delayToNextFrame, awaitAll } from "tools/async";
 import { extensions as strEx } from "tools/strings";
-import { extensions as arrEx } from "tools/array";
 import { extensions as maybe, nothing } from "tools/maybe";
 
+import { ImageSync } from "components/AsyncImage";
 import NoJavaScript from "components/NoJavaScript";
 import Header from "components/Header";
 import Main from "components/Main";
 import Footer from "components/Footer";
-import Page from "components/Page";
+import FourOhFour from "pages/articles/404";
+import $404 from "pages/articles/404?name";
 
 import bgImage from "static/images/placeholder_bg.jpg";
 
-// Require all page-components and dump them into an array.
-// This is making use of a special feature of webpack.
-const context = require.context("../components/pages", false, /\.(js|jsx)$/);
-const pageIndex = context.keys().map(file => context(file));
-
-const isProduction = getConfig().publicRuntimeConfig?.isProduction ?? true;
+const { isProduction } = environment.isProduction;
 const { Fragment } = React;
-
-const [pageComponents, knownPages] = dew(() => {
-  const components = pageIndex::arrEx.collect(({"default": module = nothing}) => {
-    if (module::maybe.isEmpty()) return void 0;
-    if (!Page.isPage(module)) return void 0;
-    return module;
-  });
-
-  const nameSet = new Set();
-  const collisions = [];
-  components.forEach(comp => {
-    const { pageName } = comp;
-    if (nameSet.has(pageName)) collisions.push(pageName);
-    else nameSet.add(pageName);
-  });
-
-  if (collisions::arrEx.isNonEmpty())
-    throw new Error(`there were multiple page-components with the same name: ${collisions.join(", ")}`);
-
-  return [components, nameSet];
-});
 
 // Little component to help solve a hydration error in the version of React in use.
 // See: https://github.com/facebook/react/issues/11423#issuecomment-341760646
@@ -57,19 +32,30 @@ const NoScript = (props) => {
   return (<noscript {...otherProps} dangerouslySetInnerHTML={{ __html: staticMarkup }} />);
 }
 
-const resolvePageToArticle = (page = null) => {
-  if (page::strEx.isNullishOrEmpty()) return "";
-  if (!knownPages.has(page)) return "404";
-  return page;
+const resolve = async (page, knownArticles) => {
+  if (page === "" || knownArticles.has(page))
+    return { knownArticles, actualPage: page };
+  
+  const articleModule = await (import("pages/articles/" + page)::promiseEx.orUndefined());
+  const component = articleModule?.default;
+
+  if (component::maybe.isEmpty())
+    return { knownArticles, actualPage: $404 };
+
+  knownArticles = new Map(knownArticles.set(page, component));
+  return { knownArticles, actualPage: page };
 }
 
-class IndexPage extends React.Component {
+class IndexPage extends React.PureComponent {
 
   static propTypes = {
-    page: PropTypes.string.isRequired,
+    expectedPage: PropTypes.string.isRequired,
     transitionsSupported: PropTypes.bool,
-    notifyPageReady: PropTypes.func.isRequired
+    notifyPageReady: PropTypes.func.isRequired,
+    elementRef: PropTypes.func
   };
+
+  static getInitialProps = ({query}) => ({ expectedPage: query?.page ?? "" });
 
   imageSync = new ImageSync();
 
@@ -86,12 +72,13 @@ class IndexPage extends React.Component {
   constructor(props) {
     super(props);
 
-    const havePage = !props.page::strEx.isNullishOrEmpty();
+    const havePage = !props.expectedPage::strEx.isNullishOrEmpty();
     this.state = {
+      knownArticles: new Map([[$404, FourOhFour]]),
+      actualPage: props.expectedPage,
       isArticleVisible: havePage,
       timeout: havePage,
       articleTimeout: havePage,
-      article: havePage ? props.page : "",
       loading: true
     };
   }
@@ -109,8 +96,11 @@ class IndexPage extends React.Component {
   }
 
   componentDidMount() {
-    // Synchronize on when the CSS background image and the phase 0 images have loaded.
     dew(async () => {
+      // Wait for the page to be loaded.
+      await this.hardTransition();
+
+      // Synchronize on when the CSS background image and the phase 0 images have loaded.
       const bgPromise = isProduction ? bgImage.preload() : bgImage.preload().catch(() => {
         console.warn(`Warning: failed to load the background image: ${bgImage.src}`);
       });
@@ -127,7 +117,7 @@ class IndexPage extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    if (this.props.page !== prevProps.page)
+    if (this.props.expectedPage !== prevProps.expectedPage)
       this.transitionToPage();
   }
 
@@ -140,18 +130,24 @@ class IndexPage extends React.Component {
     this.didUnmount = true;
   }
 
-  transitionToPage() {
-    const { page, transitionsSupported } = this.props;
-    const newArticle = resolvePageToArticle(page);
-    const oldArticle = this.transitionTarget ?? this.state.article;
+  async acquireComponent() {
+    const { props: { expectedPage }, state: { knownArticles } } = this;
+    const newState = await resolve(expectedPage, knownArticles);
+    await this.promiseState(newState);
+    return newState.actualPage === expectedPage;
+  }
 
-    if (newArticle === oldArticle) return;
+  transitionToPage() {
+    const { expectedPage, transitionsSupported } = this.props;
+    const currentPage = this.transitionTarget ?? this.state.actualPage;
+
+    if (expectedPage === currentPage) return;
 
     if (!transitionsSupported)
-      this.hardTransition(newArticle);
+      this.hardTransition();
     else {
       const canBeginTransition = this.transitionTarget::maybe.isEmpty();
-      this.transitionTarget = newArticle;
+      this.transitionTarget = expectedPage;
       if (!canBeginTransition) return;
       this.beginSoftTransition().catch((error) => {
         // An error is thrown if the component was unmounted during transition.
@@ -159,7 +155,7 @@ class IndexPage extends React.Component {
         if (this.didUnmount) return;
         if (!isProduction) console.error(error);
         // Otherwise, we need to recover; we'll do so by hard transitioning.
-        this.hardTransition(this.transitionTarget ?? this.state.article ?? "");
+        this.hardTransition(this.transitionTarget ?? this.state.actualPage ?? "");
       });
     }
   }
@@ -167,52 +163,83 @@ class IndexPage extends React.Component {
   async beginSoftTransition() {
     while (this.transitionTarget::maybe.isDefined()) {
       const {
-        transitionTarget: nextArticle,
-        state: { timeout, articleTimeout }
+        transitionTarget: targetPage,
+        state: { timeout, articleTimeout, actualPage }
       } = this;
-      const finalState = !!nextArticle;
+      const finalState = !!targetPage;
 
       if (timeout && !articleTimeout) {
+        console.log("middle transition");
         // Middle transition state; nothing is currently displayed.
-        await this.promiseState({ article: nextArticle });
-        // If we're transitioning into an article, it should now be displayed.
-        if (finalState) await this.doNotifyPageReady();
-        // Finalize transition.
-        await this.promiseState({ timeout: finalState, articleTimeout: finalState });
-        await wait(25, this.setTransitionTimeout);
+        if (targetPage !== actualPage) {
+          console.log("fetching state");
+          // Finish getting our new state.
+          await this.acquireComponent();
+          this.transitionTarget = this.state.actualPage;
+        }
+        else {
+          console.log("final transitions");
+          // If we're transitioning into an article, it should now be displayed.
+          if (finalState) await this.doNotifyPageReady();
+          // Finalize transition.
+          await this.promiseState({ timeout: finalState, articleTimeout: finalState });
+          await wait(25, this.setTransitionTimeout);
+        }
       }
       else if (finalState && !timeout) {
+        console.log("transition from header");
         // Start transitioning from header.
         await this.promiseState({ isArticleVisible: true });
         await wait(325, this.setTransitionTimeout);
         await this.promiseState({ timeout: true });
       }
-      else if (this.state.article !== nextArticle && articleTimeout) {
+      else if (this.state.actualPage !== targetPage && articleTimeout) {
+        console.log("transitioning from article");
         // Start transitioning from article.
         await this.promiseState({ articleTimeout: false });
         await wait(325, this.setTransitionTimeout);
       }
       else if (!finalState && this.state.isArticleVisible) {
+        console.log("final transition into header");
         // Finish transition into header.
         await this.promiseState({ isArticleVisible: false });
         // The header should be now be displayed.
         await this.doNotifyPageReady();
       }
       else {
+        console.log("done");
         this.transitionTarget = nothing;
       }
     }
   }
 
-  hardTransition(nextPage) {
-    const finalState = !!nextPage;
-    const newState = {
-      article: nextPage,
-      timeout: finalState,
-      articleTimeout: finalState,
-      isArticleVisible: finalState
-    };
-    this.setState(newState, this.props.notifyPageReady);
+  async hardTransition(givenPage) {
+    const haveGivenPage = givenPage::maybe.isDefined();
+    
+    if (haveGivenPage) {
+      const knownArticles = this.state.knownArticles;
+      const actualPage = knownArticles.has(givenPage) ? givenPage : $404;
+      const finalState = !!actualPage;
+      const newState = {
+        actualPage,
+        timeout: finalState,
+        articleTimeout: finalState,
+        isArticleVisible: finalState
+      };
+      this.setState(newState, this.props.notifyPageReady);
+    }
+    else {
+      // Hide the page while waiting for the load.
+      await this.promiseState({ timeout: true, articleTimeout: false });
+      await this.acquireComponent();
+      const finalState = !!this.state.actualPage;
+      const newState = {
+        timeout: finalState,
+        articleTimeout: finalState,
+        isArticleVisible: finalState
+      };
+      this.setState(newState, this.props.notifyPageReady);
+    }
   }
 
   doNotifyPageReady() {
@@ -223,8 +250,8 @@ class IndexPage extends React.Component {
   render() {
     const {
       imageSync,
-      props: { transitionsSupported },
-      state: { loading, isArticleVisible, timeout, articleTimeout, article }
+      props: { transitionsSupported, elementRef },
+      state: { loading, isArticleVisible, timeout, articleTimeout, actualPage, knownArticles }
     } = this;
 
     const klass = ["body", "js-only"];
@@ -258,13 +285,13 @@ class IndexPage extends React.Component {
         </NoScript>
 
         {/* The normal version of the website. */}
-        <div className={klass.join(" ")}>
+        <div className={klass.join(" ")} ref={elementRef}>
           <div className="prevent-scroll">
             <div id="wrapper">
               <Header timeout={timeout} transition={transitionsSupported} imageSync={imageSync} />
               <Main
-                article={article}
-                articlePages={pageComponents}
+                article={actualPage}
+                articlePages={knownArticles}
                 articleTimeout={articleTimeout}
                 timeout={timeout}
                 transition={transitionsSupported}

@@ -1,11 +1,11 @@
 import PropTypes from "prop-types";
-import getConfig from "next/config";
+import environment from "?env";
 import { dew } from "tools/common";
 import { extensions as maybe, nothing } from "tools/maybe";
 import { preloadImage, awaitAll, Future } from "tools/async";
 import { generateSvgPlaceholder } from "tools/svg";
 
-const isProduction = getConfig().publicRuntimeConfig?.isProduction ?? true;
+const isProduction = environment.isProduction;
 
 export default class AsyncImage extends React.PureComponent {
 
