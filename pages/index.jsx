@@ -91,7 +91,7 @@ class IndexPage extends React.PureComponent {
 
   promiseState(newState) {
     if (this.didUnmount)
-      return new Promise.reject(new Error("component has dismounted during async operation"));
+      return Promise.reject(new Error("component has dismounted during async operation"));
     return new Promise(resolve => this.setState(newState, resolve)).then(this.frameSync);
   }
 
@@ -169,16 +169,13 @@ class IndexPage extends React.PureComponent {
       const finalState = !!targetPage;
 
       if (timeout && !articleTimeout) {
-        console.log("middle transition");
         // Middle transition state; nothing is currently displayed.
         if (targetPage !== actualPage) {
-          console.log("fetching state");
           // Finish getting our new state.
           await this.acquireComponent();
           this.transitionTarget = this.state.actualPage;
         }
         else {
-          console.log("final transitions");
           // If we're transitioning into an article, it should now be displayed.
           if (finalState) await this.doNotifyPageReady();
           // Finalize transition.
@@ -187,27 +184,23 @@ class IndexPage extends React.PureComponent {
         }
       }
       else if (finalState && !timeout) {
-        console.log("transition from header");
         // Start transitioning from header.
         await this.promiseState({ isArticleVisible: true });
         await wait(325, this.setTransitionTimeout);
         await this.promiseState({ timeout: true });
       }
       else if (this.state.actualPage !== targetPage && articleTimeout) {
-        console.log("transitioning from article");
         // Start transitioning from article.
         await this.promiseState({ articleTimeout: false });
         await wait(325, this.setTransitionTimeout);
       }
       else if (!finalState && this.state.isArticleVisible) {
-        console.log("final transition into header");
         // Finish transition into header.
         await this.promiseState({ isArticleVisible: false });
         // The header should be now be displayed.
         await this.doNotifyPageReady();
       }
       else {
-        console.log("done");
         this.transitionTarget = nothing;
       }
     }
