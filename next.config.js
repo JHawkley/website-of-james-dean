@@ -85,7 +85,11 @@ module.exports = {
 
       if (isProduction) {
         const plugins = config.plugins || [];
-        plugins.push(new BundleAnalyzerPlugin());
+        plugins.push(new BundleAnalyzerPlugin({
+          analyzerMode: 'static',
+          reportFilename: '../out/bundle-report.html',
+          openAnalyzer: false
+        }));
         config.plugins = plugins;
       }
     }
