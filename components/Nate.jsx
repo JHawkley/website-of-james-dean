@@ -1,4 +1,5 @@
 import { extensions as objEx, dew } from "tools/common";
+import { is } from "tools/extensions/common";
 import { makeArray, forZipped } from "tools/array";
 import { extensions as maybe, nothing, some } from "tools/maybe";
 import bulletActionList from "./nateLogic/bulletActionList";
@@ -310,7 +311,7 @@ Nate.supported = dew(() => {
     const prefixes = "animationName WebkitAnimationName MozAnimationName OAnimationName msAnimationName KhtmlAnimationName".split(" ");
     
     for(let i = 0; i < prefixes.length; i++)
-      if(typeof elem.style[prefixes[i]] !== "undefined")
+      if(elem.style[prefixes[i]]::maybe.isDefined())
         return true;
     
     return false;
@@ -321,22 +322,22 @@ Nate.supported = dew(() => {
     const prefixes = "transform WebkitTransform MozTransform OTransform msTransform".split(" ");
 
     for(let i = 0; i < prefixes.length; i++)
-      if(typeof elem.style[prefixes[i]] !== "undefined")
+      if(elem.style[prefixes[i]]::maybe.isDefined())
         return true;
 
     return false;
   }
 
   const detectRequestAnimationFrame = () => {
-    if (typeof g["requestAnimationFrame"] !== "function") return false;
-    if (typeof g["cancelAnimationFrame"] !== "function") return false;
+    if (!g["requestAnimationFrame"]::is.function()) return false;
+    if (!g["cancelAnimationFrame"]::is.function()) return false;
     return true;
   }
 
-  const detectSet = () => typeof g["Set"] === "function";
+  const detectSet = () => g["Set"]::is.function();
 
   return () => {
-    if (typeof supported !== "undefined") return supported;
+    if (supported::maybe.isDefined()) return supported;
     supported = detectRequestAnimationFrame() && detectAnimation() && detectTransform() && detectSet();
     return supported;
   };

@@ -1,3 +1,5 @@
+import { is } from "tools/extensions/common";
+
 // Re-export extension methods.
 export * as extensions from "tools/extensions/common";
 
@@ -12,9 +14,9 @@ export * as extensions from "tools/extensions/common";
  * @throws When any argument provided was `null`.
  */
 export function compareOwnProps(left, right) {
-  if (left === null || typeof left !== "object")
+  if (!left::is.object())
     throw new Error("the `left` value must be an object reference");
-  if (right === null || typeof right !== "object")
+  if (!right::is.object())
     throw new Error("the `right` value must be an object reference");
   if (left === right) return true;
 

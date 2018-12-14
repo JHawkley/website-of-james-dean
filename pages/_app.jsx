@@ -5,6 +5,7 @@ import { getUrl } from "next/dist/lib/utils";
 
 import Modal from "react-modal";
 import { dew } from "tools/common";
+import { is } from "tools/extensions/common";
 import { extensions as maybe } from "tools/maybe";
 
 const updateHistoryState = (fn) => {
@@ -21,7 +22,7 @@ export default class ScrollRestoringApp extends App {
   canScrollRestore = dew(() => {
     if (typeof window === "undefined") return false;
     if (typeof window.sessionStorage === "undefined") return false;
-    return typeof window.history.scrollRestoration === "string";
+    return window.history.scrollRestoration::is.string();
   });
 
   originalScrollRestorationValue = "auto";

@@ -86,3 +86,19 @@ export function copyOwn() {
   if (this == null) return this;
   return Object.assign(newObjectBasedOn(this), this);
 }
+
+/**
+ * Contains several extension methods for matching based on type.
+*/
+export const is = {
+  string() { "use strict"; return typeof this === "string"; },
+  array() { "use strict"; return Array.isArray(this); },
+  number() { "use strict"; return typeof this === "number"; },
+  function() { "use strict"; return typeof this === "function"; },
+  symbol() { "use strict"; return typeof this === "symbol"; },
+  boolean() { "use strict"; return typeof this === "boolean"; },
+  undefined() { "use strict"; return typeof this === "undefined"; },
+  null() { "use strict"; return this === null; },
+  object() { "use strict"; return typeof this === "object" && this !== null; },
+  instanceOf(klass) { "use strict"; return this instanceof klass; }
+};
