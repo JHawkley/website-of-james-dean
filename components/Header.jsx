@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import Jump from "components/Jump";
+import { Goto } from "components/Page";
 import { ImageSync } from "components/AsyncImage";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCode } from "@fortawesome/free-solid-svg-icons";
@@ -23,10 +23,10 @@ const Header = ({timeout}) => (
     </div>
     <nav>
       <ul>
-        <li><Jump page={$intro}>Intro</Jump></li>
-        <li><Jump page={$work}>Work</Jump></li>
-        <li><Jump page={$questions}>Q&amp;A</Jump></li>
-        <li><Jump page={$contact}>Contact</Jump></li>
+        <li><Goto page={$intro}>Intro</Goto></li>
+        <li><Goto page={$work}>Work</Goto></li>
+        <li><Goto page={$questions}>Q&amp;A</Goto></li>
+        <li><Goto page={$contact}>Contact</Goto></li>
       </ul>
     </nav>
   </header>

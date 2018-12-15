@@ -1,4 +1,4 @@
-import Page from "components/Page";
+import Page, { Goto } from "components/Page";
 import Jump from "components/Jump";
 
 import ImgHeader from "static/images/pic_work.png";
@@ -13,9 +13,9 @@ import $nate from "pages/articles/nate?name";
 import $miscprogramming from "pages/articles/miscprogramming?name";
 
 const workItem = (description, title, page) => (
-  <Jump page={page} className="work-item">
+  <Goto page={page} className="work-item">
     <dl><dt>{description}</dt><dd>{title}</dd></dl>
-  </Jump>
+  </Goto>
 );
 
 const Work = (props) => {

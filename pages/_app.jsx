@@ -17,13 +17,13 @@ const updateHistoryState = (fn) => {
 
 const getHistoryState = (key) => window.history.state?.options?.[key];
 
-export default class ScrollRestoringApp extends App {
+export const canScrollRestore = dew(() => {
+  if (typeof window === "undefined") return false;
+  if (typeof window.sessionStorage === "undefined") return false;
+  return window.history.scrollRestoration::is.string();
+});
 
-  canScrollRestore = dew(() => {
-    if (typeof window === "undefined") return false;
-    if (typeof window.sessionStorage === "undefined") return false;
-    return window.history.scrollRestoration::is.string();
-  });
+export default class ScrollRestoringApp extends App {
 
   originalScrollRestorationValue = "auto";
 
@@ -51,7 +51,7 @@ export default class ScrollRestoringApp extends App {
   }
 
   restoreScrollPosition = () => {
-    if (this.canScrollRestore) {
+    if (canScrollRestore) {
       let scrollPosition = this.scrollRestoreData[this.scrollRestoreEntry];
       if (scrollPosition == null) {
         if (this.scrollToHash()) return;
@@ -69,13 +69,13 @@ export default class ScrollRestoringApp extends App {
   }
 
   onRouteChangeStart = () => {
-    if (!this.canScrollRestore) return;
+    if (!canScrollRestore) return;
     this.updateScrollPosition();
     this.persistScrollRestoreData();
   }
 
   onRouteChangeComplete = () => {
-    if (!this.canScrollRestore) return;
+    if (!canScrollRestore) return;
     updateHistoryState(this.optionsForEntryId);
     this.persistScrollRestoreData();
   }
@@ -102,7 +102,7 @@ export default class ScrollRestoringApp extends App {
 
   componentDidMount() {
     const { router } = this.props;
-    if (this.canScrollRestore) {
+    if (canScrollRestore) {
       this.originalScrollRestorationValue = window.history.scrollRestoration;
       window.history.scrollRestoration = "manual";
       this.recallScrollRestoreData();
@@ -124,7 +124,7 @@ export default class ScrollRestoringApp extends App {
     router.events.off("routeChangeComplete", this.onRouteChangeComplete);
     router.events.off("hashChangeComplete", this.scrollToHash);
     if (this.hashBlockID != null) hashScroll.release(this.hashBlockID);
-    if (this.canScrollRestore) {
+    if (canScrollRestore) {
       this.persistScrollRestoreData();
       window.history.scrollRestoration = this.originalScrollRestorationValue;
     }
@@ -154,7 +154,6 @@ export default class ScrollRestoringApp extends App {
         elementRef={Modal.setAppElement}
         url={createUrl(router)}
         notifyPageReady={this.restoreScrollPosition}
-        transitionsSupported={this.canScrollRestore}
       />
     );
   }

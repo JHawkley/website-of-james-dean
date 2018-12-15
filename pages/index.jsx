@@ -2,13 +2,13 @@ import PropTypes from "prop-types";
 import ReactDOMServer from "react-dom/server";
 import Head from "next/head";
 import environment from "?env";
+import { canScrollRestore as transitionsSupported } from "pages/_app"
 
 import stylesheet from "styles/main.scss";
 import lightboxStyle from "react-image-lightbox/style.css";
 
 import { dew } from "tools/common";
 import { extensions as promiseEx, wait, delayToNextFrame, awaitAll } from "tools/async";
-import { extensions as strEx } from "tools/strings";
 import { extensions as maybe, nothing } from "tools/maybe";
 
 import { ImageSync } from "components/AsyncImage";
@@ -21,8 +21,10 @@ import $404 from "pages/articles/404?name";
 
 import bgImage from "static/images/placeholder_bg.jpg";
 
-const { isProduction } = environment.isProduction;
+const { isProduction } = environment;
 const { Fragment } = React;
+
+const initialPages = [];
 
 // Little component to help solve a hydration error in the version of React in use.
 // See: https://github.com/facebook/react/issues/11423#issuecomment-341760646
@@ -34,28 +36,40 @@ const NoScript = (props) => {
 
 const resolve = async (page, knownArticles) => {
   if (page === "" || knownArticles.has(page))
-    return { knownArticles, actualPage: page };
+    return { actualPage: page, knownArticles };
   
   const articleModule = await (import("pages/articles/" + page)::promiseEx.orUndefined());
   const component = articleModule?.default;
 
   if (component::maybe.isEmpty())
-    return { knownArticles, actualPage: $404 };
+    return { actualPage: $404, knownArticles };
 
   knownArticles = new Map(knownArticles.set(page, component));
-  return { knownArticles, actualPage: page };
+  return { actualPage: page, knownArticles };
 }
 
 class IndexPage extends React.PureComponent {
 
   static propTypes = {
     expectedPage: PropTypes.string.isRequired,
-    transitionsSupported: PropTypes.bool,
+    redirectPage: PropTypes.string,
     notifyPageReady: PropTypes.func.isRequired,
     elementRef: PropTypes.func
   };
 
-  static getInitialProps = ({query}) => ({ expectedPage: query?.page ?? "" });
+  static getInitialProps = ({query}) => {
+    const expectedPage = query?.page ?? "";
+    const canDefer = initialPages.length > 0 || transitionsSupported;
+    return canDefer ? { expectedPage } : resolve(expectedPage, new Map()).then(
+      ({ actualPage, knownArticles }) => {
+        initialPages.push(...knownArticles);
+        return {
+          expectedPage,
+          redirectPage: actualPage
+        };
+      }
+    );
+  };
 
   imageSync = new ImageSync();
 
@@ -72,10 +86,13 @@ class IndexPage extends React.PureComponent {
   constructor(props) {
     super(props);
 
-    const havePage = !props.expectedPage::strEx.isNullishOrEmpty();
+    const { expectedPage, redirectPage } = props;
+    const actualPage = redirectPage ?? expectedPage ?? "";
+    const havePage = actualPage !== "";
+
     this.state = {
-      knownArticles: new Map([[$404, FourOhFour]]),
-      actualPage: props.expectedPage,
+      actualPage,
+      knownArticles: new Map([[$404, FourOhFour], ...initialPages]),
       isArticleVisible: havePage,
       timeout: havePage,
       articleTimeout: havePage,
@@ -138,7 +155,7 @@ class IndexPage extends React.PureComponent {
   }
 
   transitionToPage() {
-    const { expectedPage, transitionsSupported } = this.props;
+    const { expectedPage } = this.props;
     const currentPage = this.transitionTarget ?? this.state.actualPage;
 
     if (expectedPage === currentPage) return;
@@ -208,31 +225,37 @@ class IndexPage extends React.PureComponent {
 
   async hardTransition(givenPage) {
     const haveGivenPage = givenPage::maybe.isDefined();
-    
-    if (haveGivenPage) {
-      const knownArticles = this.state.knownArticles;
-      const actualPage = knownArticles.has(givenPage) ? givenPage : $404;
-      const finalState = !!actualPage;
-      const newState = {
-        actualPage,
-        timeout: finalState,
-        articleTimeout: finalState,
-        isArticleVisible: finalState
-      };
-      this.setState(newState, this.props.notifyPageReady);
+
+    if (!haveGivenPage) {
+      try {
+        // Hide the page while waiting for the load.
+        await this.promiseState({ timeout: true, articleTimeout: false });
+        await this.acquireComponent();
+        const finalState = !!this.state.actualPage;
+        const newState = {
+          timeout: finalState,
+          articleTimeout: finalState,
+          isArticleVisible: finalState
+        };
+        this.setState(newState, this.props.notifyPageReady);
+        return;
+      }
+      catch {
+        // Try to recover.
+        givenPage = this.state.actualPage ?? "";
+      }
     }
-    else {
-      // Hide the page while waiting for the load.
-      await this.promiseState({ timeout: true, articleTimeout: false });
-      await this.acquireComponent();
-      const finalState = !!this.state.actualPage;
-      const newState = {
-        timeout: finalState,
-        articleTimeout: finalState,
-        isArticleVisible: finalState
-      };
-      this.setState(newState, this.props.notifyPageReady);
-    }
+
+    const knownArticles = this.state.knownArticles;
+    const actualPage = knownArticles.has(givenPage) ? givenPage : $404;
+    const finalState = !!actualPage;
+    const newState = {
+      actualPage,
+      timeout: finalState,
+      articleTimeout: finalState,
+      isArticleVisible: finalState
+    };
+    this.setState(newState, this.props.notifyPageReady);
   }
 
   doNotifyPageReady() {
@@ -243,7 +266,7 @@ class IndexPage extends React.PureComponent {
   render() {
     const {
       imageSync,
-      props: { transitionsSupported, elementRef },
+      props: { elementRef },
       state: { loading, isArticleVisible, timeout, articleTimeout, actualPage, knownArticles }
     } = this;
 

@@ -1,76 +1,73 @@
 import PropTypes from "prop-types";
-import Link from "next/link";
-import { parse as parseUrl } from "url";
-import { ImageSync } from "./AsyncImage";
+import { withRouter } from "next/router";
+import { resolve as urlResolve } from "url";
+import Jump from "components/Jump";
+import { ImageSync } from "components/AsyncImage";
+import { extensions as objEx, dew } from "tools/common";
 import { extensions as maybe, nothing } from "tools/maybe";
 
-const attachPageQuery = (urlObj, page) => {
-  if (typeof urlObj.query === "string") {
-    if (urlObj.query.length > 0)
-      urlObj.query += "&";
-    urlObj.query += `page=${page}`;
-    return urlObj;
-  }
+const Page = (props) => {
+  const { active, id, parent, children } = props;
 
-  urlObj.query = Object.assign(urlObj.query ?? {}, { page });
-  return urlObj;
+  const back = parent::maybe.isDefined()
+    ? (<Goto page={parent} scroll={false}><div className="back"></div></Goto>)
+    : nothing;
+  
+  const close = <Goto scroll={false}><div className="close"></div></Goto>;
+  
+  const klass = "active"::maybe.when(active);
+  
+  return (
+    <article id={id} className={klass}>
+      {back}
+      {close}
+      {children}
+    </article>
+  );
 };
 
-class Page extends React.PureComponent {
+Page.propTypes = {
+  id: PropTypes.string.isRequired,
+  parent: PropTypes.string,
+  active: PropTypes.bool,
+  imageSync: PropTypes.instanceOf(ImageSync),
+  children: PropTypes.node
+};
 
-  static propTypes = {
-    id: PropTypes.string.isRequired,
-    parent: PropTypes.string,
-    active: PropTypes.bool,
-    imageSync: PropTypes.instanceOf(ImageSync),
-    children: PropTypes.node
-  };
+Page.defaultProps = {
+  active: false
+};
 
-  static defaultProps = {
-    active: false
-  };
+const Goto = withRouter((props) => {
+  const { page, hash, router, ...restProps } = props;
 
-  static hrefFor(href = nothing, page = nothing) {
-    if (page::maybe.isDefined() && typeof page !== "string")
-      throw new Error(`could not build \`href\` for a page; \`${page}\` is not a string`);
-  
-    if (href::maybe.isEmpty()) {
-      if (page::maybe.isEmpty())
-        throw new Error("expected an `href` and/or `page` property, but got neither");
-      return `?page=${page}`;
+  const basePath = router.pathname;
+
+  const [href, as] = dew(() => {
+    const haveHash = hash::maybe.isDefined();
+    const indexPage = !page;
+    switch (true) {
+      case (!haveHash && !indexPage): return [`${basePath}?page=${page}`, urlResolve(basePath, `./${page}.html`)];
+      case (!haveHash && indexPage): return basePath::objEx.times(2);
+      case (haveHash && indexPage): return `${basePath}#${hash}`::objEx.times(2);
+      default: return [
+        { pathname: basePath, query: { page }, hash },
+        { pathname: urlResolve(basePath, `./${page}.html`), hash }
+      ];
     }
+  });
   
-    if (typeof href === "string") {
-      if (page::maybe.isEmpty()) return href;
-      return attachPageQuery(parseUrl(href, true), page);
-    }
-  
-    if (typeof href === "object") {
-      if (page::maybe.isEmpty()) return href;
-      return attachPageQuery(href, page);
-    }
-  }
+  return <Jump {...restProps} href={href} as={as} />
+});
 
-  render() {
-    const { active, id, parent, children } = this.props;
+Goto.propTypes = {
+  page: PropTypes.string,
+  hash: PropTypes.string
+};
 
-    const back = parent::maybe.isDefined()
-      ? (<Link href={Page.hrefFor(null, parent)} scroll={false}><div className="back"></div></Link>)
-      : nothing;
-    
-    const close = <Link href="./" scroll={false}><div className="close"></div></Link>;
-    
-    const klass = "active"::maybe.when(active);
-    
-    return (
-      <article id={id} className={klass}>
-        {back}
-        {close}
-        {children}
-      </article>
-    );
-  }
-
-}
+Goto.defaultProps = {
+  page: ""
+};
 
 export default Page;
+export { Goto };

@@ -88,6 +88,21 @@ export function copyOwn() {
 }
 
 /**
+ * Creates and fills an array with `count` references of this object.
+ *
+ * @export
+ * @template T
+ * @this {T} The object to fill an array with.
+ * @param {number} count The number of elements of the array.
+ * @returns {T[]} An array.
+ */
+export function times(count) {
+  const arr = new Array(count);
+  for (let i = 0; i < count; i++) arr[i] = this;
+  return arr;
+}
+
+/**
  * Contains several extension methods for matching based on type.
 */
 export const is = {

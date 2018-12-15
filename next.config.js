@@ -102,7 +102,7 @@ module.exports = {
       (map, p) => {
         const ext = path.extname(p);
         const name = path.basename(p, ext);
-        map[`/${name}`] = { page: '/', query: { page: name } };
+        map[`/${name}.html`] = { page: '/', query: { page: name } };
         return map;
       },
       { '/': { page: '/' } }
