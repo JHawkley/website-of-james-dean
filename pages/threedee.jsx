@@ -1,4 +1,4 @@
-import Page from "components/Page";
+import Page, { pageDataFor } from "components/Page";
 import Jump from "components/Jump";
 import Lightbox from "components/Lightbox";
 
@@ -9,10 +9,10 @@ import ImgBlackholeInset from "static/images/3drenders/blackhole_anim_inset.jpg"
 import ImgLandscapeInset from "static/images/3drenders/landscape1_inset.jpg";
 import ImgIceCaveInset from "static/images/3drenders/icecave_inset.jpg";
 
-import $work from "pages/articles/work?name";
-import $threedee from "?name";
+import $work from "pages/work?name";
+import $name from "?name";
 
-const Gallery = Lightbox.makeGallery($threedee, [
+const Gallery = Lightbox.makeGallery($name, [
   { i: "static/images/3drenders/landscape1.jpg", d: "The far LOD portion of the blackhole strike scene.  The procedural generation includes both trees and buildings of a small city far in the distance." },
   { i: "static/images/3drenders/landscape2.jpg", d: "The unfinished near LOD portion of the blackhole strike scene.  These trees were hard to render; I believe I was searching for ways to make them render faster, while still being high quality for the near shot.  These would have burst into flames the moment of the bright blast beyond the distant mountain." },
   { i: "static/images/3drenders/icecave.jpg", d: "Everyone tells me this render would be right at home in a Myst-like game.  The internal reflections from the ice and the metal are quite neat.  I really love the atmosphere here." },
@@ -78,5 +78,7 @@ const ThreeDee = (props) => {
     </Page>
   );
 };
+
+ThreeDee.pageData = pageDataFor($name);
 
 export default ThreeDee;

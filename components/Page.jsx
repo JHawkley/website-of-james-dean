@@ -47,13 +47,10 @@ const Goto = withRouter((props) => {
     const haveHash = hash::maybe.isDefined();
     const indexPage = !page;
     switch (true) {
-      case (!haveHash && !indexPage): return [`${basePath}?page=${page}`, urlResolve(basePath, `./${page}.html`)];
+      case (!haveHash && !indexPage): return [`${basePath}/${page}`, urlResolve(basePath, `./${page}.html`)];
       case (!haveHash && indexPage): return basePath::objEx.times(2);
       case (haveHash && indexPage): return `${basePath}#${hash}`::objEx.times(2);
-      default: return [
-        { pathname: basePath, query: { page }, hash },
-        { pathname: urlResolve(basePath, `./${page}.html`), hash }
-      ];
+      default: return [`${basePath}/${page}#${hash}`, `./${page}.html#${hash}`];
     }
   });
   
@@ -69,5 +66,9 @@ Goto.defaultProps = {
   page: ""
 };
 
+const pageDataFor = (name) => Object.freeze({ name, isPage: true });
+
+const indexPageData = Object.freeze({ name: "index", isPage: false });
+
 export default Page;
-export { Goto };
+export { Goto, pageDataFor, indexPageData };

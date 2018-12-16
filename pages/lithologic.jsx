@@ -1,13 +1,13 @@
-import Page from "components/Page";
+import Page, { pageDataFor } from "components/Page";
 import Jump from "components/Jump";
 import Lightbox from "components/Lightbox";
 
 import ImgHeader from "static/images/lithologic/header.png";
 
-import $work from "pages/articles/work?name";
-import $lithologic from "?name";
+import $work from "pages/work?name";
+import $name from "?name";
 
-const Gallery = Lightbox.makeGallery($lithologic, [
+const Gallery = Lightbox.makeGallery($name, [
   { i: "static/images/lithologic/1.png", d: "A video plays in the screenshot above, demonstrating a test that can determine if a sandstone sample's cementation is calcium-based.  Above the video, the dictionary defines the selected term; below it, a mud-logger focused explanation is provided." },
   { i: "static/images/lithologic/2.png", d: "Lithologic features many niceties, such as color swatches or a magnifier to take a closer look at a library photograph." },
   { i: "static/images/lithologic/3.png", d: "Lithologic's original design concept (top) compared to the final product (bottom)." }
@@ -40,5 +40,7 @@ const Lithologic = (props) => {
     </Page>
   );
 };
+
+Lithologic.pageData = pageDataFor($name);
 
 export default Lithologic;

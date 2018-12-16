@@ -1,4 +1,5 @@
-import Page from "components/Page";
+import Page, { pageDataFor } from "components/Page";
+import $name from "?name";
 
 const Contacted = (props) => (
   <Page {...props}>
@@ -7,5 +8,7 @@ const Contacted = (props) => (
     <p>Please hit the close button in the upper-right to return to the landing page.</p>
   </Page>
 );
+
+Contacted.pageData = pageDataFor($name);
 
 export default Contacted;

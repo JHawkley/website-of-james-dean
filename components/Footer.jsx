@@ -1,6 +1,5 @@
 import PropTypes from "prop-types";
 import Jump from "./Jump";
-import { ImageSync } from "./AsyncImage";
 
 const Footer = ({timeout}) => (
   <footer id="footer" style={timeout ? {display: 'none'} : null}>
@@ -10,8 +9,7 @@ const Footer = ({timeout}) => (
 );
 
 Footer.propTypes = {
-  timeout: PropTypes.bool,
-  imageSync: PropTypes.instanceOf(ImageSync)
+  timeout: PropTypes.bool
 };
 
 export default Footer;

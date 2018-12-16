@@ -1,4 +1,4 @@
-import Page, { Goto } from "components/Page";
+import Page, { Goto, pageDataFor } from "components/Page";
 import Jump from "components/Jump";
 import Lightbox from "components/Lightbox";
 import NateWidget from "components/Nate";
@@ -7,11 +7,11 @@ import ImgHeader from "static/images/nate-game/header.png";
 import ImgTwo from "static/images/nate-game/2.jpg";
 import ImgThreeInset from "static/images/nate-game/3_inset.jpg";
 
-import $work from "pages/articles/work?name";
-import $miscprogramming from "pages/articles/miscprogramming?name";
-import $nate from "?name";
+import $work from "pages/work?name";
+import $miscprogramming from "pages/miscprogramming?name";
+import $name from "?name";
 
-const Gallery = Lightbox.makeGallery($nate, [
+const Gallery = Lightbox.makeGallery($name, [
   { i: "static/images/nate-game/1.gif", d: "Nate jumps about in the test level.  Unfortunately, the build I have right now has shooting disabled; I believe I was reworking it at the time.  The gnarly design of the final room was intended to help work out issues with auto-tiling." },
   { i: "static/images/nate-game/2.jpg", d: "Basic sketches of Nate himself; I wish I had more concept art of him to show.  This artwork was done by my partner on this project, Tderek99." },
   { i: "static/images/nate-game/3.jpg", d: "Chie's kind-of-cute appearance conceals the frightening power she has at her command.  This artwork was done by my partner on this project, Tderek99." },
@@ -69,5 +69,7 @@ const Nate = (props) => {
     </Page>
   );
 };
+
+Nate.pageData = pageDataFor($name);
 
 export default Nate;

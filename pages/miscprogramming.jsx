@@ -1,9 +1,10 @@
-import Page from "components/Page";
+import Page, { pageDataFor } from "components/Page";
 import Jump from "components/Jump";
 
 import ImgHeader from "static/images/miscprogramming/header.png";
 
-import $work from "pages/articles/work?name";
+import $work from "pages/work?name";
+import $name from "?name";
 
 const MiscProgramming = (props) => {
   const { imageSync, active } = props;
@@ -36,5 +37,7 @@ const MiscProgramming = (props) => {
     </Page>
   );
 };
+
+MiscProgramming.pageData = pageDataFor($name);
 
 export default MiscProgramming;

@@ -4,9 +4,9 @@ import App, { createUrl } from "next/app";
 import { getUrl } from "next/dist/lib/utils";
 
 import Modal from "react-modal";
-import { dew } from "tools/common";
-import { is } from "tools/extensions/common";
+import Body from "components/Body";
 import { extensions as maybe } from "tools/maybe";
+import { canScrollRestore } from "tools/scrollRestoration";
 
 const updateHistoryState = (fn) => {
   const { url = getUrl(), as = url, options: oldOptions = {} } = window.history.state ?? {};
@@ -17,13 +17,11 @@ const updateHistoryState = (fn) => {
 
 const getHistoryState = (key) => window.history.state?.options?.[key];
 
-export const canScrollRestore = dew(() => {
-  if (typeof window === "undefined") return false;
-  if (typeof window.sessionStorage === "undefined") return false;
-  return window.history.scrollRestoration::is.string();
-});
+class ScrollRestoringApp extends App {
 
-export default class ScrollRestoringApp extends App {
+  static getDerivedStateFromProps({Component, pageProps}) {
+    return { ActiveComponent: Component, activeComponentProps: pageProps };
+  }
 
   originalScrollRestorationValue = "auto";
 
@@ -32,6 +30,8 @@ export default class ScrollRestoringApp extends App {
   scrollRestoreEntry = 0;
 
   hashBlockID = null;
+
+  state = { ActiveComponent: null, activeComponentProps: null };
 
   optionsForEntryId = (oldOptions) => {
     let newOptions = oldOptions;
@@ -68,10 +68,17 @@ export default class ScrollRestoringApp extends App {
     }
   }
 
-  onRouteChangeStart = () => {
+  onUnloadingPage = () => {
     if (!canScrollRestore) return;
     this.updateScrollPosition();
     this.persistScrollRestoreData();
+  }
+
+  onRouteChangeStart = () => {
+    this.onUnloadingPage();
+    // Inform the body that a route change is occurring.  This is done by
+    // setting its RoutePage to `null`.
+    this.setState({ ActiveComponent: null, activeComponentProps: null });
   }
 
   onRouteChangeComplete = () => {
@@ -109,7 +116,7 @@ export default class ScrollRestoringApp extends App {
     }
     
     this.hashBlockID = hashScroll.block();
-    window.addEventListener("beforeunload", this.onRouteChangeStart);
+    window.addEventListener("beforeunload", this.onUnloadingPage);
     router.events.on("routeChangeStart", this.onRouteChangeStart);
     router.events.on("routeChangeComplete", this.onRouteChangeComplete);
     router.events.on("hashChangeComplete", this.scrollToHash);
@@ -119,7 +126,7 @@ export default class ScrollRestoringApp extends App {
 
   componentWillUnmount() {
     const { router } = this.props;
-    window.removeEventListener("beforeunload", this.onRouteChangeStart);
+    window.removeEventListener("beforeunload", this.onUnloadingPage);
     router.events.off("routeChangeStart", this.onRouteChangeStart);
     router.events.off("routeChangeComplete", this.onRouteChangeComplete);
     router.events.off("hashChangeComplete", this.scrollToHash);
@@ -148,14 +155,25 @@ export default class ScrollRestoringApp extends App {
   }
 
   render() {
-    const { router, Component, pageProps } = this.props;
+    const {
+      props: { Component, pageProps, router },
+      state: { ActiveComponent, activeComponentProps }
+    } = this;
+
+    if (typeof Component.pageData === "undefined")
+      return <Component {...pageProps} url={createUrl(router)} />;
+
     return (
-      <Component {...pageProps}
+      <Body
+        RoutePage={ActiveComponent}
+        routeProps={activeComponentProps}
         elementRef={Modal.setAppElement}
-        url={createUrl(router)}
         notifyPageReady={this.restoreScrollPosition}
+        url={createUrl(router)}
       />
     );
   }
 
 }
+
+export default ScrollRestoringApp;
