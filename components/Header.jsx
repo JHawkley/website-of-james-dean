@@ -1,12 +1,13 @@
 import PropTypes from "prop-types";
 import { Goto } from "components/Page";
+import { ImageSync } from "components/AsyncImage";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCode } from "@fortawesome/free-solid-svg-icons";
 
-import $intro from "pages/intro?name";
-import $work from "pages/work?name";
-import $questions from "pages/questions?name";
-import $contact from "pages/contact?name";
+import $intro from "pages/articles/intro?name";
+import $work from "pages/articles/work?name";
+import $questions from "pages/articles/questions?name";
+import $contact from "pages/articles/contact?name";
 
 const Header = ({timeout}) => (
   <header id="header" style={timeout ? {display: 'none'} : null}>
@@ -32,7 +33,8 @@ const Header = ({timeout}) => (
 );
 
 Header.propTypes = {
-  timeout: PropTypes.bool
+  timeout: PropTypes.bool,
+  imageSync: PropTypes.instanceOf(ImageSync)
 };
 
 export default Header;

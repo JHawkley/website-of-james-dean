@@ -1,9 +1,7 @@
-import Page, { pageDataFor } from "components/Page";
+import Page from "components/Page";
 import ContactForm from "components/ContactForm";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faLinkedin, faGithub } from "@fortawesome/free-brands-svg-icons";
-
-import $name from "?name";
 
 const Contact = (props) => (
   <Page {...props}>
@@ -19,7 +17,5 @@ const Contact = (props) => (
     </ul>
   </Page>
 );
-
-Contact.pageData = pageDataFor($name);
 
 export default Contact;

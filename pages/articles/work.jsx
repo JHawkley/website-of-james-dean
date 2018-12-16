@@ -1,17 +1,16 @@
-import Page, { Goto, pageDataFor } from "components/Page";
+import Page, { Goto } from "components/Page";
 import Jump from "components/Jump";
 
 import ImgHeader from "static/images/pic_work.png";
 
 // Our work pages.
-import $terravu from "pages/terravu?name";
-import $lithologic from "pages/lithologic?name";
-import $lithphoto from "pages/lithphoto?name";
-import $solar from "pages/solar?name";
-import $threedee from "pages/threedee?name";
-import $nate from "pages/nate?name";
-import $miscprogramming from "pages/miscprogramming?name";
-import $name from "?name";
+import $terravu from "pages/articles/terravu?name";
+import $lithologic from "pages/articles/lithologic?name";
+import $lithphoto from "pages/articles/lithphoto?name";
+import $solar from "pages/articles/solar?name";
+import $threedee from "pages/articles/threedee?name";
+import $nate from "pages/articles/nate?name";
+import $miscprogramming from "pages/articles/miscprogramming?name";
 
 const workItem = (description, title, page) => (
   <Goto page={page} className="work-item">
@@ -39,7 +38,5 @@ const Work = (props) => {
     </Page>
   );
 };
-
-Work.pageData = pageDataFor($name);
 
 export default Work;

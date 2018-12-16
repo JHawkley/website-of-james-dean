@@ -1,13 +1,13 @@
-import Page, { pageDataFor } from "components/Page";
+import Page from "components/Page";
 import Jump from "components/Jump";
 import Lightbox from "components/Lightbox";
 
 import ImgHeader from "static/images/terravu/header.png";
 
-import $work from "pages/work?name";
-import $name from "?name";
+import $work from "pages/articles/work?name";
+import $terravu from "?name";
 
-const Gallery = Lightbox.makeGallery($name, [
+const Gallery = Lightbox.makeGallery($terravu, [
   { i: "static/images/terravu/1.png", d: "TerraVu's minimalist interface gives it an unassuming appearance.  Note the help bar at the bottom guiding the user through the software." },
   { i: "static/images/terravu/2.png", d: "The Dip Changer appears only when it's in a state where it is needed; in this case, when there is an active segment." },
   { i: "static/images/terravu/3.png", d: "The LAS loader is by far the most worked on component of this software.  My latest update to TerraVu was even a small bug-fix to the data-loader." }
@@ -42,7 +42,5 @@ const TerraVu = (props) => {
     </Page>
   );
 };
-
-TerraVu.pageData = pageDataFor($name);
 
 export default TerraVu;

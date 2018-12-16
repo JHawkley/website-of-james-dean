@@ -97,16 +97,15 @@ module.exports = {
     return config;
   },
   exportPathMap: () => {
-    const articlesGlob = path.join(__dirname, 'pages') + '/*.@(js|jsx)';
+    const articlesGlob = path.join(__dirname, 'pages/articles') + '/*.@(js|jsx)';
     return glob.sync(articlesGlob).reduce(
       (map, p) => {
         const ext = path.extname(p);
         const name = path.basename(p, ext);
-        if (name.startsWith("_")) return map;
-        map[`/${name}.html`] = { page: `/${name}` };
+        map[`/${name}.html`] = { page: '/', query: { page: name } };
         return map;
       },
-      { '/': { page: '/' }, '/404.html': { page: '/_error', query: { statusCode: 404 } } }
+      { '/': { page: '/' } }
     );
   },
   pageExtensions: ['jsx', 'js']

@@ -1,9 +1,8 @@
-import Page, { Goto, pageDataFor } from "components/Page";
+import Page, { Goto } from "components/Page";
 
 import ImgPlaceholderPhoto from "static/images/placeholder_photo.jpg";
 
-import $work from "pages/work?name";
-import $name from "?name";
+import $work from "pages/articles/work?name";
 
 const Intro = (props) => {
   const { imageSync, active } = props;
@@ -68,7 +67,5 @@ const Intro = (props) => {
     </Page>
   );
 };
-
-Intro.pageData = pageDataFor($name);
 
 export default Intro;

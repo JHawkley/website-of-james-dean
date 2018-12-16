@@ -1,7 +1,5 @@
-import Page, { pageDataFor } from "components/Page";
+import Page from "components/Page";
 import Jump from "components/Jump";
-
-import $name from "?name";
 
 const Questions = (props) => (
   <Page {...props}>
@@ -35,7 +33,5 @@ const Questions = (props) => (
     </dl>
   </Page>
 );
-
-Questions.pageData = pageDataFor($name);
 
 export default Questions;

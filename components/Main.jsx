@@ -1,15 +1,16 @@
 import PropTypes from "prop-types";
 import Lightbox from "components/Lightbox";
+import { ImageSync } from "components/AsyncImage";
 import { extensions as mapEx } from "tools/maps";
 
 export default class Main extends React.PureComponent {
 
   static propTypes = {
-    pages: PropTypes.instanceOf(Map).isRequired,
-    activePage: PropTypes.string.isRequired,
-    timeout: PropTypes.bool.isRequired,
+    article: PropTypes.string,
     articleTimeout: PropTypes.bool.isRequired,
-    url: PropTypes.any.isRequired
+    timeout: PropTypes.bool.isRequired,
+    imageSync: PropTypes.instanceOf(ImageSync),
+    articlePages: PropTypes.instanceOf(Map).isRequired
   };
 
   componentDidUpdate(prevProps) {
@@ -20,28 +21,15 @@ export default class Main extends React.PureComponent {
   }
   
   render() {
-    const { pages, activePage, timeout, articleTimeout, url } = this.props;
+    const { article, timeout, articleTimeout, articlePages, imageSync } = this.props;
 
     const display = timeout ? "flex" : "none";
     const klass = articleTimeout ? "article-timeout" : null;
 
     return (
       <div id="main" className={klass} style={{display}}>
-        {pages::mapEx.mapToArray(([SomePage, pageProps]) => {
-          const { name, isPage } = SomePage.pageData;
-
-          // Filter out components that aren't pages.
-          if (!isPage) return null;
-
-          return (
-            <SomePage
-              {...pageProps}
-              key={name}
-              id={name}
-              active={activePage === name}
-              url={url}
-            />
-          );
+        {articlePages::mapEx.mapToArray(([pageName, SomePage]) => {
+          return <SomePage key={pageName} id={pageName} active={article === pageName} imageSync={imageSync} />;
         })}
         <Lightbox />
       </div>

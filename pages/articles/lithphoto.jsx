@@ -1,4 +1,4 @@
-import Page, { pageDataFor } from "components/Page";
+import Page from "components/Page";
 import Jump from "components/Jump";
 import Lightbox from "components/Lightbox";
 
@@ -6,10 +6,10 @@ import ImgHeader from "static/images/lithologic-photo/header.png";
 import ImgFourInset from "static/images/lithologic-photo/4_inset.jpg";
 import ImgFiveInset from "static/images/lithologic-photo/5_inset.jpg";
 
-import $work from "pages/work?name";
-import $name from "?name";
+import $work from "pages/articles/work?name";
+import $lithphoto from "?name";
 
-const Gallery = Lightbox.makeGallery($name, [
+const Gallery = Lightbox.makeGallery($lithphoto, [
   { i: "static/images/lithologic-photo/1.png", d: "The administrative interface.  Along with managing users, wells could be shared between organizations." },
   { i: "static/images/lithologic-photo/2.png", d: "A couple of example samples in a small example well.  The image processor automatically cropped out and squared off the sample area of the image, ensuring visual consistency between samples." },
   { i: "static/images/lithologic-photo/3.png", d: "The diagnostics view of a sample, revealing various properties of the color correction process.  If the process failed, this would provide error information explaining why." },
@@ -57,7 +57,5 @@ const LithologicPhoto = (props) => {
     </Page>
   );
 };
-
-LithologicPhoto.pageData = pageDataFor($name);
 
 export default LithologicPhoto;

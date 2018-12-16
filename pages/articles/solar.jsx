@@ -1,4 +1,4 @@
-import Page, { pageDataFor } from "components/Page";
+import Page from "components/Page";
 import Jump from "components/Jump";
 import Lightbox from "components/Lightbox";
 
@@ -6,10 +6,10 @@ import ImgHeader from "static/images/3drenders/br_header.jpg";
 import ImgAnimInset from "static/images/3drenders/br_anim_inset.jpg";
 import ImgFiveInset from "static/images/3drenders/br5_inset.jpg";
 
-import $work from "pages/work?name";
-import $name from "?name";
+import $work from "pages/articles/work?name";
+import $solar from "?name";
 
-const Gallery = Lightbox.makeGallery($name, [
+const Gallery = Lightbox.makeGallery($solar, [
   { i: "static/images/3drenders/br1.jpg", d: "A glory shot of the solar bio-reactor with a sprawling Tibet-inspired mountain landscape behind it." },
   { i: "static/images/3drenders/br2.jpg", d: "An overview of the rendered installation.  The control script had a low chance to keep some of the mirrors unaimed so as to make them appear as if they were being cleaned and maintained." },
   { i: "static/images/3drenders/br3.jpg", d: "A cutaway of a mirror, showing its structure.  A thin membrane was intended to be flexed by controlling the air pressure inside it, which would deform the mirror and control its focus." },
@@ -49,7 +49,5 @@ const Solar = (props) => {
     </Page>
   );
 };
-
-Solar.pageData = pageDataFor($name);
 
 export default Solar;
