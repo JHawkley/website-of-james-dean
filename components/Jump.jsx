@@ -4,8 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faImage } from "@fortawesome/free-regular-svg-icons";
 import { faExternalLinkAlt, faFilm, faImages } from "@fortawesome/free-solid-svg-icons";
 import { Url, parse as parseUrl } from "url";
-import { extensions as objEx, dew } from "tools/common";
-import { is } from "tools/extensions/common";
+import { extensions as objEx, dew, is } from "tools/common";
 import { extensions as maybe, nothing } from "tools/maybe";
 
 const buildIcon = (props) => {

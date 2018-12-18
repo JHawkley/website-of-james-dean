@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { is } from "tools/extensions/common";
+import { is } from "tools/common";
 import { extensions as numEx } from "tools/numbers";
 import { extensions as fnEx } from "tools/functions";
 import { extensions as maybe, nothing } from "tools/maybe";

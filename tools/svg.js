@@ -1,7 +1,6 @@
 import ReactDOMServer from "react-dom/server";
 import { Text } from '@vx/text';
-import { dew } from "tools/common";
-import { is } from "tools/extensions/common";
+import { dew, is } from "tools/common";
 import { base64 } from "tools/strings";
 import { extensions as numEx } from "tools/numbers";
 import { extensions as strEx } from "tools/strings";

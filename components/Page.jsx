@@ -38,26 +38,31 @@ Page.defaultProps = {
   active: false
 };
 
-const Goto = withRouter((props) => {
-  const { page, hash, router, ...restProps } = props;
 
-  const basePath = router.pathname;
-
-  const [href, as] = dew(() => {
-    const haveHash = hash::maybe.isDefined();
-    const indexPage = !page;
-    switch (true) {
-      case (!haveHash && !indexPage): return [`${basePath}?page=${page}`, urlResolve(basePath, `./${page}.html`)];
-      case (!haveHash && indexPage): return basePath::objEx.times(2);
-      case (haveHash && indexPage): return `${basePath}#${hash}`::objEx.times(2);
-      default: return [
-        { pathname: basePath, query: { page }, hash },
-        { pathname: urlResolve(basePath, `./${page}.html`), hash }
-      ];
-    }
-  });
+const Goto = dew(() => {
+  const Goto = (props) => {
+    const { page, hash, router, ...restProps } = props;
   
-  return <Jump {...restProps} href={href} as={as} />
+    const basePath = router.pathname;
+  
+    const [href, as] = dew(() => {
+      const haveHash = hash::maybe.isDefined();
+      const indexPage = !page;
+      switch (true) {
+        case (!haveHash && !indexPage): return [`${basePath}?page=${page}`, urlResolve(basePath, `./${page}.html`)];
+        case (!haveHash && indexPage): return basePath::objEx.times(2);
+        case (haveHash && indexPage): return `${basePath}#${hash}`::objEx.times(2);
+        default: return [
+          { pathname: basePath, query: { page }, hash },
+          { pathname: urlResolve(basePath, `./${page}.html`), hash }
+        ];
+      }
+    });
+    
+    return <Jump {...restProps} href={href} as={as} />
+  };
+
+  return withRouter(Goto);
 });
 
 Goto.propTypes = {

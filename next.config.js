@@ -54,7 +54,6 @@ module.exports = {
         use: ({ issuer }) => {
           return {
             loader: 'name-of-loader',
-            rules: [defaultLoaders.babel],
             options: { issuer }
           };
         }
@@ -65,7 +64,6 @@ module.exports = {
         use: () => {
           return {
             loader: 'environment-loader',
-            rules: [defaultLoaders.babel],
             options: { isServer, isProduction }
           };
         }
@@ -87,7 +85,7 @@ module.exports = {
         const plugins = config.plugins || [];
         plugins.push(new BundleAnalyzerPlugin({
           analyzerMode: 'static',
-          reportFilename: '../out/bundle-report.html',
+          reportFilename: path.join(__dirname, './bundle-report.html'),
           openAnalyzer: false
         }));
         config.plugins = plugins;

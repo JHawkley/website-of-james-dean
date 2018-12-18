@@ -2,6 +2,8 @@ import { is } from "tools/extensions/common";
 
 // Re-export extension methods.
 export * as extensions from "tools/extensions/common";
+// Also re-export `is`; it's just too useful.
+export { is };
 
 /**
  * Compares the own-properties of two objects.

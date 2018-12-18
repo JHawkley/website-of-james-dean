@@ -1,5 +1,4 @@
-import { dew } from "tools/common";
-import { is } from "tools/extensions/common";
+import { dew, is } from "tools/common";
 
 export const canScrollRestore = dew(() => {
   if (typeof window === "undefined") return false;

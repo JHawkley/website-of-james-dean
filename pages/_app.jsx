@@ -1,11 +1,10 @@
 import { hashScroll } from "patch/router";
 
 import App, { createUrl } from "next/app";
-import { getUrl } from "next/dist/lib/utils";
+import { getUrl, loadGetInitialProps } from "next/dist/lib/utils";
 
 import Modal from "react-modal";
-import { dew } from "tools/common";
-import { is } from "tools/extensions/common";
+import { dew, is } from "tools/common";
 import { extensions as maybe } from "tools/maybe";
 
 const updateHistoryState = (fn) => {
@@ -25,6 +24,11 @@ export const canScrollRestore = dew(() => {
 
 export default class ScrollRestoringApp extends App {
 
+  static async getInitialProps({ Component, ctx }) {
+    const initialPageProps = await loadGetInitialProps(Component, ctx);
+    return { initialPageProps };
+  }
+
   originalScrollRestorationValue = "auto";
 
   scrollRestoreData = null;
@@ -32,6 +36,11 @@ export default class ScrollRestoringApp extends App {
   scrollRestoreEntry = 0;
 
   hashBlockID = null;
+
+  constructor(props) {
+    super(props);
+    this.state = { pageProps: props.initialPageProps ?? {} };
+  }
 
   optionsForEntryId = (oldOptions) => {
     let newOptions = oldOptions;
@@ -68,10 +77,18 @@ export default class ScrollRestoringApp extends App {
     }
   }
 
-  onRouteChangeStart = () => {
+  onBeforeMajorChange = () => {
     if (!canScrollRestore) return;
     this.updateScrollPosition();
     this.persistScrollRestoreData();
+  }
+
+  onRouteChangeStart = () => {
+    this.onBeforeMajorChange();
+    const { props: { Component }, state: { pageProps: oldProps } } = this;
+    const newProps = Component?.getRouteChangeProps(oldProps) ?? oldProps;
+    if (newProps !== oldProps)
+      this.setState({ pageProps: newProps });
   }
 
   onRouteChangeComplete = () => {
@@ -109,7 +126,7 @@ export default class ScrollRestoringApp extends App {
     }
     
     this.hashBlockID = hashScroll.block();
-    window.addEventListener("beforeunload", this.onRouteChangeStart);
+    window.addEventListener("beforeunload", this.onBeforeMajorChange);
     router.events.on("routeChangeStart", this.onRouteChangeStart);
     router.events.on("routeChangeComplete", this.onRouteChangeComplete);
     router.events.on("hashChangeComplete", this.scrollToHash);
@@ -117,9 +134,14 @@ export default class ScrollRestoringApp extends App {
     this.onRouteChangeComplete();
   }
 
+  componentDidUpdate(prevProps) {
+    if (this.props.initialPageProps !== prevProps.initialPageProps)
+      this.setState({ pageProps: this.props.initialPageProps });
+  }
+
   componentWillUnmount() {
     const { router } = this.props;
-    window.removeEventListener("beforeunload", this.onRouteChangeStart);
+    window.removeEventListener("beforeunload", this.onBeforeMajorChange);
     router.events.off("routeChangeStart", this.onRouteChangeStart);
     router.events.off("routeChangeComplete", this.onRouteChangeComplete);
     router.events.off("hashChangeComplete", this.scrollToHash);
@@ -148,7 +170,7 @@ export default class ScrollRestoringApp extends App {
   }
 
   render() {
-    const { router, Component, pageProps } = this.props;
+    const { props: { router, Component }, state: { pageProps } } = this;
     return (
       <Component {...pageProps}
         elementRef={Modal.setAppElement}

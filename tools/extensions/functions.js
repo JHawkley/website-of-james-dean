@@ -47,3 +47,23 @@ export function tryCall(thisArg = null, ...args) {
   try { return args.length === 0 ? thisArg::this() : thisArg::this(...args); }
   catch { return void 0; }
 }
+
+/**
+ * Creates a function that will only call this function once.  The return value of this function is discarded,
+ * so only apply this extension-method to side-effecting functions.
+ *
+ * @export
+ * @template T
+ * @this {function(...T): void} The function to use as a basis.
+ * @returns {function(...T): void} A function that will only execute a side-effect once.
+ */
+export function callableOnce() {
+  const fn = this;
+  let doOnce = true;
+  return function(...args) {
+    if (doOnce) {
+      doOnce = false;
+      fn.apply(this, args);
+    }
+  }
+}
