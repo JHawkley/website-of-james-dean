@@ -86,3 +86,34 @@ export function copyOwn() {
   if (this == null) return this;
   return Object.assign(newObjectBasedOn(this), this);
 }
+
+/**
+ * Creates and fills an array with `count` references of this object.
+ *
+ * @export
+ * @template T
+ * @this {T} The object to fill an array with.
+ * @param {number} count The number of elements of the array.
+ * @returns {T[]} An array.
+ */
+export function times(count) {
+  const arr = new Array(count);
+  for (let i = 0; i < count; i++) arr[i] = this;
+  return arr;
+}
+
+/**
+ * Contains several extension methods for matching based on type.
+*/
+export const is = {
+  string() { "use strict"; return typeof this === "string"; },
+  array() { "use strict"; return Array.isArray(this); },
+  number() { "use strict"; return typeof this === "number"; },
+  function() { "use strict"; return typeof this === "function"; },
+  symbol() { "use strict"; return typeof this === "symbol"; },
+  boolean() { "use strict"; return typeof this === "boolean"; },
+  undefined() { "use strict"; return typeof this === "undefined"; },
+  null() { "use strict"; return this === null; },
+  object() { "use strict"; return typeof this === "object" && this !== null; },
+  instanceOf(klass) { "use strict"; return this instanceof klass; }
+};

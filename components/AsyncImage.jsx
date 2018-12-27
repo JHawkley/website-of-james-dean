@@ -1,11 +1,10 @@
 import PropTypes from "prop-types";
-import getConfig from "next/config";
 import { dew } from "tools/common";
 import { extensions as maybe, nothing } from "tools/maybe";
 import { preloadImage, awaitAll, Future } from "tools/async";
 import { generateSvgPlaceholder } from "tools/svg";
 
-const isProduction = getConfig().publicRuntimeConfig?.isProduction ?? true;
+const isProduction = process.env.NODE_ENV === 'production';
 
 export default class AsyncImage extends React.PureComponent {
 
@@ -192,7 +191,7 @@ export class ImageSync {
     // Start all our loading promises and wait for them all to complete.
     await awaitAll(callbacks.map(cb => cb()));
   
-    // Finally report if we're done.
+    // Finally, report if we've still got more phases to load.
     return !this.allPhasesAreLoaded;
   }
 

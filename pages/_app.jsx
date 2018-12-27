@@ -1,27 +1,40 @@
-import { hashScroll } from "patch/router";
+import { hashScroll } from "patch/client-router";
 
 import App, { createUrl } from "next/app";
-import { getUrl } from "next/dist/lib/utils";
+import { getUrl, loadGetInitialProps, loadGetRenderProps } from "next/dist/lib/utils";
+
 import Modal from "react-modal";
-import { dew } from "tools/common";
+import { dew, is } from "tools/common";
 import { extensions as maybe } from "tools/maybe";
 
-const updateState = (fn) => {
+const updateHistoryState = (fn) => {
   const { url = getUrl(), as = url, options: oldOptions = {} } = window.history.state ?? {};
   const newOptions = fn(oldOptions) ?? oldOptions;
   if (newOptions === oldOptions) return;
   window.history.replaceState({ url, as, options: newOptions }, null, as);
 };
 
-const getState = (key) => window.history.state?.options?.[key];
+const getHistoryState = (key) => window.history.state?.options?.[key];
 
-export default class PaginatedApp extends App {
+export const canScrollRestore = dew(() => {
+  if (typeof window === "undefined") return false;
+  if (typeof window.sessionStorage === "undefined") return false;
+  return window.history.scrollRestoration::is.string();
+});
 
-  canScrollRestore = dew(() => {
-    if (typeof window === "undefined") return false;
-    if (typeof window.sessionStorage === "undefined") return false;
-    return typeof window.history.scrollRestoration === "string";
-  });
+export default class ScrollRestoringApp extends App {
+
+  static async getInitialProps({ Component, ctx }) {
+    const initialPageProps = await loadGetInitialProps(Component, ctx);
+    return { initialPageProps };
+  }
+
+  static async getRenderProps(props, { Component, ctx }, ssr) {
+    const { initialPageProps: oldProps } = props;
+    const newProps = await loadGetRenderProps(Component, oldProps, ctx, ssr);
+    if (oldProps === newProps) return props;
+    return { ...props, initialPageProps: newProps };
+  }
 
   originalScrollRestorationValue = "auto";
 
@@ -33,8 +46,7 @@ export default class PaginatedApp extends App {
 
   constructor(props) {
     super(props);
-    const initialPage = props.router.query?.page ?? "";
-    this.state = { currentPage: initialPage };
+    this.state = { pageProps: props.initialPageProps ?? {} };
   }
 
   optionsForEntryId = (oldOptions) => {
@@ -55,75 +67,93 @@ export default class PaginatedApp extends App {
   }
 
   restoreScrollPosition = () => {
-    if (this.canScrollRestore) {
+    if (canScrollRestore) {
       let scrollPosition = this.scrollRestoreData[this.scrollRestoreEntry];
       if (scrollPosition == null) {
         if (this.scrollToHash()) return;
         scrollPosition = [0, 0];
       }
       
-      const [scorllX, scrollY] = scrollPosition;
-      window.scrollTo(scorllX, scrollY);
+      const [scrollX, scrollY] = scrollPosition;
+      window.scrollTo(scrollX, scrollY);
     }
-    else if (!getState("didEntryScroll")) {
-      updateState(this.optionsForEntryScroll);
+    else if (!getHistoryState("didEntryScroll")) {
+      updateHistoryState(this.optionsForEntryScroll);
       if (this.scrollToHash()) return;
       window.scrollTo(0, 0);
     }
   }
 
-  onRouteChangeStart = () => {
-    if (!this.canScrollRestore) return;
+  onBeforeMajorChange = () => {
+    if (!canScrollRestore) return;
     this.updateScrollPosition();
     this.persistScrollRestoreData();
   }
 
+  onRouteChangeStart = () => {
+    this.onBeforeMajorChange();
+    const { props: { Component }, state: { pageProps: oldProps } } = this;
+    const newProps = Component.getRouteChangeProps?.(oldProps) ?? oldProps;
+    if (newProps !== oldProps)
+      this.setState({ pageProps: newProps });
+  }
+
   onRouteChangeComplete = () => {
-    const { state: { currentPage }, props: { router } } = this;
-    const newPage = router.query?.page ?? "";
+    if (!canScrollRestore) return;
+    updateHistoryState(this.optionsForEntryId);
+    this.persistScrollRestoreData();
+  }
 
-    if (this.canScrollRestore) {
-      updateState(this.optionsForEntryId);
-      this.persistScrollRestoreData();
+  scrollToHash = () => {
+    let { hash } = window.location;
+    hash = hash ? hash.substring(1) : false;
+    if (!hash) return false;
+
+    const el = document.getElementById(hash);
+    if (el) {
+      el.scrollIntoView();
+      return true;
     }
 
-    if (newPage === currentPage) {
-      // No page change, however the hash may have changed.
-      this.scrollToHash();
+    const nameEl = document.getElementsByName(hash)[0];
+    if (nameEl) {
+      nameEl.scrollIntoView();
+      return true;
     }
-    else {
-      // Set the new current page.
-      this.setState({ currentPage: newPage });
-    }
+
+    return false;
   }
 
   componentDidMount() {
     const { router } = this.props;
-    if (this.canScrollRestore) {
+    if (canScrollRestore) {
       this.originalScrollRestorationValue = window.history.scrollRestoration;
       window.history.scrollRestoration = "manual";
       this.recallScrollRestoreData();
     }
     
-    Modal.setAppElement('#__next');
     this.hashBlockID = hashScroll.block();
-    window.addEventListener("beforeunload", this.onRouteChangeStart);
+    window.addEventListener("beforeunload", this.onBeforeMajorChange);
     router.events.on("routeChangeStart", this.onRouteChangeStart);
     router.events.on("routeChangeComplete", this.onRouteChangeComplete);
-    router.events.on("hashChangeComplete", this.restoreScrollPosition);
+    router.events.on("hashChangeComplete", this.scrollToHash);
 
-    // Set the correct page.
     this.onRouteChangeComplete();
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.initialPageProps !== prevProps.initialPageProps)
+      this.setState({ pageProps: this.props.initialPageProps });
   }
 
   componentWillUnmount() {
     const { router } = this.props;
-    window.removeEventListener("beforeunload", this.onRouteChangeStart);
+    window.removeEventListener("beforeunload", this.onBeforeMajorChange);
     router.events.off("routeChangeStart", this.onRouteChangeStart);
     router.events.off("routeChangeComplete", this.onRouteChangeComplete);
-    router.events.off("hashChangeComplete", this.restoreScrollPosition);
+    router.events.off("hashChangeComplete", this.scrollToHash);
     if (this.hashBlockID != null) hashScroll.release(this.hashBlockID);
-    if (this.canScrollRestore) {
+    if (canScrollRestore) {
       this.persistScrollRestoreData();
       window.history.scrollRestoration = this.originalScrollRestorationValue;
     }
@@ -146,35 +176,13 @@ export default class PaginatedApp extends App {
     this.scrollRestoreEntry = options?.entryId ?? this.scrollRestoreData.length;
   }
 
-  scrollToHash() {
-    let { hash } = window.location;
-    hash = hash ? hash.substring(1) : false;
-    if (!hash) return false;
-
-    const el = document.getElementById(hash);
-    if (el) {
-      el.scrollIntoView();
-      return true;
-    }
-
-    const nameEl = document.getElementsByName(hash)[0];
-    if (nameEl) {
-      nameEl.scrollIntoView();
-      return true;
-    }
-
-    return false;
-  }
-
   render() {
-    const { router, Component, pageProps } = this.props;
-    const { currentPage } = this.state;
+    const { props: { router, Component }, state: { pageProps } } = this;
     return (
       <Component {...pageProps}
+        elementRef={Modal.setAppElement}
         url={createUrl(router)}
-        page={currentPage}
         notifyPageReady={this.restoreScrollPosition}
-        transitionsSupported={this.canScrollRestore}
       />
     );
   }
