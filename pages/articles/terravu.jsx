@@ -5,7 +5,7 @@ import Lightbox from "components/Lightbox";
 import ImgHeader from "static/images/terravu/header.png";
 
 import $work from "pages/articles/work?name";
-import $terravu from "?name";
+const $terravu = process.module.name;
 
 const Gallery = Lightbox.makeGallery($terravu, [
   { i: "static/images/terravu/1.png", d: "TerraVu's minimalist interface gives it an unassuming appearance.  Note the help bar at the bottom guiding the user through the software." },

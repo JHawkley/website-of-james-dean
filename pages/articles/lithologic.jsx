@@ -5,7 +5,7 @@ import Lightbox from "components/Lightbox";
 import ImgHeader from "static/images/lithologic/header.png";
 
 import $work from "pages/articles/work?name";
-import $lithologic from "?name";
+const $lithologic = process.module.name;
 
 const Gallery = Lightbox.makeGallery($lithologic, [
   { i: "static/images/lithologic/1.png", d: "A video plays in the screenshot above, demonstrating a test that can determine if a sandstone sample's cementation is calcium-based.  Above the video, the dictionary defines the selected term; below it, a mud-logger focused explanation is provided." },

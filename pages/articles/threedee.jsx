@@ -10,7 +10,7 @@ import ImgLandscapeInset from "static/images/3drenders/landscape1_inset.jpg";
 import ImgIceCaveInset from "static/images/3drenders/icecave_inset.jpg";
 
 import $work from "pages/articles/work?name";
-import $threedee from "?name";
+const $threedee = process.module.name;
 
 const Gallery = Lightbox.makeGallery($threedee, [
   { i: "static/images/3drenders/landscape1.jpg", d: "The far LOD portion of the blackhole strike scene.  The procedural generation includes both trees and buildings of a small city far in the distance." },

@@ -1,9 +1,10 @@
 import PropTypes from "prop-types";
-import { isProduction } from "?env";
 import { dew } from "tools/common";
 import { extensions as maybe, nothing } from "tools/maybe";
 import { preloadImage, awaitAll, Future } from "tools/async";
 import { generateSvgPlaceholder } from "tools/svg";
+
+const isProduction = process.env.NODE_ENV === 'production';
 
 export default class AsyncImage extends React.PureComponent {
 

@@ -1,7 +1,7 @@
-import { hashScroll } from "patch/router";
+import { hashScroll } from "patch/client-router";
 
 import App, { createUrl } from "next/app";
-import { getUrl, loadGetInitialProps } from "next/dist/lib/utils";
+import { getUrl, loadGetInitialProps, loadGetRenderProps } from "next/dist/lib/utils";
 
 import Modal from "react-modal";
 import { dew, is } from "tools/common";
@@ -27,6 +27,13 @@ export default class ScrollRestoringApp extends App {
   static async getInitialProps({ Component, ctx }) {
     const initialPageProps = await loadGetInitialProps(Component, ctx);
     return { initialPageProps };
+  }
+
+  static async getRenderProps(props, { Component, ctx }, ssr) {
+    const { initialPageProps: oldProps } = props;
+    const newProps = await loadGetRenderProps(Component, oldProps, ctx, ssr);
+    if (oldProps === newProps) return props;
+    return { ...props, initialPageProps: newProps };
   }
 
   originalScrollRestorationValue = "auto";
@@ -67,8 +74,8 @@ export default class ScrollRestoringApp extends App {
         scrollPosition = [0, 0];
       }
       
-      const [scorllX, scrollY] = scrollPosition;
-      window.scrollTo(scorllX, scrollY);
+      const [scrollX, scrollY] = scrollPosition;
+      window.scrollTo(scrollX, scrollY);
     }
     else if (!getHistoryState("didEntryScroll")) {
       updateHistoryState(this.optionsForEntryScroll);
@@ -86,7 +93,7 @@ export default class ScrollRestoringApp extends App {
   onRouteChangeStart = () => {
     this.onBeforeMajorChange();
     const { props: { Component }, state: { pageProps: oldProps } } = this;
-    const newProps = Component?.getRouteChangeProps(oldProps) ?? oldProps;
+    const newProps = Component.getRouteChangeProps?.(oldProps) ?? oldProps;
     if (newProps !== oldProps)
       this.setState({ pageProps: newProps });
   }

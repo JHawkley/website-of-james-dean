@@ -7,7 +7,7 @@ import ImgFourInset from "static/images/lithologic-photo/4_inset.jpg";
 import ImgFiveInset from "static/images/lithologic-photo/5_inset.jpg";
 
 import $work from "pages/articles/work?name";
-import $lithphoto from "?name";
+const $lithphoto = process.module.name;
 
 const Gallery = Lightbox.makeGallery($lithphoto, [
   { i: "static/images/lithologic-photo/1.png", d: "The administrative interface.  Along with managing users, wells could be shared between organizations." },

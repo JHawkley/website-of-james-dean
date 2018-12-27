@@ -9,7 +9,7 @@ import ImgThreeInset from "static/images/nate-game/3_inset.jpg";
 
 import $work from "pages/articles/work?name";
 import $miscprogramming from "pages/articles/miscprogramming?name";
-import $nate from "?name";
+const $nate = process.module.name;
 
 const Gallery = Lightbox.makeGallery($nate, [
   { i: "static/images/nate-game/1.gif", d: "Nate jumps about in the test level.  Unfortunately, the build I have right now has shooting disabled; I believe I was reworking it at the time.  The gnarly design of the final room was intended to help work out issues with auto-tiling." },

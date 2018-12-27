@@ -7,7 +7,7 @@ import ImgAnimInset from "static/images/3drenders/br_anim_inset.jpg";
 import ImgFiveInset from "static/images/3drenders/br5_inset.jpg";
 
 import $work from "pages/articles/work?name";
-import $solar from "?name";
+const $solar = process.module.name;
 
 const Gallery = Lightbox.makeGallery($solar, [
   { i: "static/images/3drenders/br1.jpg", d: "A glory shot of the solar bio-reactor with a sprawling Tibet-inspired mountain landscape behind it." },
