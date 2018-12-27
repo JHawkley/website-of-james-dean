@@ -2,7 +2,7 @@ import PropTypes from "prop-types";
 import { Goto } from "components/Page";
 import { ImageSync } from "components/AsyncImage";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCode } from "@fortawesome/free-solid-svg-icons";
+import { faCode } from "@fortawesome/free-solid-svg-icons/faCode";
 
 import $intro from "pages/articles/intro?name";
 import $work from "pages/articles/work?name";

@@ -5,7 +5,7 @@ import { extensions as fnEx } from "tools/functions";
 import { extensions as maybe, nothing } from "tools/maybe";
 import ReactLightbox from "react-image-lightbox";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faImages } from "@fortawesome/free-solid-svg-icons";
+import { faImages } from "@fortawesome/free-solid-svg-icons/faImages";
 
 const galleries = new Map();
 const openFns = new Set();

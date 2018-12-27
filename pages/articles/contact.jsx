@@ -1,7 +1,8 @@
 import Page from "components/Page";
 import ContactForm from "components/ContactForm";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faLinkedin, faGithub } from "@fortawesome/free-brands-svg-icons";
+import { faLinkedin } from "@fortawesome/free-brands-svg-icons/faLinkedin";
+import { faGithub } from "@fortawesome/free-brands-svg-icons/faGithub";
 
 const Contact = (props) => (
   <Page {...props}>
