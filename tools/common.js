@@ -72,3 +72,17 @@ export function noop() { return; }
  * @returns {T} The same value as `v`.
  */
 export function identityFn(v) { return v; }
+
+/**
+ * Creates a function that will call `factory` only once, storing its return value in a closure and returning
+ * it with each subsequent call.
+ *
+ * @export
+ * @template T
+ * @param {function(): T} factory The factory function.
+ * @returns {function(): T} A function that produces the singleton value returned from `factory`.
+ */
+export function singleton(factory) {
+  let instance = void 0;
+  return () => instance::is.undefined() ? (instance = factory()) : instance;
+}

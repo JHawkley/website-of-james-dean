@@ -130,7 +130,7 @@ export class CallSync {
      * 
      * @function
      * @param {T} value The value to resolve the future's promise with.
-     * @return {this}
+     * @returns {this}
      */
     Object.defineProperty(this, "resolve", {
       value: (value) => {
@@ -146,7 +146,7 @@ export class CallSync {
      * 
      * @function
      * @param {*} reason The reason for the rejection.
-     * @return {this}
+     * @returns {this}
      */
     Object.defineProperty(this, "reject", {
       value: (reason) => {
@@ -162,11 +162,66 @@ export class CallSync {
    * Creates an async-iterator for this `CallSync`.  It will yield values until a rejection occurs.
    * 
    * @function
-   * @return {AsyncIterator<T>} An `AsyncIterator` for this object.
+   * @returns {AsyncIterator<T>} An `AsyncIterator` for this object.
    */
   async *[Symbol.asyncIterator]() {
     while (true) yield await this.sync;
   }
+}
+
+export class Stream {
+
+  static doneMessage = Symbol("stream:done");
+
+  static mixin(state) {
+    const { callSync } = state;
+    return {
+      isCompleted: { get: () => state.done },
+      didError: { get: () => state.error != null },
+      done: {
+        value: () => {
+          if (state.done) return this;
+          state.done = true;
+          callSync.resolve(Stream.doneMessage);
+          return this;
+        }
+      },
+      emit: {
+        value: (value) => {
+          if (!state.done) callSync.resolve(value);
+          return this;
+        }
+      },
+      error: {
+        value: (reason) => {
+          if (state.done) return this;
+          state.error = reason;
+          state.done = true;
+          callSync.reject(reason);
+          return this;
+        }
+      },
+      [Symbol.asyncIterator]: {
+        value: async function*() {
+          while (!state.done) {
+            const emitted = await callSync.sync;
+            if (emitted === Stream.doneMessage) break;
+            yield emitted;
+          }
+          if (state.error) throw state.error;
+        }
+      }
+    };
+  }
+
+  constructor(promiseDecorator = identityFn) {
+    Object.defineProperties(this, Stream.mixin({
+      callSync: new CallSync(promiseDecorator),
+      error: null,
+      done: null
+    }));
+  }
+
 }
 
 /**
@@ -180,102 +235,43 @@ export class CallSync {
  */
 export class BufferedStream {
 
-  static doneMessage = Symbol("buffered-stream:done");
+  static doneMessage = Stream.doneMessage;
+
+  static mixin(state) {
+    const { callSync } = state;
+    return Object.assign(Stream.mixin(state), {
+      emit: {
+        value: (value) => {
+          if (state.done) return this;
+          if (callSync.awaitingSync) state.buffer.push(value);
+          else callSync.resolve(value);
+          return this;
+        }
+      },
+      [Symbol.asyncIterator]: {
+        value: async function*() {
+          while (!state.done) {
+            if (state.buffer.length > 0) {
+              yield* state.buffer;
+              state.buffer = [];
+            }
+            const emitted = await callSync.sync;
+            if (emitted === BufferedStream.doneMessage) break;
+            yield emitted;
+          }
+          if (state.error) throw state.error;
+        }
+      }
+    });
+  }
 
   constructor(promiseDecorator = identityFn) {
-    const callSync = new CallSync(promiseDecorator);
-    let buffer = [];
-    let error = null;
-    let done = false;
-
-    /**
-     * Whether this instance has completed, and no more values will be emitted.
-     * 
-     * @property {boolean}
-     */
-    Object.defineProperty(this, "isCompleted", {
-      get: () => done
-    });
-
-    /**
-     * Whether this instance reported an error.
-     * 
-     * @property {boolean}
-     */
-    Object.defineProperty(this, "didError", {
-      get: () => error != null
-    });
-
-    /**
-     * Emits a value, buffering if nothing is awaiting.
-     * 
-     * @function
-     * @param {T} value The value to resolve the future's promise with.
-     * @return {this}
-     */
-    Object.defineProperty(this, "done", {
-      value: () => {
-        if (done) return this;
-        done = true;
-        if (callSync.awaitingSync)
-          callSync.resolve(BufferedStream.doneMessage);
-        return this;
-      }
-    });
-
-    /**
-     * Emits a value, buffering if nothing is awaiting.
-     * 
-     * @function
-     * @param {T} value The value to resolve the future's promise with.
-     * @return {this}
-     */
-    Object.defineProperty(this, "emit", {
-      value: (value) => {
-        if (done) return this;
-        if (callSync.awaitingSync) buffer.push(value);
-        else callSync.resolve(value);
-        return this;
-      }
-    });
-
-    /**
-     * Causes this instance to enter an error state.  No further values can be emitted after the call.
-     * 
-     * @function
-     * @param {*} reason The reason behind the error.
-     * @return {this}
-     */
-    Object.defineProperty(this, "error", {
-      value: (reason) => {
-        if (done) return this;
-        error = reason;
-        done = true;
-        callSync.reject(reason);
-        return this;
-      }
-    });
-
-    /**
-     * Creates an async-iterator for this `BufferedStream`.  It will yield emitted values until `error` is called.
-     * 
-     * @function
-     * @return {AsyncIterator<T>} An `AsyncIterator` for this object.
-     */
-    Object.defineProperty(this, Symbol.asyncIterator, {
-      value: async function*() {
-        while (!done) {
-          if (buffer.length > 0) {
-            yield* buffer;
-            buffer = [];
-          }
-          const emitted = await callSync.sync;
-          if (emitted === BufferedStream.doneMessage) break;
-          yield emitted;
-        }
-        if (error) throw error;
-      }
-    });
+    Object.defineProperties(this, BufferedStream.mixin({
+      callSync: new CallSync(promiseDecorator),
+      buffer: [],
+      error: null,
+      done: null
+    }));
   }
 }
 
@@ -309,28 +305,38 @@ export async function awaitAll(promises) {
  * @template T
  * @param {function(): ?Promise<T>} promiseGetterFn
  *   A function that produces either promises or a nullish value when called.
- * @param {T} [defaultResult]
- *  A value to use as a default, if `promiseGetterFn` immediately returns a nullish value.
+ * @param {Object} [options]
+ *   An optional options object.
+ * @param {function(T): boolean} [options.condition]
+ *   A predicate function to determine whether the next promise should be awaited.
+ * @param {T|(function(): T)} [options.defaultResult]
+ *   A value or function to call to obtain a default value, in case no promise could be awaited.
  * @returns {Promise<T>} A promise that will resolve once `promiseGetterFn` stops materializing new promises.
  * @throws When no promise could be awaited and no `defaultResult` was provided.
  */
-export async function awaitWhile(promiseGetterFn, defaultResult) {
+export async function awaitWhile(promiseGetterFn, options) {
+  const defaultResult = options?.defaultResult ?? awaitWhile_noDefault;
+  const condition = options?.condition ?? awaitWhile_alwaysContinue;
   let promise = promiseGetterFn();
 
   if (promise == null) {
-    if (typeof defaultResult !== "undefined") return defaultResult;
-    throw new Error("the `promiseGetterFn` materialized no promise that could be awaited");
+    if (defaultResult::is.function()) return defaultResult();
+    return defaultResult;
   }
 
   // eslint-disable-next-line no-constant-condition
   while (true) {
     const result = await promise;
     const nextPromise = promiseGetterFn();
-    if (nextPromise == null || nextPromise === promise) return result;
+    if (nextPromise === promise) return result;
+    if (nextPromise == null) return result;
+    if (!condition(result)) return result;
     promise = nextPromise;
   }
-  
 }
+const awaitWhile_alwaysContinue = () => true;
+const awaitWhile_noDefault = () =>
+  throw new Error("the `promiseGetterFn` materialized nothing that could be awaited");
 
 /**
  * Wraps an image in a promise.
@@ -351,24 +357,27 @@ export function preloadImage(src, width, height) {
 }
 
 /**
- * Creates a function that creates a promise that will resolve with the given `value` after some `delay`.
- * Use this function in a `Promise..then` call to delay its resolution.
+ * Creates a promise that can be aborted.  The promise will resolve normally if `mainPromise` resolves
+ * before the `signalPromise` completes.  However, if the `signalPromise` completes first, the result
+ * will be `abortable.signal`, a symbol indicating an abort occurred.  Any rejection from `signalPromise`
+ * will be ignored, and will still cause the abortion signal to fire.
+ * 
+ * Note: if `mainPromise` is a nullish value, a promise that can only end via abortion will be returned
+ * instead.
  *
  * @export
  * @function
  * @template T
- * @param {Promise<T>} mainPromise The promise to make abortable.
+ * @param {Promise<T>} mainPromise The promise to make abortable or a nullish value.
  * @param {Promise<*>} signalPromise The promise to use as a signal to abort when it completes.
  * @returns {Promise<T|Symbol>} An abortable promise.
  */
-export const abortable = dew(() => {
-  const signal = Symbol("abortable:signal");
-  function abortable(mainPromise, signalPromise) {
-    return Promise.race([mainPromise, signalPromise::finishWith(() => signal)]);
-  }
-  abortable.signal = signal;
-  return abortable;
-});
+export function abortable(mainPromise, signalPromise) {
+  const abortingPromise = signalPromise::finishWith(() => abortable.signal);
+  if (mainPromise == null) return abortingPromise;
+  return Promise.race([mainPromise, abortingPromise]);
+}
+abortable.signal = Symbol("abortable:signal");
 
 /**
  * Creates a promise that will resolve the moment the JavaScript runtime becomes free.  This ensures the

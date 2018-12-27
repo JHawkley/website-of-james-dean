@@ -1,0 +1,227 @@
+import { dew } from "tools/common";
+
+const isIterable = (obj) => typeof obj[Symbol.iterator] === 'function';
+
+export const CoercionMethods = {
+  arrayLike(obj) {
+    if (typeof this.length !== "number")
+      throw new Error(`cannot coerce to an iterable; \`${obj}\` has no \`length\` property`);
+    return dew(function* () {
+      for (let i = 0, len = this.length; i <= len; i++) yield obj[i];
+    });
+  },
+  countable(obj) {
+    if (typeof this.count !== "number")
+      throw new Error(`cannot coerce to an iterable; \`${obj}\` has no \`count\` property`);
+    return dew(function* () {
+      for (let i = 0, len = this.count; i <= len; i++) yield obj[i];
+    });
+  }
+}
+
+/**
+ * Coerces this object into an iterable.
+ *
+ * @export
+ * @param {function(*): IterableIterator<*>} [coercionMethod=CoercionMethods.arrayLike]
+ *   A function that will produce an iterable that supports this object.
+ * @returns {IterableIterator<*>} An iterable for this object's elements.
+ * @throws When the `coercionMethod` fails to produce an iterable object.
+ */
+export function coerce(coercionMethod = CoercionMethods.arrayLike) {
+  if (Array.isArray(this)) return this;
+  if (isIterable(this)) return this;
+  const result = coercionMethod(this);
+  if (isIterable(result)) return result;
+  throw new Error(`the given \`coercionMethod\` could not produce an iterator from \`${this}\``);
+}
+
+/**
+ * Creates an iterable that will yield this iterable's content in reverse order.  Note that this is very inefficient
+ * for iterables that are not arrays and cannot be used on iterables that will never terminate.
+ *
+ * @export
+ * @template T
+ * @this {Iterable<T>}
+ * @returns {IterableIterator<T>}
+ */
+export function* reverse() {
+  if (Array.isArray(this))
+    for (let i = this.length - 1; i >= 0; i--) yield this[i];
+  else
+    yield* [...this]::reverse();
+}
+
+/**
+ * Iterates over this iterable, applying `iteratorFn` for each value yielded.
+ *
+ * @export
+ * @template T
+ * @this {Iterable<T>}
+ * @param {function(T): void} iteratorFn
+ */
+export function forEach(iteratorFn) {
+  if (Array.isArray(this))
+    this.forEach(iteratorFn);
+  else
+    for (const value of this) iteratorFn(value);
+}
+
+/**
+ * Transforms this iterable, applying `transformationFn` to each value yielded and yielding its result.
+ *
+ * @export
+ * @template T, U
+ * @this {Iterable<T>}
+ * @param {function(T): U} transformationFn
+ * @returns {IterableIterator<U>}
+ */
+export function* map(transformationFn) {
+  if (Array.isArray(this))
+    for (let i = 0, len = this.length; i < len; i++) yield transformationFn(this[i]);
+  else
+    for (const value of this) yield transformationFn(value);
+}
+
+/**
+ * Reduces this iterable object.
+ *
+ * @export
+ * @template T, U
+ * @this {Iterable<T>}
+ * @param {U} initialValue The initial value of the reduce.
+ * @param {function(U, T, number, Iterable<T>): U} reducerFn The function that reduces the iterable.
+ * @returns {U} The reduced value.
+ */
+export function reduce(initialValue, reducerFn) {
+  if (Array.isArray(this))
+    return this.reduce(reducerFn, initialValue);
+  else {
+    let value = initialValue;
+    let count = 0;
+    for (const thisValue of this) {
+      value = reducerFn(value, thisValue, count, this);
+      count += 1;
+    }
+    return value;
+  }
+}
+
+/**
+ * Reduces this iterable object while the `predicate` holds truthy.  When the `predicate` becomes falsy,
+ * the reduced value will be returned.
+ *
+ * @export
+ * @template T, U
+ * @this {Iterable<T>}
+ * @param {U} initialValue The initial value of the reduce.
+ * @param {function(U, number): boolean} predicate The predicate function to test the reduced value against.
+ * @param {function(U, T, number, Iterable<T>): U} fn The function that reduces the iterable.
+ * @returns {U} The reduced value.
+ */
+export function reduceWhile(initialValue, predicate, fn) {
+  let value = initialValue;
+  let count = 0;
+  for (const thisValue of this) {
+    if (!predicate(value, count)) break;
+    value = fn(value, thisValue, count, this);
+    count += 1;
+  }
+  return value;
+}
+
+/**
+ * Flattens this iterable by one level.
+ *
+ * @export
+ * @template T
+ * @this {Iterable<T|Iterable<T>>}
+ * @returns {IterableIterator<T>} An iterable that has been flattened one level.
+ */
+export function flatten() {
+  return this::flattenBy(1);
+}
+
+/**
+ * Flattens this iterable by some number of `levels`.
+ *
+ * @export
+ * @this {Iterable<*>}
+ * @param {number} [levels=1] The number of levels to flatten by.
+ * @returns {IterableIterator<*>} An iterable that yields this array's values, flattened by some number of levels.
+ */
+export function* flattenBy(levels = 1) {
+  if (levels === 0) {
+    yield* this;
+    return;
+  }
+
+  for (const value of this) {
+    if (isIterable(value)) yield* value::flattenBy(levels - 1);
+    else yield value;
+  }
+}
+
+/**
+ * Computes the intersection of this iterable with the `other` iterable, yielding those values that are
+ * members of both.
+ * 
+ * Internally, the iterables are converted into sets (as needed), so any iterables that do not terminate
+ * will cause this iterator to never terminate as well.  This could lead to excessive memory usage.
+ * Use with care!
+ * 
+ * If both inputs are sets, no conversion will be performed at all.
+ * 
+ * @export
+ * @template T
+ * @this {Iterable<T>}
+ * @param {Iterable<T>} other The other iterable.
+ * @returns {IterableIterator<T>}
+ */
+export function* intersection(other) {
+  const thisIsSet = this instanceof Set;
+  const otherIsSet = other instanceof Set;
+  switch (true) {
+    case thisIsSet && otherIsSet:
+      yield* intersection_SetSet(this, other);
+      break;
+    case thisIsSet && !otherIsSet:
+      yield* intersection_SetElse(this, other);
+      break;
+    case !thisIsSet && otherIsSet:
+      yield* intersection_SetElse(other, this);
+      break;
+    default:
+      yield* intersection_SetElse(new Set(this), other);
+      break;
+  }
+}
+
+function* intersection_SetSet(set, other) {
+  for (const value of other)
+    if (set.has(value))
+      yield value;
+}
+
+function* intersection_SetElse(set, other) {
+  const foundSet = new Set();
+  for (const value of other) {
+    if (!foundSet.has(value) && set.has(value)){
+      foundSet.add(value);
+      yield value;
+    }
+  }
+}
+
+/**
+ * Joins all the members of this iterator into a string.
+ *
+ * @export
+ * @this {Iterable<string>}
+ * @param {string} [separator=","] A string to use as a separator.
+ * @returns {string}
+ */
+export function join(separator = ",") {
+  if (Array.isArray(this)) return this.join(separator);
+  return [...this].join(separator);
+}

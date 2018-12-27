@@ -1,7 +1,12 @@
+import { dew } from "tools/common";
 import { nothing } from "tools/maybe";
 import { isEmpty as maybeIsEmpty } from "tools/extensions/maybe";
+import { flattenBy as iterFlattenBy } from "tools/extensions/iterables";
 
 const { floor, random: randomNum } = Math;
+
+// Some functions that apply to iterables are good to have for arrays too.
+export { reduceWhile } from "tools/extensions/iterables";
 
 /**
  * Checks to see if this array is empty.
@@ -130,3 +135,77 @@ export function partition(predicateFn) {
 
   return [whenTrue, whenFalse];
 }
+
+/**
+ * Creates an array of arrays based on a segregation function.  When the segregation function returns `true`,
+ * the value will be added to the current group.  It it returns false, the value will create a new group, to which
+ * it will be added.
+ *
+ * @export
+ * @template T
+ * @param {function(T, T, number, T[]): boolean} segregationFn The segregation function.
+ * @returns {T[][]} An array of all the groupings created by the segregation function.
+ */
+export function segregate(segregationFn) {
+  const length = this.length;
+  const result = [];
+  if (length === 0) return result;
+
+  let prevValue = this[0];
+  let currentGroup = [prevValue];
+
+  for (let i = 1; i < length; i++) {
+    const value = this[i];
+    const belongsWithPrevious = segregationFn(prevValue, value, i, this);
+    if (belongsWithPrevious) currentGroup.push(value);
+    else {
+      result.push(currentGroup);
+      currentGroup = [value];
+    }
+    prevValue = value;
+  }
+
+  if (currentGroup.length > 0)
+    result.push(currentGroup);
+
+  return result;
+}
+
+const arrayFlattenBy = Array.prototype.flat ?? dew(() => {
+  return function flattenBy(levels) {
+    if (levels <= 0) return this;
+    return flattenBy_recursive(this, [], levels);
+  }
+
+  function flattenBy_recursive(arr, result, levels) {
+    if (levels < 0) result.push(arr);
+    else {
+      for (let i = 0, len = arr.length; i < len; i++) {
+        const value = arr[i];
+        if (Array.isArray(value)) flattenBy_recursive(value, result, levels - 1);
+        else result.push(value);
+      }
+    }
+    return result;
+  }
+});
+
+/**
+ * Flattens this array by one level.
+ *
+ * @export
+ * @template T
+ * @this {Array<T|T[]>}
+ * @returns {Iterable<T>} An iterable that has been flattened one level.
+ */
+export function flatten() { return this::arrayFlattenBy(1); }
+
+/**
+ * Flattens this array by some number of `levels`.
+ *
+ * @export
+ * @this {Array<*>}
+ * @param {number} [levels=1] The number of levels to flatten by.
+ * @returns {Array<*>} A copy of this array that has been flattened by some number of levels.
+ */
+export function flattenBy(levels = 1) { return this::arrayFlattenBy(levels); }
