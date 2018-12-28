@@ -72,6 +72,43 @@ export const concat = (lead, ...rest) => {
 };
 
 /**
+ * Creates a parser that will apply as many of the given parsers to the input as possible and return their results
+ * in an array.  The parsers are applied in the given order, and any that fail to match will not be included in the
+ * resulting array.  If none of the parsers match, then an empty array is returned.
+ * 
+ * For a version that will fail if none of the parsers match, use `anyOf.strict` instead.
+ *
+ * @export
+ * @template T
+ * @param {...Parser<T>} parsers An array of parsers to attempt to apply to the input.
+ * @returns {Parser<T[]>} A parser producing an array.
+ */
+export const anyOf = (...parsers) => (state) => {
+  const result = [];
+  for (const parser of parsers) {
+    const { position } = state;
+    const parserResult = parser(state);
+    if (isResult(parserResult))
+      result.push(parserResult);
+    else
+      state.position = position;
+  }
+  return result;
+};
+
+/**
+ * Creates a parser that will apply as many of the given parsers to the input as possible and return their results
+ * in an array.  The parsers are applied in the given order, and any that fail to match will not be included in the
+ * resulting array.  If none of the parsers match, the parser will fail.
+ *
+ * @export
+ * @template T
+ * @param {...Parser<T>} parsers An array of parsers to attempt to apply to the input.
+ * @returns {BacktrackingParser<T[]>} A parser producing an array.
+ */
+anyOf.strict = (...parsers) => backtrack(map(anyOf(...parsers), (result) => result.length > 0 ? result : void 0));
+
+/**
  * Creates a parser that will return the result of the first parser that successfully matches.  The `parsers`
  * are attempted in the order given.
  *

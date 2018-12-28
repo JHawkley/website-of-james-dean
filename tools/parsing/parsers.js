@@ -1,3 +1,5 @@
+import { emptyResult } from "./core";
+
 /**
  * A parser that will always result in the state object.
  * 
@@ -29,22 +31,36 @@ export const any = (state) => {
   return char;
 };
 
-/** 
- * A parser that will match the start-of-input.  It produces an empty-value on match.
- * 
- * @param {ParserState} state The state of the parse.
- * @returns {null} The next character.
+/**
+ * A parser that will match all remaining characters of the input.  If the parser is already at the end of the input,
+ * an empty-value will be returned instead.
+ *
+ * @param {ParserState} state
+ * @returns {string} The rest of the input.
  */
-export const startOfInput = ({position}) => {
-  return position === 0 ? null : void 0;
+export const rest = (state) => {
+  const { input, position } = state;
+  if (position >= input.length) return emptyResult;
+  state.position = input.length;
+  return input.substring(position);
 }
 
 /** 
- * A parser that will match the end-of-input.  It produces an empty-value on match.
+ * A parser that will match the start-of-input.  It produces an empty-result on match.
  * 
  * @param {ParserState} state The state of the parse.
- * @returns {null} The next character.
+ * @returns {emptyResult}
+ */
+export const startOfInput = ({position}) => {
+  return position === 0 ? emptyResult : void 0;
+}
+
+/** 
+ * A parser that will match the end-of-input.  It produces an empty-result on match.
+ * 
+ * @param {ParserState} state The state of the parse.
+ * @returns {emptyResult}
  */
 export const endOfInput = ({input, position}) => {
-  return position >= input.length ? null : void 0;
+  return position >= input.length ? emptyResult : void 0;
 };

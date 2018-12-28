@@ -1,7 +1,12 @@
-import { flattenBy as flattenArrayBy } from "tools/extensions/array";
-import { reverse, reduce } from "tools/extensions/iterables";
-import { ParsingError, run } from "./core";
-import { isUndefined, isResult, backtrack, isStringable, resultToString, isRegExpExecArray } from "./helpers";
+import { dew } from "tools/common";
+import * as arrEx from "tools/extensions/array";
+import * as iterEx from "tools/extensions/iterables";
+import { emptyResult, ParsingError, run } from "./core";
+import { isUndefined, isResult, isEmpty } from "./helpers";
+import { isStringable, backtrack, resultToString, isRegExpExecArray } from "./helpers";
+import * as premade from "./parsers";
+
+const stringToArray = (parser) => map(parser, (str) => [...str]);
 
 /**
  * Creates a new parser by applying it sequentially to the given `parserModifiers` from left-to-right.
@@ -19,7 +24,7 @@ import { isUndefined, isResult, backtrack, isStringable, resultToString, isRegEx
  * @returns {Parser<*>}
  */
 export const chain = (parser, parserModifiers) => {
-  return parserModifiers::reduce(parser, (last, factory) => factory(last));
+  return parserModifiers::iterEx.reduce(parser, (last, factory) => factory(last));
 };
 
 /**
@@ -38,7 +43,7 @@ export const chain = (parser, parserModifiers) => {
  * @returns {Parser<*>}
  */
 export const pipe = (parserModifiers, parser) => {
-  return chain(parser, parserModifiers::reverse());
+  return chain(parser, parserModifiers::iterEx.reverse());
 }
 
 /**
@@ -146,8 +151,48 @@ export const peek = (parser) => backtrack.mark((state) => {
  */
 export const skip = (parser) => (state) => {
   const result = parser(state);
-  return isUndefined(result) ? void 0 : null;
+  return isUndefined(result) ? void 0 : emptyResult;
 }
+
+/**
+ * Creates a parser that removes empty-results from the given parser's result.  If the result is not an array,
+ * it will be wrapped in one.
+ * 
+ * This modifier will return an empty array in the case all the results were empty.  For a more-strict version
+ * that expects at least one result to remain, use `filterEmpty.strict`.
+ *
+ * @export
+ * @template T
+ * @param {Parser<T>} parser The parser whose result to be filtered.
+ * @returns {Parser<T[]>} A parser that produces an array containing the results.
+ */
+export const filterEmpty = (parser) => map(parser, (parserResult) => {
+  if (isEmpty(parserResult)) return [];
+  if (!Array.isArray(parserResult)) return [parserResult];
+  const result = parserResult::arrEx.reject(isEmpty);
+  if (result.length === 0) return [];
+  return result;
+});
+
+/**
+ * Creates a parser that removes empty-results from the given parser's result.  If the result is not an array,
+ * it will be wrapped in one.
+ * 
+ * This version expects that at least one result will remain after filtering.  If not, the parser will consider
+ * it a failure.
+ *
+ * @export
+ * @template T
+ * @param {Parser<T>} parser The parser whose result to be filtered.
+ * @returns {Parser<T[]>} A parser that produces an array containing the results.
+ */
+filterEmpty.strict = (parser) => map(parser, (parserResult) => {
+  if (isEmpty(parserResult)) return void 0;
+  if (!Array.isArray(parserResult)) return [parserResult];
+  const result = parserResult::arrEx.reject(isEmpty);
+  if (result.length === 0) return void 0;
+  return result;
+});
 
 /**
  * Creates a parser that will apply the given parser and then, if it succeeds, apply the given `transformationFn`
@@ -171,14 +216,14 @@ export const map = (parser, transformationFn) => {
 
 /**
  * Creates a parser that will apply the given parser until it fails, accumulating valid results, then returns
- * those results as an array.
+ * those results as an array.  If the given parser never matched, the array will be empty.
  *
  * @export
  * @template T
  * @param {Parser<T>} parser The parser to accumulate results from.
  * @returns {Parser<T[]>} A parser that produces the accumulated results of `parser`.
  */
-export const takeWhile = (parser) => (state) => {
+export const takeWhile = (parser) => parser === premade.any ? stringToArray(premade.rest) : (state) => {
   const result = [];
   let value = parser(state);
   while(isResult(value)) {
@@ -189,17 +234,30 @@ export const takeWhile = (parser) => (state) => {
 };
 
 /**
+ * Creates a parser that will apply the given parser until it fails, joining results the results into a string
+ * and returning it.  If the given parser never matched, the string will be empty.
+ *
+ * @export
+ * @param {Parser<Stringable>} parser The parser to accumulate results from.
+ * @returns {Parser<string>} A parser that produces the accumulated results of `parser`.
+ */
+takeWhile.string = (parser) => parser === premade.any ? premade.rest : join.all(takeWhile(parser), "");
+
+/**
  * Creates a parser that will apply the given parser and accumulate valid results, until `ending` successfully
  * matches something, then returns those results as an array.  If `parser` fails before the `ending` is located,
  * the parser will fail.
  *
  * @export
- * @template T, U
+ * @template T,U
  * @param {Parser<T>} parser The parser to accumulate results from.
  * @param {Parser<U>} ending The parser that will signal the end.
  * @returns {BacktrackingParser<T[]>} A parser that produces the accumulated results of `parser`.
  */
 export const takeUntil = (parser, ending) => {
+  const fastPath = takeUntil_tryFastPath(parser, ending);
+  if (fastPath) return stringToArray(fastPath);
+
   const peekForEnding = peek(ending);
   return backtrack((state) => {
     const result = [];
@@ -211,6 +269,60 @@ export const takeUntil = (parser, ending) => {
     return result;
   });
 };
+
+/**
+ * Creates a parser that will apply the given parser and accumulate valid results, until `ending` successfully
+ * matches something, then joins those results into a string and returns it.  If `parser` fails before the
+ * `ending` is located, the parser will fail.
+ *
+ * @export
+ * @template T
+ * @param {Parser<Stringable>} parser The parser to accumulate results from.
+ * @param {Parser<T>} ending The parser that will signal the end.
+ * @returns {BacktrackingParser<string>} A parser that produces the accumulated results of `parser`.
+ */
+takeUntil.string = (parser, ending) =>
+  takeUntil_tryFastPath(parser, ending) ?? join.all(takeUntil(parser, ending), "");
+
+const takeUntil_tryFastPath = (parser, ending) => {
+  // There are a few fast-paths we can take if we're using the `any` parser.
+  if (parser === premade.any) {
+    if (ending === premade.endOfInput)
+      return premade.rest;
+    if (ending.parserSource) {
+      if (typeof ending.parserSource === "string")
+        return takeUntil_fastPath_string(ending.parserSource);
+      else if (ending.parserSource instanceof RegExp)
+        return takeUntil_fastPath_regex(ending.parserSource);
+    }
+  }
+  return void 0;
+}
+
+const takeUntil_fastPath_string = (pattern) => backtrack.mark((state) => {
+  const { position, input } = state;
+  const indexOfStr = input.indexOf(pattern, position);
+  if (indexOfStr === -1) return void 0;
+  state.position = indexOfStr;
+  return input.substring(position, indexOfStr);
+});
+
+const takeUntil_fastPath_regex = backtrack.mark((pattern) => {
+  const rgx = !pattern.sticky ? pattern : dew(() => {
+    const set = new Set(pattern.flags[Symbol.iterator]());
+    set.remove("y");
+    set.add("g");
+    return new RegExp(pattern.source, set::iterEx.join(""));
+  });
+  return backtrack.mark((state) => {
+    const { position, input } = state;
+    rgx.lastIndex = position;
+    const indexOfMatch = input.search(rgx);
+    if (indexOfMatch === -1) return void 0;
+    state.position = indexOfMatch;
+    return input.substring(position, indexOfMatch);
+  });
+});
 
 /**
  * Creates a parser that will generate a substring from the current position, through to the new position of
@@ -380,7 +492,7 @@ export const flatten = (parser) => flattenBy(parser, 1);
  * @returns {Parser<Array<*>>} A parser that produces an array.
  */
 export const flattenBy = (parser, levels) => map(parser, (parserResult) => {
-  return parserResult::flattenArrayBy(levels);
+  return parserResult::arrEx.flattenBy(levels);
 });
 
 /**

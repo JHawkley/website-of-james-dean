@@ -45,3 +45,24 @@ export const forPair = (arr, fn) => {
   const lim = arr.length - 1;
   for (let i = 0; i < lim; i++) fn(arr[i], arr[i + 1]);
 }
+
+/**
+ * Folds two arrays into each other.  An element of `a` will follow an element of `b`, ending when no more
+ * elements can follow according to the pattern.
+ * 
+ * @export
+ * @template T
+ * @param {T[]} a The array that will begin the pattern.
+ * @param {T[]} b The array whose elements will follow each `a` element.
+ * @returns {T[]}
+ */
+export const fold = (a, b) => {
+  const result = [];
+  let curArr = a;
+  let i = 0;
+  while (i < curArr.length) {
+    result.push(curArr[i]);
+    curArr = curArr === a ? b : (i += 1, a);
+  }
+  return result;
+}

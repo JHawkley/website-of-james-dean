@@ -1,7 +1,6 @@
 import { dew } from "tools/common";
 import { nothing } from "tools/maybe";
 import { isEmpty as maybeIsEmpty } from "tools/extensions/maybe";
-import { flattenBy as iterFlattenBy } from "tools/extensions/iterables";
 
 const { floor, random: randomNum } = Math;
 
@@ -111,6 +110,19 @@ export function collect(partialFn) {
 }
 
 /**
+ * The inverse of `filter`; filters the array to those values that did not pass the given `predicateFn`.
+ *
+ * @export
+ * @template T
+ * @this {T[]} This array.
+ * @param {function(T, number, T[]): boolean} predicateFn The predicate function.
+ * @returns {T[]}
+ */
+export function reject(predicateFn) {
+  return this.filter(v => !predicateFn(v))
+}
+
+/**
  * Partitions this array into two arrays, based on the result of a predicate.  The returned value is a tuple,
  * where the first element contains an array of values where the predicate held true, and the second element
  * contains values where the predicate was false.
@@ -143,6 +155,7 @@ export function partition(predicateFn) {
  *
  * @export
  * @template T
+ * @this {T[]} This array.
  * @param {function(T, T, number, T[]): boolean} segregationFn The segregation function.
  * @returns {T[][]} An array of all the groupings created by the segregation function.
  */
@@ -195,17 +208,21 @@ const arrayFlattenBy = Array.prototype.flat ?? dew(() => {
  *
  * @export
  * @template T
- * @this {Array<T|T[]>}
+ * @this {Array<T|T[]>} This array.
  * @returns {Iterable<T>} An iterable that has been flattened one level.
  */
-export function flatten() { return this::arrayFlattenBy(1); }
+export function flatten() {
+  return this::arrayFlattenBy(1);
+}
 
 /**
  * Flattens this array by some number of `levels`.
  *
  * @export
- * @this {Array<*>}
+ * @this {Array<*>} This array.
  * @param {number} [levels=1] The number of levels to flatten by.
  * @returns {Array<*>} A copy of this array that has been flattened by some number of levels.
  */
-export function flattenBy(levels = 1) { return this::arrayFlattenBy(levels); }
+export function flattenBy(levels = 1) {
+  return this::arrayFlattenBy(levels);
+}

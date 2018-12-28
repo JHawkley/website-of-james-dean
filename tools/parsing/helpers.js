@@ -1,4 +1,5 @@
 import { str, regex } from "./atomic";
+import { emptyResult } from "./core";
 
 /**
  * Determines if the value is `undefined`.
@@ -17,6 +18,15 @@ export const isUndefined = (v) => typeof v === "undefined";
  * @returns {boolean}
  */
 export const isResult = (v) => typeof v !== "undefined";
+
+/**
+ * Determines if the value is some kind of empty-value.
+ *
+ * @export
+ * @param {*} v The value to test.
+ * @returns {boolean}
+ */
+export const isEmpty = (v) => v === emptyResult;
 
 /**
  * Wraps the parser such that it will backtrack when it fails.  If the parser is already known
@@ -72,8 +82,8 @@ export const castToParser = (obj) => {
  * @returns {string|undefined} The string or `undefined` if it couldn't be converted.
  */
 export const resultToString = (obj) => {
-  // Is it `null`?  We convert those to an empty value.
-  if (obj === null) return "";
+  // Is it the empty-value?  We convert those to an empty value.
+  if (isEmpty(obj)) return "";
   // Is it already a string?
   if (typeof obj === "string") return obj;
   // Is it a regular-expression `exec` match?
@@ -82,14 +92,14 @@ export const resultToString = (obj) => {
 }
 
 /**
- * Tries to cast the given object to a string.  Only has special handling for `null` and the `RegExpExecArray`;
+ * Tries to cast the given object to a string.  Only has special handling for `emptyResult` and the `RegExpExecArray`;
  * otherwise it will just return `obj.toString()`.
  * 
  * @param {*} obj The object to convert to a string.
  * @returns {string} The string representation of `obj`.
  */
 resultToString.force = (obj) => {
-  if (obj === null) return "";
+  if (isEmpty(obj)) return "";
   if (isRegExpExecArray(obj)) return obj[0];
   return obj.toString();
 }
@@ -101,7 +111,7 @@ resultToString.force = (obj) => {
  * @returns {boolean}
  */
 export const isStringable = (obj) => {
-  if (obj === null) return true;
+  if (isEmpty(obj)) return true;
   if (typeof obj === "string") return true;
   if (isRegExpExecArray(obj)) return true;
   return false;
@@ -122,7 +132,7 @@ export const isRegExpExecArray = (obj) => {
 
 /**
  * Tries to determine a suitable "empty" value for an object.  Strings get empty-string, arrays an empty-array and
- * so on.  Defaults to `null` for pretty much anything else, except `undefined`, which will raise an error.
+ * so on.  Defaults to `emptyResult` for pretty much anything else, except `undefined`, which will raise an error.
  * 
  * @param {*} obj The object to find an empty value for.
  * @returns {*}
@@ -132,5 +142,5 @@ export const emptyFor = (obj) => {
   if (isUndefined(obj)) throw new Error("cannot get an empty value for `undefined`");
   if (typeof obj === "string") return "";
   if (Array.isArray(obj)) return [];
-  return null;
+  return emptyResult;
 }
