@@ -1,26 +1,31 @@
+import { forOwnProps } from "tools/extensions/common";
 import { fold, extensions as arrEx } from "tools/array";
 import * as iterEx from "tools/extensions/iterables";
-import { str } from "./atomic";
+import { str, regex } from "./atomic";
 import { any, rest, endOfInput } from "./parsers";
 import { seq } from "./combinators";
 import { takeUntil, map, asString } from "./modifiers";
-import { isUndefined, isEmpty, castToParser } from "./helpers";
+import { isUndefined, isEmpty } from "./helpers";
 
 const preservedEmpty = Symbol("template:preserved-empty");
 const preserveResult = (result) => isEmpty(result) ? preservedEmpty : result;
 const restoreResult = (result) => result === preservedEmpty ? null : result;
 const finalizeResult = (result) => [...result::iterEx.reject(isEmpty)::iterEx.map(restoreResult)];
 const emptyToVoid = (v) => v === "" ? void 0 : str.skip(v);
+const mark = (p) => (p.preserveResult = true, p);
+const wrap = (parser) => Object.assign((state) => parser(state), parser);
 
 const prepareParser = (parser) => {
+  if (parser == null) throw new Error("a placeholder in the template-literal contained `null` or `undefined`");
   // Ignore the interpolation placeholders.  We'll deal with them later.
   if (parser === interpolate) return parser;
   if (parser instanceof AppliedInterpolation) return parser;
-  // Indicate we want to preserve the results in the case the parser returns the empty-result value.
-  // We want the result array to map one-to-one the placeholder values.
-  const preparedParser = castToParser(parser);
-  preparedParser.preserveResult = true;
-  return preparedParser;
+  // Wrap functional parsers so we can attach our marker to it safely.
+  if (typeof parser === "function") return mark(wrap(parser));
+  // Otherwise, build the standard parsers.
+  if (typeof obj === "string") return mark(str(parser));
+  if (parser instanceof RegExp) return mark(regex(parser));
+  throw new Error(`no parser could be located for \`${parser}\` in the template-literal`);
 };
 
 const processParser = (cur, last) => {
