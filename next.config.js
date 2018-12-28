@@ -67,7 +67,7 @@ module.exports = {
     const plugins = config.plugins || [];
 
     plugins.push(new DefinePlugin({
-      'process.module.name': runtimeValue(({ module }) => {
+      'process.module.name': DefinePlugin.runtimeValue(({ module }) => {
         if (!module) return undefined;
         if (!module.resource) return undefined;
         const ext = path.extname(module.resource);
@@ -116,21 +116,4 @@ function patchMain(patches, config) {
 
     return entries;
   };
-}
-
-// Patch instances of `RuntimeValue` of `DefinePlugin` to work like later versions of Webpack.
-function runtimeValue(fn, fileDependencies) {
-  const instance = DefinePlugin.runtimeValue(fn, fileDependencies);
-  instance.exec = function patched_exec(parser) {
-		if (this.fileDependencies === true) {
-			parser.state.module.buildInfo.cacheable = false;
-		} else {
-			for (const fileDependency of this.fileDependencies) {
-				parser.state.module.buildInfo.fileDependencies.add(fileDependency);
-			}
-		}
-
-		return this.fn({ module: parser.state.module });
-  }
-  return instance;
 }

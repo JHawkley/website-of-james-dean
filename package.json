@@ -54,7 +54,7 @@
     "postcss-easy-import": "^3.0.0",
     "postcss-loader": "^3.0.0",
     "raw-loader": "^1.0.0",
-    "webpack": "4.20.2",
+    "webpack": "^4.28.2",
     "webpack-bundle-analyzer": "^3.0.3"
   }
 }
