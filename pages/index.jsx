@@ -8,6 +8,7 @@ import { Future, CallSync, Stream, wait as asyncWaitFn } from "tools/async";
 import { extensions as asyncEx, delayToNextFrame, awaitAll, awaitWhile, abortable } from "tools/async";
 import { extensions as maybe, nothing } from "tools/maybe";
 import { extensions as mapEx } from "tools/maps";
+import * as parsing from "tools/parsing/index";
 import dynamic from "next/dynamic";
 import DynamicLoader from "components/DynamicLoader";
 
@@ -496,6 +497,28 @@ const NoScript = (props) => {
 const LandingPageComponent = () => null;
 LandingPageComponent.article = "";
 
+// The context for resolving articles.  This is an effort to correct a problem with using `import`.
+// The `react-loadable-plugin` Next.js provides for Webpack produces a loadable-manifest that is
+// incompatible with imports that make use of string-interpolation.
+const articlesCtx = dew(() => {
+  const { atomic: { str }, combinators: { oneOf }, template: { parser: p, interpolate }, run } = parsing;
+  const parser = p`./${interpolate}.${oneOf(str("js"), str("jsx"))}`;
+
+  const lazyCtx = require.context("components/articles", false, /\.(js|jsx)$/, "lazy");
+  const weakCtx = require.context("components/articles", false, /\.(js|jsx)$/, "weak");
+
+  const mapOfKeys = new Map(weakCtx.keys().map(k => [run(parser, k)[0], k]));
+  const keyFor = (article) => mapOfKeys.get(article) ?? throw new Error("the given article could not be located");
+
+  const requireArticle = (article) => lazyCtx(keyFor(article));
+  requireArticle.id = lazyCtx.id;
+  requireArticle.resolve = (article) => weakCtx.resolve(keyFor(article));
+  requireArticle.articles = () => [...mapOfKeys.keys()];
+  requireArticle.keys = weakCtx.keys;
+  requireArticle.moduleFor = keyFor;
+  return requireArticle;
+});
+
 // A function for resolving components.  Provides a lot of features we're not using!  :D
 function resolve(article) {
   if (!article::is.string())
@@ -506,7 +529,7 @@ function resolve(article) {
 
   const progress = new Stream();
   const progressUpdates = progress::asyncEx.fromLatest();
-  const Component = dynamic(() => import(`components/articles/${article}`), {
+  const Component = dynamic(() => articlesCtx(article), {
     loading: DynamicLoader.bindCallbacks({
       onError(error, retryLoader) {
         let didRetry = false;
@@ -521,8 +544,8 @@ function resolve(article) {
         progress.emit({ state: $$dynPastDelay, value: nothing, article });
       }
     }),
-    webpack: () => [require.resolveWeak(`components/articles/${article}`)],
-    modules: [require.resolveWeak(`components/articles/${article}`)]
+    webpack: () => [articlesCtx.resolve(article)],
+    modules: [articlesCtx.moduleFor(article)]
   });
 
   Component.preload().then(() => {
