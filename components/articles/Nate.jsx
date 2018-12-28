@@ -1,4 +1,4 @@
-import Page, { Goto } from "components/Page";
+import Article, { Goto } from "components/Article";
 import Jump from "components/Jump";
 import Lightbox from "components/Lightbox";
 import NateWidget from "components/Nate";
@@ -7,8 +7,8 @@ import ImgHeader from "static/images/nate-game/header.png";
 import ImgTwo from "static/images/nate-game/2.jpg";
 import ImgThreeInset from "static/images/nate-game/3_inset.jpg";
 
-import $work from "pages/articles/work?name";
-import $miscprogramming from "pages/articles/miscprogramming?name";
+import $work from "components/articles/Work?name";
+import $miscprogramming from "components/articles/MiscProgramming?name";
 const $nate = process.module.name;
 
 const Gallery = Lightbox.makeGallery($nate, [
@@ -23,7 +23,7 @@ const Nate = (props) => {
   const headerPhase = active ? 0 : 1;
   const bodyPhase = active ? 0 : 2;
   return (
-    <Page {...props} parent={$work}>
+    <Article {...props} parent={$work}>
       <h2 className="major">Nate Game</h2>
       <span className="image main javascript-link" onClick={Gallery.openCallback(0)}>
         <ImgHeader fluid phase={headerPhase} imageSync={imageSync} alt="Nate Game Gallery" />
@@ -53,7 +53,7 @@ const Nate = (props) => {
       <h3>Design</h3>
       <p>This project was my first time utilizing Entity-Component Systems and Action Lists.  Impact did not really have support for ECS entities out of the box, so I integrated an open-source ECS library, which I later ported to CoffeeScript so I could understand how it worked better as well as customize it.</p>
       <p>Unfortunately, I was not satisfied with Box2D's performance for driving the physics of the game.  Nate was using the old &quot;capsule body&quot; trick to make him run smoothly across slopes and other surfaces without getting stuck; this gave him a bit of a slippery feel on the edges of platforms.</p>
-      <p>Most likely, I would have eventually disabled the physical simulation and only used Box2D for collision detection.  I didn't really like the thought of having so much dead weight from Box2D hanging around, though, and it inspired me to instead work on <Goto page={$miscprogramming} hash="platter">Platter</Goto>, a collision detection engine specifically for classical feeling 2D games.</p>
+      <p>Most likely, I would have eventually disabled the physical simulation and only used Box2D for collision detection.  I didn't really like the thought of having so much dead weight from Box2D hanging around, though, and it inspired me to instead work on <Goto article={$miscprogramming} hash="platter">Platter</Goto>, a collision detection engine specifically for classical feeling 2D games.</p>
       <p>At the time we stopped working on the game, I was still building out the basic gameplay mechanics, figuring out how to handle all the power interactions and abilities, as well as laying the foundation for enemy programming.  Although I had scribbled out thoughts on how I'd try and do all the proc-gen stuff, I never got started on a prototype.</p>
 
       <h3>Interactive Sample</h3>
@@ -66,7 +66,7 @@ const Nate = (props) => {
       <p>All of this was made using a combination of HTML, JavaScript (with ESNext features via <Jump href="https://babeljs.io/">Babel</Jump>), and CSS (via <Jump href="https://sass-lang.com/">SASS</Jump>).  The sounds were created using <Jump href="http://github.grumdrig.com/jsfxr/">jsfxr</Jump> and hopefully the sounds he makes when he changes between his behavior states are recognized as sounds a dog might make.</p>
       <p>While the Canvas API would probably have been the more performant option, an HTML-element based solution is fine for such a simple interactive piece.  His animations are all driven and controlled by CSS, and an action-list coded in a data-driven style drives his rather complicated behavior, made up of around 50 individual actions spread across 4 major behaviors.</p>
       <p>This was actually the most complex AI that I have made to date, in terms of behavioral complexity.</p>
-    </Page>
+    </Article>
   );
 };
 

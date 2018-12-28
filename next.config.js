@@ -1,5 +1,6 @@
 const path = require('path');
 const glob = require('glob');
+const toLower = require('lodash/toLower');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const DefinePlugin = require('webpack/lib/DefinePlugin');
 
@@ -87,12 +88,12 @@ module.exports = {
     return config;
   },
   exportPathMap: () => {
-    const articlesGlob = path.join(__dirname, 'pages/articles') + '/*.@(js|jsx)';
+    const articlesGlob = path.join(__dirname, 'components/articles') + '/*.@(js|jsx)';
     return glob.sync(articlesGlob).reduce(
       (map, p) => {
         const ext = path.extname(p);
         const name = path.basename(p, ext);
-        map[`/${name}.html`] = { page: '/', query: { page: name } };
+        map[`/${toLower(name)}.html`] = { page: '/', query: { article: name } };
         return map;
       },
       { '/': { page: '/' } }

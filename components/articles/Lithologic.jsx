@@ -1,10 +1,10 @@
-import Page from "components/Page";
+import Article from "components/Article";
 import Jump from "components/Jump";
 import Lightbox from "components/Lightbox";
 
 import ImgHeader from "static/images/lithologic/header.png";
 
-import $work from "pages/articles/work?name";
+import $work from "components/articles/Work?name";
 const $lithologic = process.module.name;
 
 const Gallery = Lightbox.makeGallery($lithologic, [
@@ -17,7 +17,7 @@ const Lithologic = (props) => {
   const { imageSync, active } = props;
   const phase = active ? 0 : 1;
   return (
-    <Page {...props} parent={$work}>
+    <Article {...props} parent={$work}>
       <h2 className="major">Lithologic</h2>
       <span className="image main javascript-link" onClick={Gallery.openCallback(0)}>
         <ImgHeader fluid phase={phase} imageSync={imageSync} alt="Lithologic Gallery" />
@@ -37,7 +37,7 @@ const Lithologic = (props) => {
       <p>Along with building the application itself, I also had to produce tools to assist other teams in assembling and collating the massive library of photographs and videos.  They used these tools while doing the photography to keep track of their work: what they were photographing, who was photographing, the conditions of the microscope, etc.</p>
       <p>Furthermore, there was the matter of actually assembling the library itself.  The photographs had to be associated to geological terms from the dictionary and then user-friendly HTML files assembled and exported into as neat a package as I could manage.  This library also needed to be capable of being updated as well.</p>
       <p>As for the design of the software itself, I was given a complete design document and tasked to follow it.  The final product pretty closely resembles <Gallery index={2}>the original design document</Gallery>, with only a few minor differences.</p>
-    </Page>
+    </Article>
   );
 };
 

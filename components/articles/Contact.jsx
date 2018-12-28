@@ -1,11 +1,11 @@
-import Page from "components/Page";
+import Article from "components/Article";
 import ContactForm from "components/ContactForm";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faLinkedin } from "@fortawesome/free-brands-svg-icons/faLinkedin";
 import { faGithub } from "@fortawesome/free-brands-svg-icons/faGithub";
 
 const Contact = (props) => (
-  <Page {...props}>
+  <Article {...props}>
     <h2 className="major">Contact</h2>
     <ContactForm displayed={props.active} />
     <ul className="icons">
@@ -16,7 +16,7 @@ const Contact = (props) => (
         <FontAwesomeIcon icon={faGithub} />
       </a></li>
     </ul>
-  </Page>
+  </Article>
 );
 
 export default Contact;

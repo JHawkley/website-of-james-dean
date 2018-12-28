@@ -1,4 +1,4 @@
-import Page from "components/Page";
+import Article from "components/Article";
 import Jump from "components/Jump";
 import Lightbox from "components/Lightbox";
 
@@ -6,7 +6,7 @@ import ImgHeader from "static/images/lithologic-photo/header.png";
 import ImgFourInset from "static/images/lithologic-photo/4_inset.jpg";
 import ImgFiveInset from "static/images/lithologic-photo/5_inset.jpg";
 
-import $work from "pages/articles/work?name";
+import $work from "components/articles/Work?name";
 const $lithphoto = process.module.name;
 
 const Gallery = Lightbox.makeGallery($lithphoto, [
@@ -22,7 +22,7 @@ const LithologicPhoto = (props) => {
   const headerPhase = active ? 0 : 1;
   const bodyPhase = active ? 0 : 2;
   return (
-    <Page {...props} parent={$work}>
+    <Article {...props} parent={$work}>
       <h2 className="major">Lithologic Photo</h2>
       <span className="image main javascript-link" onClick={Gallery.openCallback(0)}>
         <ImgHeader fluid phase={headerPhase} imageSync={imageSync} alt="Lithologic Photo Gallery" />
@@ -54,7 +54,7 @@ const LithologicPhoto = (props) => {
       <p>Finding them was hard; coordinating with them across the world was harder; not losing the microfilm we put considerable effort into purchasing turned out to be impossible.</p>
       <p>It was not me that lost it though, just to be clear.  Someone else was handling the actual manufacture of the plates and they had a hard time keeping track of that tiny black box worth $1000  ...or the other one we got when we ordered prints of the version 2 graphic.</p>
       <p>This, and other problems like it, eventually took their toll on the project.</p>
-    </Page>
+    </Article>
   );
 };
 
