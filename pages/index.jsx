@@ -3,9 +3,6 @@ import ReactDOMServer from "react-dom/server";
 import Head from "next/head";
 import { canScrollRestore as transitionsSupported } from "pages/_app"
 
-import stylesheet from "styles/main.scss";
-import lightboxStyle from "react-image-lightbox/style.css";
-
 import { dew, is, singleton } from "tools/common";
 import { Future, CallSync, Stream, wait as asyncWaitFn } from "tools/async";
 import { extensions as asyncEx, delayToNextFrame, awaitAll, awaitWhile, abortable } from "tools/async";
@@ -156,12 +153,7 @@ class IndexPage extends React.PureComponent {
       <Fragment>
         <Head>
           <title>A Programmer's Place</title>
-          <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,300i,600,600i" rel="stylesheet" />
         </Head>
-
-        <style dangerouslySetInnerHTML={{ __html: stylesheet }} />
-        <style dangerouslySetInnerHTML={{ __html: lightboxStyle }} />
-        <style dangerouslySetInnerHTML={{ __html: "body { overflow-y: scroll; }"}} />
 
         {/* A special no-script version of the website. */}
         <NoScript>
