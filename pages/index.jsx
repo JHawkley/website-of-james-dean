@@ -34,26 +34,26 @@ const $$dynRetry = Symbol("dynamic-import:retry");
 
 const $$transMiddle = Symbol("transition:middle");
 const $$transFromIndex = Symbol("transition:from-index");
-const $$transFromPage = Symbol("transition:from-page");
+const $$transFromArticle = Symbol("transition:from-article");
 const $$transFinalizeIndex = Symbol("transition:finalize-index");
 const $$transDone = Symbol("transition:done");
 
 class IndexPage extends React.PureComponent {
 
   static propTypes = {
-    expectedPage: PropTypes.string,
+    expectedArticle: PropTypes.string,
     preloadedArticle: PropTypes.func,
     notifyPageReady: PropTypes.func.isRequired,
     elementRef: PropTypes.func
   };
 
   static defaultProps = {
-    expectedPage: ""
+    expectedArticle: ""
   };
 
   static getInitialProps({query}) {
-    const expectedPage = query?.page ?? "";
-    return { expectedPage };
+    const expectedArticle = query?.article ?? "";
+    return { expectedArticle };
   }
 
   imageSync = new ImageSync();
@@ -74,7 +74,7 @@ class IndexPage extends React.PureComponent {
     super(props);
 
     this.state = {
-      actualPage: "",
+      actualArticle: "",
       knownArticles: new Map(),
       asyncError: nothing,
       isArticleVisible: false,
@@ -110,8 +110,8 @@ class IndexPage extends React.PureComponent {
     await Promise.race([imagesPromise, timerPromise]);
   }
 
-  transitionToPage() {
-    throw new Error("the method `transitionToPage` must be overridden; do not call `super.transitionToPage`");
+  transitionToArticle() {
+    throw new Error("the method `transitionToArticle` must be overridden; do not call `super.transitionToArticle`");
   }
 
   bodyClass() {
@@ -133,8 +133,8 @@ class IndexPage extends React.PureComponent {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (this.props.expectedPage !== prevProps.expectedPage)
-      this.transitionToPage();
+    if (this.props.expectedArticle !== prevProps.expectedArticle)
+      this.transitionToArticle();
     
     if (this.state.asyncError && this.state.asyncError !== prevState.asyncError)
       throw this.state.asyncError;
@@ -149,7 +149,7 @@ class IndexPage extends React.PureComponent {
     const {
       imageSync,
       props: { elementRef },
-      state: { timeout, articleTimeout, actualPage, knownArticles }
+      state: { timeout, articleTimeout, actualArticle, knownArticles }
     } = this;
   
     return (
@@ -183,7 +183,7 @@ class IndexPage extends React.PureComponent {
             <div id="wrapper">
               <Header timeout={timeout} transition={transitionsSupported} imageSync={imageSync} />
               <Main
-                article={actualPage}
+                article={actualArticle}
                 articlePages={knownArticles}
                 articleTimeout={articleTimeout}
                 timeout={timeout}
@@ -205,10 +205,10 @@ class IndexPage extends React.PureComponent {
 class SoftIndexPage extends IndexPage {
 
   static async getRenderProps(props, ctx, ssr) {
-    const { expectedPage } = props;
-    if (!ssr || !expectedPage) return props;
+    const { expectedArticle } = props;
+    if (!ssr || !expectedArticle) return props;
     try {
-      const preloadedArticle = await resolve(expectedPage).promise;
+      const preloadedArticle = await resolve(expectedArticle).promise;
       return { ...props, preloadedArticle };
     }
     catch {
@@ -223,12 +223,12 @@ class SoftIndexPage extends IndexPage {
   transitioning = false;
 
   get transitionState() {
-    const { props: { expectedPage }, state: { actualPage, isArticleVisible } } = this;
+    const { props: { expectedArticle }, state: { actualArticle, isArticleVisible } } = this;
     // Use of `==` in this getter is intentional.
-    if (actualPage == nothing) return actualPage == expectedPage ? $$transDone : $$transMiddle;
-    if (actualPage === "" && isArticleVisible) return $$transFinalizeIndex;
-    if (actualPage == expectedPage) return $$transDone;
-    if (actualPage !== "") return $$transFromPage;
+    if (actualArticle == nothing) return actualArticle == expectedArticle ? $$transDone : $$transMiddle;
+    if (actualArticle === "" && isArticleVisible) return $$transFinalizeIndex;
+    if (actualArticle == expectedArticle) return $$transDone;
+    if (actualArticle !== "") return $$transFromArticle;
     return $$transFromIndex;
   }
 
@@ -259,29 +259,29 @@ class SoftIndexPage extends IndexPage {
       if (this.didUnmount)
         throw new Error("cannot resolve article; page has already unmounted");
 
-      const { props: { expectedPage }, state: { knownArticles } } = this;
+      const { props: { expectedArticle }, state: { knownArticles } } = this;
   
       // Can't get a null article; just return a promise that will abort
       // when we get a proper article.
-      if (expectedPage::maybe.isEmpty())
+      if (expectedArticle::maybe.isEmpty())
         return abortable(null, abortLoadSync.sync);
 
       // If we're getting the landing-page, synchronously return the faux component.
-      if (expectedPage === "")
+      if (expectedArticle === "")
         return LandingPageComponent;
   
       // No need to resolve an article that is already resolved.  Synchronously return it.
-      if (knownArticles.has(expectedPage))
-        return knownArticles.get(expectedPage);
+      if (knownArticles.has(expectedArticle))
+        return knownArticles.get(expectedArticle);
       
       // And if we have this article resolving already, we can just wait for it to finish.
-      if (lastArticle != null && lastArticle.article === expectedPage)
+      if (lastArticle != null && lastArticle.article === expectedArticle)
         return lastArticle.promise();
   
-      const resolvingArticle = resolve(expectedPage);
+      const resolvingArticle = resolve(expectedArticle);
 
       lastArticle = {
-        article: expectedPage,
+        article: expectedArticle,
         promise: singleton(() => {
           return resolvingArticle.promise
             .then(finishArticle)
@@ -305,16 +305,16 @@ class SoftIndexPage extends IndexPage {
 
   initialStateFor(props) {
     const [article, mapElements] = dew(() => {
-      const { expectedPage, preloadedArticle } = props;
+      const { expectedArticle, preloadedArticle } = props;
       if (!preloadedArticle)
-        return [expectedPage ?? "", []];
+        return [expectedArticle ?? "", []];
       
       const { article } = preloadedArticle;
 
-      if (!isProduction && article !== expectedPage) {
+      if (!isProduction && article !== expectedArticle) {
         console.warn([
           "preloaded component was for unexpected article",
-          `expected = ${expectedPage}, received = ${article}`
+          `expected = ${expectedArticle}, received = ${article}`
         ].join("; "));
       }
 
@@ -331,19 +331,19 @@ class SoftIndexPage extends IndexPage {
     switch (article) {
       case null:
       case undefined: return {
-        actualPage: nothing,
+        actualArticle: nothing,
         timeout: true,
         articleTimeout: false,
         isArticleVisible: true
       };
       case "": return {
-        actualPage: "",
+        actualArticle: "",
         timeout: false,
         articleTimeout: false,
         isArticleVisible: false
       };
       default: return {
-        actualPage: article,
+        actualArticle: article,
         timeout: true,
         articleTimeout: true,
         isArticleVisible: true
@@ -356,7 +356,7 @@ class SoftIndexPage extends IndexPage {
     const superPromise = super.doLoading();
 
     // Wait for the article component to be loaded.
-    const initialArticle = this.props.expectedPage;
+    const initialArticle = this.props.expectedArticle;
     const loadedComponent = await awaitWhile(this.resolveArticle);
 
     if (loadedComponent::asyncEx.isAborted())
@@ -369,11 +369,11 @@ class SoftIndexPage extends IndexPage {
     await superPromise;
   }
 
-  transitionToPage() {
+  transitionToArticle() {
     if (!this.didMount)
-      throw new Error("`transitionToPage` was called before the component has finished mounting");
+      throw new Error("`transitionToArticle` was called before the component has finished mounting");
     // Call out to `resolveArticle` to begin loading the new article.
-    if (this.props.expectedPage::maybe.isDefined())
+    if (this.props.expectedArticle::maybe.isDefined())
       this.resolveArticle();
     // If already transitioning, the changes will be picked up by `doSoftTransition`.
     if (this.transitioning) return;
@@ -392,13 +392,13 @@ class SoftIndexPage extends IndexPage {
           // Wait for our component to finish loading.
           const loadedComponent = await this.resolveArticle();
           if (loadedComponent::asyncEx.isAborted()) continue;
-          const isPage = loadedComponent.article !== "";
-          // Set the active page.
-          await this.promiseState({ actualPage: loadedComponent.article });
+          const isArticle = loadedComponent.article !== "";
+          // Set the active article.
+          await this.promiseState({ actualArticle: loadedComponent.article });
           // If we're transitioning into an article, it should now be displayed.
-          if (isPage) await this.doNotifyPageReady();
+          if (isArticle) await this.doNotifyPageReady();
           // Finalize transition.
-          await this.promiseState({ timeout: isPage, articleTimeout: isPage });
+          await this.promiseState({ timeout: isArticle, articleTimeout: isArticle });
           await this.wait(25);
           break;
         }
@@ -406,16 +406,16 @@ class SoftIndexPage extends IndexPage {
           // Start transitioning from index.
           await this.promiseState({ isArticleVisible: true });
           await this.wait(325);
-          // Deactivate the previous page.
-          await this.promiseState({ timeout: true, actualPage: nothing });
+          // Deactivate the previous article.
+          await this.promiseState({ timeout: true, actualArticle: nothing });
           break;
         }
-        case $$transFromPage: {
+        case $$transFromArticle: {
           // Start transitioning from article.
           await this.promiseState({ articleTimeout: false });
           await this.wait(325);
-          // Deactivate the previous page.
-          await this.promiseState({ actualPage: nothing });
+          // Deactivate the previous article.
+          await this.promiseState({ actualArticle: nothing });
           break;
         }
         case $$transFinalizeIndex: {
@@ -452,8 +452,8 @@ class SoftIndexPage extends IndexPage {
 class HardIndexPage extends IndexPage {
 
   static async getRenderProps(props) {
-    const { expectedPage } = props;
-    const preloadedArticle = expectedPage ? (await resolve(expectedPage).promise) : LandingPageComponent;
+    const { expectedArticle } = props;
+    const preloadedArticle = expectedArticle ? (await resolve(expectedArticle).promise) : LandingPageComponent;
     return { ...props, preloadedArticle };
   }
 
@@ -468,14 +468,14 @@ class HardIndexPage extends IndexPage {
     switch (article) {
       case "": return {
         knownArticles: new Map(),
-        actualPage: article,
+        actualArticle: article,
         timeout: false,
         articleTimeout: false,
         isArticleVisible: false
       };
       default: return {
         knownArticles: new Map([[article, preloadedArticle]]),
-        actualPage: article,
+        actualArticle: article,
         timeout: true,
         articleTimeout: true,
         isArticleVisible: true
@@ -483,9 +483,9 @@ class HardIndexPage extends IndexPage {
     }
   }
 
-  transitionToPage() {
+  transitionToArticle() {
     if (!this.didMount)
-      throw new Error("`transitionToPage` was called before the component has finished mounting");
+      throw new Error("`transitionToArticle` was called before the component has finished mounting");
     if (this.didUnmount) return;
     this.setState(this.initialStateFor(this.props), this.props.notifyPageReady);
   }
@@ -500,7 +500,7 @@ const NoScript = (props) => {
   return (<noscript {...otherProps} dangerouslySetInnerHTML={{ __html: staticMarkup }} />);
 }
 
-// A false component for the landing page; aka article empty-string.
+// A false component for the landing-page; aka the article named empty-string.
 const LandingPageComponent = () => null;
 LandingPageComponent.article = "";
 
@@ -514,7 +514,7 @@ function resolve(article) {
 
   const progress = new Stream();
   const progressUpdates = progress::asyncEx.fromLatest();
-  const Component = dynamic(() => import(`pages/articles/${article}`), {
+  const Component = dynamic(() => import(`components/articles/${article}`), {
     loading: DynamicLoader.bindCallbacks({
       onError(error, retryLoader) {
         let didRetry = false;
@@ -529,8 +529,8 @@ function resolve(article) {
         progress.emit({ state: $$dynPastDelay, value: nothing, article });
       }
     }),
-    webpack: () => [require.resolveWeak(`pages/articles/${article}`)],
-    modules: [require.resolveWeak(`pages/articles/${article}`)]
+    webpack: () => [require.resolveWeak(`components/articles/${article}`)],
+    modules: [require.resolveWeak(`components/articles/${article}`)]
   });
 
   Component.preload().then(() => {

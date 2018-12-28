@@ -1,10 +1,10 @@
-import Page from "components/Page";
+import Article from "components/Article";
 import Jump from "components/Jump";
 import Lightbox from "components/Lightbox";
 
 import ImgHeader from "static/images/terravu/header.png";
 
-import $work from "pages/articles/work?name";
+import $work from "components/articles/Work?name";
 const $terravu = process.module.name;
 
 const Gallery = Lightbox.makeGallery($terravu, [
@@ -17,7 +17,7 @@ const TerraVu = (props) => {
   const { imageSync, active } = props;
   const phase = active ? 0 : 1;
   return (
-    <Page {...props} parent={$work}>
+    <Article {...props} parent={$work}>
       <h2 className="major">TerraVu 2</h2>
       <span className="image main javascript-link" onClick={Gallery.openCallback(0)}>
         <ImgHeader fluid phase={phase} imageSync={imageSync} alt="TerraVu Gallery" />
@@ -39,7 +39,7 @@ const TerraVu = (props) => {
       <p>TerraVu's users are often roused from sleep at all hours to get an update done while a well is being drilled; this simple, concise design allowed them to get an update done and sent back to the rig in little more than 10 minutes.  We want them to be able to get right back to sleep as soon as possible!</p>
       <p>Perhaps the biggest challenge in producing this software was loading data from standardized LAS format files.  I use the term &quot;standardized&quot; loosely here; before LAS version 3, the standard was not very strongly defined, and what was defined wasn't always adhered to.</p>
       <p>Early on, receiving files from customers that wouldn't load for one reason or another was common.  Over time, <Gallery index={2}>my data loader</Gallery> became more toned, more honed.  It is exceptionally rare for it to fail on a file that isn't inherently flawed in some way.</p>
-    </Page>
+    </Article>
   );
 };
 

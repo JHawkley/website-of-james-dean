@@ -1,4 +1,4 @@
-import Page from "components/Page";
+import Article from "components/Article";
 import Jump from "components/Jump";
 import Lightbox from "components/Lightbox";
 
@@ -9,7 +9,7 @@ import ImgBlackholeInset from "static/images/3drenders/blackhole_anim_inset.jpg"
 import ImgLandscapeInset from "static/images/3drenders/landscape1_inset.jpg";
 import ImgIceCaveInset from "static/images/3drenders/icecave_inset.jpg";
 
-import $work from "pages/articles/work?name";
+import $work from "components/articles/Work?name";
 const $threedee = process.module.name;
 
 const Gallery = Lightbox.makeGallery($threedee, [
@@ -23,7 +23,7 @@ const ThreeDee = (props) => {
   const headerPhase = active ? 0 : 1;
   const bodyPhase = active ? 0 : 2;
   return (
-    <Page {...props} parent={$work}>
+    <Article {...props} parent={$work}>
       <h2 className="major">Miscellaneous 3D</h2>
       <span className="image main javascript-link" onClick={Gallery.openCallback(0)}>
         <ImgHeader fluid phase={headerPhase} imageSync={imageSync} alt="Miscellaneous 3D Modeling Gallery" />
@@ -75,7 +75,7 @@ const ThreeDee = (props) => {
       <p>This chilling scene would have led to the game's climax, where you release an evil colored-shape with, <em>gasp</em>, <strong>NO CORNERS</strong> from its prison!  Terrifying, I know...  This would have led into a silly jRPG battle mini-game before the credits played.</p>
       <p>Getting the ice texture to look this way was quite a challenge.  I wanted that translucent glow, like the sun's light is managing to break through into the cavern through the walls.</p>
       <p>Gives it quite the eerie atmosphere, doesn't it?</p>
-    </Page>
+    </Article>
   );
 };
 

@@ -1,16 +1,17 @@
 import PropTypes from "prop-types";
 import { withRouter } from "next/router";
 import { resolve as urlResolve } from "url";
+import toLower from "lodash/toLower";
 import Jump from "components/Jump";
 import { ImageSync } from "components/AsyncImage";
-import { extensions as objEx, dew } from "tools/common";
+import { dew } from "tools/common";
 import { extensions as maybe, nothing } from "tools/maybe";
 
-const Page = (props) => {
+const Article = (props) => {
   const { active, id, parent, children } = props;
 
   const back = parent::maybe.isDefined()
-    ? (<Goto page={parent} scroll={false}><div className="back"></div></Goto>)
+    ? (<Goto article={parent} scroll={false}><div className="back"></div></Goto>)
     : nothing;
   
   const close = <Goto scroll={false}><div className="close"></div></Goto>;
@@ -26,7 +27,7 @@ const Page = (props) => {
   );
 };
 
-Page.propTypes = {
+Article.propTypes = {
   id: PropTypes.string.isRequired,
   parent: PropTypes.string,
   active: PropTypes.bool,
@@ -34,30 +35,27 @@ Page.propTypes = {
   children: PropTypes.node
 };
 
-Page.defaultProps = {
+Article.defaultProps = {
   active: false
 };
 
 
 const Goto = dew(() => {
   const Goto = (props) => {
-    const { page, hash, router, ...restProps } = props;
+    const { article, hash, router, ...restProps } = props;
   
     const basePath = router.pathname;
-  
-    const [href, as] = dew(() => {
-      const haveHash = hash::maybe.isDefined();
-      const indexPage = !page;
-      switch (true) {
-        case (!haveHash && !indexPage): return [`${basePath}?page=${page}`, urlResolve(basePath, `./${page}.html`)];
-        case (!haveHash && indexPage): return basePath::objEx.times(2);
-        case (haveHash && indexPage): return `${basePath}#${hash}`::objEx.times(2);
-        default: return [
-          { pathname: basePath, query: { page }, hash },
-          { pathname: urlResolve(basePath, `./${page}.html`), hash }
-        ];
-      }
-    });
+
+    const href = {
+      pathname: basePath,
+      query: !article ? void 0 : { article },
+      hash: hash::maybe.isEmpty() ? void 0 : hash
+    };
+
+    const as = {
+      pathname: !article ? basePath : urlResolve(basePath, `./${toLower(article)}.html`),
+      hash: hash::maybe.isEmpty() ? void 0 : hash
+    };
     
     return <Jump {...restProps} href={href} as={as} />
   };
@@ -66,13 +64,13 @@ const Goto = dew(() => {
 });
 
 Goto.propTypes = {
-  page: PropTypes.string,
+  article: PropTypes.string,
   hash: PropTypes.string
 };
 
 Goto.defaultProps = {
-  page: ""
+  article: ""
 };
 
-export default Page;
+export default Article;
 export { Goto };

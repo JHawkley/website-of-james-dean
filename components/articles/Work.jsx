@@ -1,19 +1,19 @@
-import Page, { Goto } from "components/Page";
+import Article, { Goto } from "components/Article";
 import Jump from "components/Jump";
 
 import ImgHeader from "static/images/pic_work.png";
 
 // Our work pages.
-import $terravu from "pages/articles/terravu?name";
-import $lithologic from "pages/articles/lithologic?name";
-import $lithphoto from "pages/articles/lithphoto?name";
-import $solar from "pages/articles/solar?name";
-import $threedee from "pages/articles/threedee?name";
-import $nate from "pages/articles/nate?name";
-import $miscprogramming from "pages/articles/miscprogramming?name";
+import $terravu from "components/articles/TerraVu?name";
+import $lithologic from "components/articles/Lithologic?name";
+import $lithphoto from "components/articles/LithologicPhoto?name";
+import $solar from "components/articles/Solar?name";
+import $threedee from "components/articles/ThreeDee?name";
+import $nate from "components/articles/Nate?name";
+import $miscprogramming from "components/articles/MiscProgramming?name";
 
-const workItem = (description, title, page) => (
-  <Goto page={page} className="work-item">
+const workItem = (description, title, article) => (
+  <Goto article={article} className="work-item">
     <dl><dt>{description}</dt><dd>{title}</dd></dl>
   </Goto>
 );
@@ -22,7 +22,7 @@ const Work = (props) => {
   const { imageSync, active } = props;
   const phase = active ? 0 : 1;
   return (
-    <Page {...props}>
+    <Article {...props}>
       <h2 className="major">Work</h2>
       <span className="image main"><ImgHeader fluid phase={phase} imageSync={imageSync} alt="Variety of Work" /></span>
       <p>Much of my work was done at my previous employer, <strong><Jump href="http://www.terradomain.us/">TerraDom Corporation</Jump></strong> (formerly Terra Domain Consulting).  My best and biggest software projects were done there.  You can read about them from the selection below:</p>
@@ -35,7 +35,7 @@ const Work = (props) => {
       <p>I also enjoy taking on <strong>personal projects</strong>, usually to help me learn new things and expand my horizons.  A selection of my more worth-while projects, largely centered around game development, appear below:</p>
       {workItem("Abducted Dog Adventure", "Nate Game", $nate)}
       {workItem("My Time Invested", "Misc Programming", $miscprogramming)}
-    </Page>
+    </Article>
   );
 };
 

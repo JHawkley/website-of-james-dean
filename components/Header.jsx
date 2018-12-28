@@ -1,13 +1,13 @@
 import PropTypes from "prop-types";
-import { Goto } from "components/Page";
+import { Goto } from "components/Article";
 import { ImageSync } from "components/AsyncImage";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCode } from "@fortawesome/free-solid-svg-icons/faCode";
 
-import $intro from "pages/articles/intro?name";
-import $work from "pages/articles/work?name";
-import $questions from "pages/articles/questions?name";
-import $contact from "pages/articles/contact?name";
+import $intro from "components/articles/Intro?name";
+import $work from "components/articles/Work?name";
+import $questions from "components/articles/Questions?name";
+import $contact from "components/articles/Contact?name";
 
 const Header = ({timeout}) => (
   <header id="header" style={timeout ? {display: 'none'} : null}>
@@ -23,10 +23,10 @@ const Header = ({timeout}) => (
     </div>
     <nav>
       <ul>
-        <li><Goto page={$intro}>Intro</Goto></li>
-        <li><Goto page={$work}>Work</Goto></li>
-        <li><Goto page={$questions}>Q&amp;A</Goto></li>
-        <li><Goto page={$contact}>Contact</Goto></li>
+        <li><Goto article={$intro}>Intro</Goto></li>
+        <li><Goto article={$work}>Work</Goto></li>
+        <li><Goto article={$questions}>Q&amp;A</Goto></li>
+        <li><Goto article={$contact}>Contact</Goto></li>
       </ul>
     </nav>
   </header>

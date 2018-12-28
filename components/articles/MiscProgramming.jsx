@@ -1,15 +1,15 @@
-import Page from "components/Page";
+import Article from "components/Article";
 import Jump from "components/Jump";
 
 import ImgHeader from "static/images/miscprogramming/header.png";
 
-import $work from "pages/articles/work?name";
+import $work from "components/articles/Work?name";
 
 const MiscProgramming = (props) => {
   const { imageSync, active } = props;
   const phase = active ? 0 : 1;
   return (
-    <Page {...props} parent={$work}>
+    <Article {...props} parent={$work}>
       <h2 className="major">Misc Programming</h2>
       <span className="image main"><ImgHeader fluid phase={phase} imageSync={imageSync} alt="Misc Programming" /></span>
       <p>For the following projects, I have less to show, but they're still worth mentioning.</p>
@@ -33,7 +33,7 @@ const MiscProgramming = (props) => {
       <p>Unfortunately, I did a bit of a silly thing and did it all in ScalaJS, which targets the decidedly single-threaded JavaScript platform and can't take advantage of the concurrency gains from immutability.  But hey, baby steps.  I know JavaScript well.  I could adapt it to JVM later once I got the principals down.</p>
       <p>I kind of wish I had targeted the JVM, though, as I can see a number of mistakes now that would negatively impact concurrency.  I also think I over-complicated the design a lot by using a functional-reactive style for the entity manager.</p>
       <p>I think if I ever come back to this project, I'd probably do a number of refactors to reduce that complexity and make safe concurrency easier to obtain.  However, making my own engine, while a great learning experience, wouldn't be the best use of my time.  I would prefer investing my time mastering Unity instead.</p>
-    </Page>
+    </Article>
   );
 };
 

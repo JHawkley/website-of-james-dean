@@ -1,4 +1,4 @@
-import Page from "components/Page";
+import Article from "components/Article";
 import Jump from "components/Jump";
 import Lightbox from "components/Lightbox";
 
@@ -6,7 +6,7 @@ import ImgHeader from "static/images/3drenders/br_header.jpg";
 import ImgAnimInset from "static/images/3drenders/br_anim_inset.jpg";
 import ImgFiveInset from "static/images/3drenders/br5_inset.jpg";
 
-import $work from "pages/articles/work?name";
+import $work from "components/articles/Work?name";
 const $solar = process.module.name;
 
 const Gallery = Lightbox.makeGallery($solar, [
@@ -22,7 +22,7 @@ const Solar = (props) => {
   const headerPhase = active ? 0 : 1;
   const bodyPhase = active ? 0 : 2;
   return (
-    <Page {...props} parent={$work}>
+    <Article {...props} parent={$work}>
       <h2 className="major">Solar Bio-Reactor</h2>
       <span className="image main javascript-link" onClick={Gallery.openCallback(0)}>
         <ImgHeader fluid phase={headerPhase} imageSync={imageSync} alt="Bioreactor Gallery" />
@@ -46,7 +46,7 @@ const Solar = (props) => {
       </span>
       <p>There were also ideas to use the installation for food and water production, so a couple of greenhouse designs were also included in the renders.  One greenhouse had <Gallery index={3}>a more mundane design</Gallery> to it, while another was <Gallery index={4}>much more complex</Gallery> with the idea of integrating a water desalination system into it.</p>
       <p>When the videos and images produced were shown in China while searching for investors, I was told that a few attendees asked where this installation was located.  I guess that's some high praise, but I always felt the terrain needed more love before it deserved comments like that.</p>
-    </Page>
+    </Article>
   );
 };
 
