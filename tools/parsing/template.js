@@ -1,10 +1,9 @@
-import { forOwnProps } from "tools/extensions/common";
 import { fold, extensions as arrEx } from "tools/array";
 import * as iterEx from "tools/extensions/iterables";
-import { str, regex } from "./atomic";
 import { any, rest, endOfInput } from "./parsers";
-import { seq } from "./combinators";
-import { takeUntil, map, asString } from "./modifiers";
+import { str, regex } from "./atomic";
+import { seq, interpose } from "./combinators";
+import { map, asString } from "./modifiers";
 import { isUndefined, isEmpty } from "./helpers";
 
 const preservedEmpty = Symbol("template:preserved-empty");
@@ -32,30 +31,35 @@ const processParser = (cur, last) => {
   if (cur.preserveResult) return map(cur, preserveResult);
 
   if (last) switch (true) {
-    case cur === interpolate: return takeUntil.string(any, last);
-    case cur instanceof AppliedInterpolation: return takeUntil(cur.parser, last);
+    case cur === interpolate: return interpose.string(any, last);
+    case cur instanceof AppliedInterpolation: return interpose(cur.parser, last);
   }
 
   switch (true) {
     case cur === interpolate: return asString(rest);
-    case cur instanceof AppliedInterpolation: return takeUntil(cur.parser, endOfInput);
+    case cur instanceof AppliedInterpolation: return interpose(cur.parser, endOfInput);
     default: return cur;
   }
 }
 
 /**
  * Creates a parser from a string template literal, when used as a tag.  Each placeholder will produce a result in
- * an output array, transforming an empty-result into `null`.
+ * an output array, transforming an empty-result into `null`.  The string-fragments between placeholders will not
+ * be included in the result.
  * 
  * Strings and regular-expressions provided directly in the placeholders will be automatically converted to an
- * appropriate parser.  Use `interpolate` to indicate that you want to match between the previous string-fragment
- * and the next.
+ * appropriate parser.  Use `interpolate` to indicate that you want to match everything between the previous
+ * string-fragment and the next.
+ * 
+ * @example <caption>Decomposing a height in the foot-inch notation to a number in inches.</caption>
+ * const integer = map(regex(/\d+/), Number);
+ * const parseHeight = map(parser`${integer}'${integer}"`, ([feet, inches]) => feet * 12 + inches);
+ * const myHeightInInches = run(parseHeight, `5'6"`);  // myHeightInInches === 66
  * 
  * @export
- * @template T
  * @param {string[]} strings The string-fragments between placeholders.
- * @param {string|RegExp|Parser<T>} parsers The parsers to use to extract values.
- * @returns {Parser<T[]>} A parser constructed from a string template literal.
+ * @param {string|RegExp|Parser} parsers The parsers to use to extract values.
+ * @returns {Parser<Array>} A parser constructed from a string template literal.
  */
 export const parser = (strings, ...parsers) => {
   const combined = fold(

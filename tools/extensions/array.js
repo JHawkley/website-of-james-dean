@@ -87,13 +87,13 @@ export function randomElement() {
 }
 
 /**
- * Performs a combination filter + map on each element of the array.  The `collectFn` should return `undefined`
+ * Performs a combination filter + map on each element of the array.  The `partialFn` should return `undefined`
  * for values that should be filtered out.  Any other value will be added to the result array.
  *
  * @export
  * @template T,U
  * @this {T[]} This array.
- * @param {function(T, number, T[]): (U|undefined)} partialFn The collection partial-function.
+ * @param {PartialFunction<T>} partialFn The partial-function.
  * @returns {U[]} A new array.
  */
 export function collect(partialFn) {
@@ -110,16 +110,16 @@ export function collect(partialFn) {
 }
 
 /**
- * The inverse of `filter`; filters the array to those values that did not pass the given `predicateFn`.
+ * Filters the array to those values that did not pass the given `predicateFn`; the inverse of `filter`.
  *
  * @export
  * @template T
  * @this {T[]} This array.
- * @param {function(T, number, T[]): boolean} predicateFn The predicate function.
+ * @param {PredicateFunction<T>} predicateFn The predicate function.
  * @returns {T[]}
  */
 export function reject(predicateFn) {
-  return this.filter(v => !predicateFn(v))
+  return this.filter((v, i, arr) => !predicateFn(v, i, arr));
 }
 
 /**
@@ -130,7 +130,7 @@ export function reject(predicateFn) {
  * @export
  * @template T
  * @this {T[]} This array.
- * @param {function(T, number, T[]): boolean} predicateFn The predicate function.
+ * @param {PredicateFunction<T>} predicateFn The predicate function.
  * @returns {[T[], T[]]} A tuple; element 1 has values that held true, while element 2 all held false.
  */
 export function partition(predicateFn) {
@@ -156,7 +156,7 @@ export function partition(predicateFn) {
  * @export
  * @template T
  * @this {T[]} This array.
- * @param {function(T, T, number, T[]): boolean} segregationFn The segregation function.
+ * @param {SegregationFunction<T>} segregationFn The segregation function.
  * @returns {T[][]} An array of all the groupings created by the segregation function.
  */
 export function segregate(segregationFn) {
@@ -219,10 +219,38 @@ export function flatten() {
  * Flattens this array by some number of `levels`.
  *
  * @export
- * @this {Array<*>} This array.
+ * @this {Array} This array.
  * @param {number} [levels=1] The number of levels to flatten by.
- * @returns {Array<*>} A copy of this array that has been flattened by some number of levels.
+ * @returns {Array} A copy of this array that has been flattened by some number of levels.
  */
 export function flattenBy(levels = 1) {
   return this::arrayFlattenBy(levels);
 }
+
+/**
+ * @template T,U
+ * @callback PartialFunction
+ * @param {T} value The current value.
+ * @param {number} index The current index into the array.
+ * @param {T[]} arr The array being iterated.
+ * @returns {U|void} A new value or `undefined` in the case the function could not be applied to the value.
+ */
+
+/**
+ * @template T
+ * @callback PredicateFunction
+ * @param {T} value The current value.
+ * @param {number} index The current index into the array.
+ * @param {T[]} arr The array being iterated.
+ * @returns {boolean} Whether the `value` passes the predicate.
+ */
+
+/**
+ * @template T
+ * @callback SegregationFunction
+ * @param {T} previousValue The previous value.
+ * @param {T} currentValue The current value.
+ * @param {number} index The current index into the array.
+ * @param {T[]} arr The array being iterated.
+ * @returns {boolean} Whether the `currentValue` should belong to the same group as `previousValue`.
+ */

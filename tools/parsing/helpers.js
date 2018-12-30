@@ -1,3 +1,5 @@
+import { dew } from "tools/common";
+import * as iterEx from "tools/extensions/iterables";
 import { str, regex } from "./atomic";
 import { emptyResult } from "./core";
 
@@ -29,42 +31,49 @@ export const isResult = (v) => typeof v !== "undefined";
 export const isEmpty = (v) => v === emptyResult;
 
 /**
- * Wraps the parser such that it will backtrack when it fails.  If the parser is already known
- * to backtrack, it will just return the same parser.
+ * Creates a new parser by applying it sequentially to the given `parserModifiers` from left-to-right.
+ * Use this to perform multiple transformations on a parser's result in a sequence.
+ * 
+ * @example
+ * const joinSpaces = chain(str(" "), [takeWhile, join]);
+ * console.log(run(joinSpaces, "    Four space indentation!"));
+ * // Logs a string with four spaces, "    ".
  * 
  * @export
- * @template T
- * @param {Parser<T>} parser The parser to wrap.
- * @returns {BacktrackingParser<T>} A parser that will backtrack.
+ * @param {Parser} parser The initial parser.
+ * @param {ParserModifier[]} parserModifiers
+ *   An array of functions that take a parser and produce a new parser.
+ * @returns {Parser}
  */
-export const backtrack = (parser) => {
-  if (parser._willBacktrackOnFailure === true) return parser;
-  return backtrack.mark((state) => {
-    const { position } = state;
-    const result = parser(state);
-    if (isResult(result)) return result;
-    state.position = position;
-    return void 0;
-  });
-}
+export const chain = (parser, parserModifiers) => {
+  return parserModifiers::iterEx.reduce(parser, (last, factory) => factory(last));
+};
 
 /**
- * Marks the given parser as a backtracking-parser.
+ * Creates a new parser by applying it sequentially to the given `parserModifiers` from right-to-left.
+ * Use this to perform multiple transformations on a parser's result in a sequence.
  * 
- * @template T
- * @param {Parser<T>} parser The parser to mark.
- * @returns {BacktrackingParser<T>} The same parser, marked as backtracking.
+ * @example
+ * const joinSpaces = pipe([join, takeWhile], str(" "));
+ * console.log(run(joinSpaces, "    Four space indentation!"));
+ * // Logs a string with four spaces, "    ".
+ * 
+ * @export
+ * @param {ParserModifier[]} parserModifiers
+ * @param {Parser} parser The initial parser.
+ *   An array of functions that take a parser and produce a new parser.
+ * @returns {Parser}
  */
-backtrack.mark = (parser) => {
-  parser._willBacktrackOnFailure = true;
-  return parser;
-};
+export const pipe = (parserModifiers, parser) => {
+  return chain(parser, parserModifiers::iterEx.reverse());
+}
 
 /**
  * Tries to cast the given object to a compatible parser.  Assumes that a function is a parser.
  * 
+ * @export
  * @param {*} obj The object to cast to a parser.
- * @returns {Parser<*>} A parser for that object.
+ * @returns {Parser} A parser for that object.
  * @throws When no parser could be determined to suit the `obj`.
  */
 export const castToParser = (obj) => {
@@ -78,6 +87,7 @@ export const castToParser = (obj) => {
  * Tries to cast the given object to a string.  Only matches `string` and `RegExpExecArray` types.
  * Returns `undefined` if it is not one of those types.
  * 
+ * @export
  * @param {*} obj The object to cast try to cast.
  * @returns {string|undefined} The string or `undefined` if it couldn't be converted.
  */
@@ -105,8 +115,24 @@ resultToString.force = (obj) => {
 }
 
 /**
+ * Decomposes a regular-expression into its source followed by the flags, ensuring that the "global" flag is set
+ * and the "sticky" flag is unset.
+ * 
+ * @export
+ * @param {RegExp} rgx The regular expression to base off of.
+ * @returns {[string, string]} A tuple of the source and new flags for a new `RegExp`.
+ */
+export const globalizedRegExpData = (rgx) => {
+  const set = new Set(rgx.flags[Symbol.iterator]());
+  set.delete("y");
+  set.add("g");
+  return [rgx.source, set::iterEx.join("")];
+}
+
+/**
  * Determines whether the given object can be converted into a string with `resultToString`.
  * 
+ * @export
  * @param {*} obj The object to test.
  * @returns {boolean}
  */
@@ -120,6 +146,7 @@ export const isStringable = (obj) => {
 /**
  * Determines whether the given object is most-likely a `RegExpExecArray`.
  * 
+ * @export
  * @param {*} obj The object to test.
  * @returns {boolean}
  */
@@ -134,6 +161,7 @@ export const isRegExpExecArray = (obj) => {
  * Tries to determine a suitable "empty" value for an object.  Strings get empty-string, arrays an empty-array and
  * so on.  Defaults to `emptyResult` for pretty much anything else, except `undefined`, which will raise an error.
  * 
+ * @export
  * @param {*} obj The object to find an empty value for.
  * @returns {*}
  * @throws When `obj` is `undefined`.

@@ -1,6 +1,8 @@
-import { reduceWhile } from "tools/extensions/array";
-import { backtrack, isUndefined, isResult } from "./helpers";
-import { takeUntil, map, expect, flatten } from "./modifiers";
+import * as arrEx from "tools/extensions/array";
+import * as premade from "./parsers";
+import { isUndefined, isResult, isEmpty, globalizedRegExpData } from "./helpers";
+import { backtrack, map, expect, join, peek, stringToArray } from "./modifiers";
+import { emptyResult } from "./core";
 
 /**
  * Creates a parser that will use a map-of-parsers to generate a map-of-parser-results.  The parsers are
@@ -41,7 +43,7 @@ export const seq = (...parsers) => arr(parsers);
  * @returns {BacktrackingParser<T[]>} A parser that results in an array of parsing results.
  */
 export const arr = (parsers) => backtrack((state) => {
-  const result = parsers::reduceWhile([], isResult, (arr, parser) => {
+  const result = parsers::arrEx.reduceWhile([], isResult, (arr, parser) => {
     const value = parser(state);
     if (isUndefined(value)) return void 0;
     arr.push(value);
@@ -51,62 +53,193 @@ export const arr = (parsers) => backtrack((state) => {
 });
 
 /**
- * Creates a parser that will concatenate the results of `rest` to the result of `lead`.  If `lead` is not an array
- * it will be wrapped in one before the concatenation begins.
+ * Creates a parser that will perform array-concatenation, concatenating the results of `rest` to the result
+ * of `lead`.  If `lead` is not an array it will be wrapped in one before the concatenation begins.
  *
  * @export
  * @template T
  * @param {Parser<T|T[]>} lead The parser whose result will be the leading value(s) of the output array.
  * @param {...Parser<T>} rest The other parsers to be concatenated.
- * @returns {ConcatParser<T[]>} A parser producing an array.
+ * @returns {ArrayConcatParser<T[]>} A parser producing an array.
  */
 export const concat = (lead, ...rest) => {
-  const trueLead = lead._concatLead ?? lead; 
-  const concatRest = typeof lead._concatRest === "undefined" ? rest : [...lead._concatRest, ...rest];
+  const trueLead = lead._arrConcatLead ?? lead;
+  const concatRest = isUndefined(lead._arrConcatRest) ? rest : [...lead._arrConcatRest, ...rest];
 
-  const concatParser = flatten(seq(trueLead, arr(concatRest)));
-  concatParser._concatLead = trueLead;
-  concatParser._concatRest = concatRest;
+  const concatParser = backtrack((state) => {
+    const leadResult = trueLead(state);
+    const result = Array.isArray(leadResult) ? leadResult : [leadResult];
+    for (let i = 0, len = concatRest.length; i < len; i++) {
+      const restResult = concatRest[i](state);
+      if (isUndefined(restResult)) return void 0;
+      result.push(restResult);
+    }
+    return result;
+  });
+  concatParser._arrConcatLead = trueLead;
+  concatParser._arrConcatRest = concatRest;
 
   return concatParser;
 };
 
 /**
+ * Creates a parser that will perform array-concatenation, concatenating the results of `rest` to the result
+ * of `lead`.  If `lead` is not an array it will be wrapped in one before the concatenation begins.
+ *
+ * @export
+ * @template T
+ * @param {Parser<T|T[]>} lead The parser whose result will be the leading value(s) of the output array.
+ * @param {...Parser<T>} rest The other parsers to be concatenated.
+ * @returns {ArrayConcatParser<T[]>} A parser producing an array.
+ */
+concat.array = concat;
+
+/**
+ * Creates a parser that will perform string-concatenation, concatenating the result of `rest` to the result
+ * of `lead`.
+ *
+ * @export
+ * @template T
+ * @param {Parser<Stringable>} lead The parser whose result will be the start of the output string.
+ * @param {...Parser<Stringable>} rest The other parsers to be concatenated.
+ * @returns {StringConcatParser<string>} A parser producing a string.
+ */
+concat.string = (lead, ...rest) => {
+  const trueLead = lead._strConcatLead ?? lead; 
+  const concatRest = isUndefined(lead._strConcatRest) ? rest : [...lead._strConcatRest, ...rest];
+
+  const concatParser = backtrack(join(arr([trueLead, ...concatRest])));
+  concatParser._strConcatLead = trueLead;
+  concatParser._strConcatRest = concatRest;
+
+  return concatParser;
+};
+
+/**
+ * Creates a parser that will apply the given parser and accumulate valid results, until `ending` successfully
+ * matches something, then returns those results as an array.  If `parser` fails before the `ending` is located,
+ * the parser will fail.
+ *
+ * @export
+ * @template T
+ * @param {Parser<T>} parser The parser to accumulate results from.
+ * @param {Parser} ending The parser that will signal the end.
+ * @returns {BacktrackingParser<T[]>} A parser that produces the accumulated results of `parser`.
+ */
+export const interpose = (parser, ending) => {
+  const fastPath = interpose_tryFastPath(parser, ending);
+  if (fastPath) return stringToArray(fastPath);
+
+  const peekForEnding = peek(ending);
+  return backtrack((state) => {
+    const result = [];
+    while (isUndefined(peekForEnding(state))) {
+      const value = parser(state);
+      if (isUndefined(value)) return void 0;
+      result.push(value);
+    }
+    return result;
+  });
+};
+
+/**
+ * Creates a parser that will apply the given parser and accumulate valid results, until `ending` successfully
+ * matches something, then returns those results as an array.  If `parser` fails before the `ending` is located,
+ * the parser will fail.
+ *
+ * @export
+ * @template T
+ * @param {Parser<T>} parser The parser to accumulate results from.
+ * @param {Parser} ending The parser that will signal the end.
+ * @returns {BacktrackingParser<T[]>} A parser that produces the accumulated results of `parser`.
+ */
+interpose.array = interpose;
+
+/**
+ * Creates a parser that will apply the given parser and accumulate valid results, until `ending` successfully
+ * matches something, then joins those results into a string and returns it.  If `parser` fails before the
+ * `ending` is located, the parser will fail.
+ *
+ * @export
+ * @template T
+ * @param {Parser<Stringable>} parser The parser to accumulate results from.
+ * @param {Parser<T>} ending The parser that will signal the end.
+ * @returns {BacktrackingParser<string>} A parser that produces the accumulated results of `parser`.
+ */
+interpose.string = (parser, ending) =>
+  interpose_tryFastPath(parser, ending) ?? join.all(interpose(parser, ending), "");
+
+const interpose_tryFastPath = (parser, ending) => {
+  // There are a few fast-paths we can take if we're using the `any` parser.
+  if (parser === premade.any) {
+    if (ending === premade.endOfInput)
+      return premade.rest;
+    if (ending.parserSource) {
+      if (typeof ending.parserSource === "string")
+        return interpose_fastPath_string(ending.parserSource);
+      else if (ending.parserSource instanceof RegExp)
+        return interpose_fastPath_regex(ending.parserSource);
+    }
+  }
+  return void 0;
+}
+
+const interpose_fastPath_string = (pattern) => backtrack.mark((state) => {
+  const { position, input } = state;
+  const indexOfStr = input.indexOf(pattern, position);
+  if (indexOfStr === -1) return void 0;
+  state.position = indexOfStr;
+  return input.substring(position, indexOfStr);
+});
+
+const interpose_fastPath_regex = backtrack.mark((pattern) => {
+  const rgx = new RegExp(...globalizedRegExpData(pattern));
+
+  return backtrack.mark((state) => {
+    const { position, input } = state;
+    rgx.lastIndex = position;
+    const indexOfMatch = input.search(rgx);
+    if (indexOfMatch === -1) return void 0;
+    state.position = indexOfMatch;
+    return input.substring(position, indexOfMatch);
+  });
+});
+
+/**
  * Creates a parser that will apply as many of the given parsers to the input as possible and return their results
- * in an array.  The parsers are applied in the given order, and any that fail to match will not be included in the
- * resulting array.  If none of the parsers match, then an empty array is returned.
+ * in an array.  The parsers are applied in the given order, and any that fail to match will have an empty-result
+ * in their position.
  * 
- * For a version that will fail if none of the parsers match, use `anyOf.strict` instead.
+ * For a version that will fail if none of the parsers match, use `anyOf.required` instead.
  *
  * @export
  * @template T
  * @param {...Parser<T>} parsers An array of parsers to attempt to apply to the input.
  * @returns {Parser<T[]>} A parser producing an array.
  */
-export const anyOf = (...parsers) => (state) => {
-  const result = [];
-  for (const parser of parsers) {
-    const { position } = state;
-    const parserResult = parser(state);
-    if (isResult(parserResult))
-      result.push(parserResult);
-    else
-      state.position = position;
-  }
-  return result;
+export const anyOf = (...parsers) => {
+  const backtrackingParsers = parsers.map(backtrack);
+  return (state) => {
+    return backtrackingParsers.map((parser) => {
+      const parserResult = parser(state);
+      return isResult(parserResult) ? parserResult : emptyResult;
+    });
+  };
 };
 
 /**
  * Creates a parser that will apply as many of the given parsers to the input as possible and return their results
- * in an array.  The parsers are applied in the given order, and any that fail to match will not be included in the
- * resulting array.  If none of the parsers match, the parser will fail.
+ * in an array.  The parsers are applied in the given order, and any that fail to match will have an empty-result
+ * in their position.
+ * 
+ * If none of the given parsers match, the whole parser will fail.
  *
  * @export
  * @template T
  * @param {...Parser<T>} parsers An array of parsers to attempt to apply to the input.
  * @returns {BacktrackingParser<T[]>} A parser producing an array.
  */
-anyOf.strict = (...parsers) => backtrack(map(anyOf(...parsers), (result) => result.length > 0 ? result : void 0));
+anyOf.required = (...parsers) => backtrack(map(anyOf(...parsers), (result) => result.every(isEmpty) ? void 0 : result));
 
 /**
  * Creates a parser that will return the result of the first parser that successfully matches.  The `parsers`
@@ -183,7 +316,7 @@ surround.contentOnly = (opening, contents, closing, expectMsg) => {
  * @throws When `opening` was found but `closing` was not.
  */
 export const scope = (opening, contents, closing, expectMsg) => {
-  const safeContents = expect(takeUntil(contents, closing), expectMsg ?? "found `opening` but did not find `closing`");
+  const safeContents = expect(interpose(contents, closing), expectMsg ?? "found `opening` but did not find `closing`");
   return seq(opening, safeContents, closing);
 };
 
@@ -210,8 +343,21 @@ scope.contentOnly = (opening, contents, closing, expectMsg) => {
  * A parser created by the `concat` combinator.  When `concat` is chained, the function will recognize this and
  * optimize the result parser.
  * 
- * @typedef {BacktrackingParser<T[]>} ConcatParser
+ * @typedef {BacktrackingParser<T[]>} ArrayConcatParser
  * @template T
- * @property {Parser<T|T[]>} _concatLead The parser that produces the first element(s).
- * @property {Parser<T>[]} _concatRest An array of parsers that this parser will concatenate to the leading element(s).
+ * @property {Parser<T|T[]>} _concatLead
+ *   The parser that produces the first element(s).
+ * @property {Parser<T>[]} _concatRest
+ *   An array of parsers that this parser will concatenate to the leading element(s).
+ */
+
+/**
+ * A parser created by the `concat.string` combinator.  When `concat.string` is chained, the function will recognize
+ * this and optimize the result parser.
+ * 
+ * @typedef {BacktrackingParser<string>} StringConcatParser
+ * @property {Parser<Stringable>} _concatLead
+ *   The parser that produces the first element(s).
+ * @property {Parser<Stringable>[]} _concatRest
+ *   An array of parsers that this parser will concatenate to the leading element(s).
  */

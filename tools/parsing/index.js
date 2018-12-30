@@ -1,9 +1,9 @@
+export * as parsers from "./parsers";
 export * as atomic from "./atomic";
 export * as combinators from "./combinators";
 export * as extensions from "./extensions";
 export * as helpers from "./helpers";
 export * as modifiers from "./modifiers";
-export * as parsers from "./parsers";
 export * as template from "./template";
 export * from "./core";
 

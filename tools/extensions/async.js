@@ -36,7 +36,7 @@ export function orUndefined() {
  * @export
  * @template T
  * @this {Promise<T>} This promise.
- * @param {Promise<*>} signalPromise The promise to use as a signal to abort when it completes.
+ * @param {Promise} signalPromise The promise to use as a signal to abort when it completes.
  * @returns {Promise<T|Symbol>} An abortable promise.
  */
 export function abortOn(signalPromise) {
@@ -61,7 +61,7 @@ export function isAborted() {
  *
  * @export
  * @template T
- * @this {Promise<*>} This promise.
+ * @this {Promise} This promise.
  * @param {function(): T} onComplete A function to be run after this promise completes.
  * @returns {Promise<T>} A promise that will resolve to the value produced by `onComplete`.
  */

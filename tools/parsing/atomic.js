@@ -1,8 +1,7 @@
 import * as iterEx from "tools/extensions/iterables";
 import { dew } from "tools/common";
 import { emptyResult } from "./core";
-import { backtrack } from "./helpers";
-import { skip } from "./modifiers";
+import { backtrack, skip } from "./modifiers";
 
 /**
  * Creates a parser that will parse the exact, given string.
@@ -57,7 +56,7 @@ regex.skip = (pattern, flags = "y") => {
 };
 
 const str_impl = (pattern, result) => {
-  if (pattern === "") throw new Error("an empty-string cannot be matched");
+  if (!pattern) throw new Error("an empty-string cannot be matched");
 
   return tag(pattern, (state) => {
     const { input, position } = state;

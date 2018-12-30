@@ -1,50 +1,41 @@
-import { dew } from "tools/common";
 import * as arrEx from "tools/extensions/array";
-import * as iterEx from "tools/extensions/iterables";
+import * as premade from "./parsers";
+import { regex } from "./atomic";
 import { emptyResult, ParsingError, run } from "./core";
 import { isUndefined, isResult, isEmpty } from "./helpers";
-import { isStringable, backtrack, resultToString, isRegExpExecArray } from "./helpers";
-import * as premade from "./parsers";
-
-const stringToArray = (parser) => map(parser, (str) => [...str]);
+import { isStringable, resultToString, globalizedRegExpData, isRegExpExecArray } from "./helpers";
 
 /**
- * Creates a new parser by applying it sequentially to the given `parserModifiers` from left-to-right.
- * Use this to perform multiple transformations on a parser's result in a sequence.
- * 
- * @example
- * const joinSpaces = chain(str(" "), [takeWhile, join]);
- * console.log(run(joinSpaces, "    Four space indentation!"));
- * // Logs a string with four spaces, "    ".
+ * Wraps the parser such that it will backtrack when it fails.  If the parser is already known
+ * to backtrack, it will just return the same parser.
  * 
  * @export
- * @param {Parser<*>} parser The initial parser.
- * @param {ParserModifier<*, *>[]} parserModifiers
- *   An array of functions that take a parser and produce a new parser.
- * @returns {Parser<*>}
+ * @template T
+ * @param {Parser<T>} parser The parser to wrap.
+ * @returns {BacktrackingParser<T>} A parser that will backtrack.
  */
-export const chain = (parser, parserModifiers) => {
-  return parserModifiers::iterEx.reduce(parser, (last, factory) => factory(last));
-};
-
-/**
- * Creates a new parser by applying it sequentially to the given `parserModifiers` from right-to-left.
- * Use this to perform multiple transformations on a parser's result in a sequence.
- * 
- * @example
- * const joinSpaces = pipe([join, takeWhile], str(" "));
- * console.log(run(joinSpaces, "    Four space indentation!"));
- * // Logs a string with four spaces, "    ".
- * 
- * @export
- * @param {ParserModifier<*, *>[]} parserModifiers
- * @param {Parser<*>} parser The initial parser.
- *   An array of functions that take a parser and produce a new parser.
- * @returns {Parser<*>}
- */
-export const pipe = (parserModifiers, parser) => {
-  return chain(parser, parserModifiers::iterEx.reverse());
+export const backtrack = (parser) => {
+  if (parser._willBacktrackOnFailure === true) return parser;
+  return backtrack.mark((state) => {
+    const { position } = state;
+    const result = parser(state);
+    if (isResult(result)) return result;
+    state.position = position;
+    return void 0;
+  });
 }
+
+/**
+ * Marks the given parser as a backtracking-parser.
+ * 
+ * @template T
+ * @param {Parser<T>} parser The parser to mark.
+ * @returns {BacktrackingParser<T>} The same parser, marked as backtracking.
+ */
+backtrack.mark = (parser) => {
+  parser._willBacktrackOnFailure = true;
+  return parser;
+};
 
 /**
  * Creates a parser that will backtrack on any thrown errors while executing the given parser.
@@ -76,11 +67,15 @@ export const errorBoundary = (parser, handler) => (state) => {
 };
 
 /**
- * Creates a parser that will throw an error if the given parser fails to match, or otherwise return its value.
+ * Creates a parser that will throw an error with the given `message` if the given parser fails to match,
+ * or otherwise return its value.
+ * 
+ * This version throws a basic `ParserError`.  To throw a custom error type, use `expect.custom`.
  *
  * @export
  * @template T
  * @param {Parser<T>} parser The parser to wrap.
+ * @param {string} [message] The message to give to the thrown `ParsingError`.
  * @returns {Parser<T>}
  */
 export const expect = (parser, message = "expected parser to succeed") => (state) => {
@@ -90,12 +85,32 @@ export const expect = (parser, message = "expected parser to succeed") => (state
 };
 
 /**
- * Creates a parser that will throw an error if the given parser matches successfully, or otherwise returns
- * `undefined`.
+ * Creates a parser that will throw a custom error if the given parser fails to match, or otherwise return
+ * its value.  The return value from `errorFactory` will be immediately thrown, no matter what that value
+ * happens to be.
  *
  * @export
  * @template T
  * @param {Parser<T>} parser The parser to wrap.
+ * @param {function(ParserState): Error} errorFactory A factory creating a custom error.
+ * @returns {Parser<T>}
+ */
+expect.custom = (parser, errorFactory) => (state) => {
+  const value = parser(state);
+  if (isResult(value)) return value;
+  throw errorFactory(state);
+}
+
+/**
+ * Creates a parser that will throw a custom error if the given parser matches successfully, or otherwise
+ * returns `undefined`.
+ * 
+ * This version throws a basic `ParserError`.  To throw a custom error type, use `neverExpect.custom`.
+ *
+ * @export
+ * @template T
+ * @param {Parser<T>} parser The parser to wrap.
+ * @param {string} [message] The message to give to the thrown `ParsingError`.
  * @returns {Parser<T>}
  */
 export const neverExpect = (parser, message = "expected parser to fail") => (state) => {
@@ -104,27 +119,81 @@ export const neverExpect = (parser, message = "expected parser to fail") => (sta
 };
 
 /**
- * Creates a parser that will search the input until the given parser matches.  This can be an expensive process,
- * as the parser will be tested on each character until a match is found or the entire string was searched.
+ * Creates a parser that will throw an error if the given parser matches successfully, or otherwise return its
+ * `undefined`. The return value from `errorFactory` will be immediately thrown, no matter what that value happens
+ * to be.
+ *
+ * @export
+ * @template T
+ * @param {Parser<T>} parser The parser to wrap.
+ * @param {function(ParserState): Error} errorFactory A factory creating a custom error.
+ * @returns {Parser<T>}
+ */
+neverExpect.custom = (parser, errorFactory) => (state) => {
+  if (isUndefined(parser(state))) return void 0;
+  throw errorFactory(state);
+};
+
+/**
+ * Creates a parser that will convert the given parser's result from something stringable to an array of characters.
+ * 
+ * @export
+ * @template T
+ * @param {Parser<Stringable>} parser The parser to wrap.
+ * @returns {Parser<string[]>} A parser.
+ */
+export const stringToArray = (parser) => map(asString(parser), (str) => [...str]);
+
+/**
+ * Creates a parser that will search the input until the given parser matches.
+ * 
+ * This can be an expensive process, as the parser will be tested on each character until a match is found or
+ * the entire string was searched.  However, there are fast-paths if the `parser` was created by the `str` or
+ * `regex` atomic parser factories.
  *
  * @export
  * @template T
  * @param {Parser<T>} parser The parser to use in the search.
  * @returns {BacktrackingParser<T>}
  */
-export const seekTo = (parser) => backtrack.mark((state) => {
-  const { position, input } = state;
-  let result = void 0;
-  let offset = position;
-  while (state.position < input.length && isUndefined(result)) {
-    state.position = offset;
-    offset += 1;
-    result = parser(state);
+export const seekTo = (parser) => {
+  const fastPath = seekTo_tryFastPath(parser);
+  if (fastPath) return fastPath;
+
+  return backtrack.mark((state) => {
+    const { position, input } = state;
+    let result = void 0;
+    let offset = position;
+    while (state.position < input.length && isUndefined(result)) {
+      state.position = offset;
+      offset += 1;
+      result = parser(state);
+    }
+    if (isResult(result)) return result;
+    state.position = position;
+    return void 0;
+  });
+};
+
+const seekTo_tryFastPath = (parser) => {
+  if (parser.parserSource) {
+    if (typeof parser.parserSource === "string")
+      return seekTo_fastPath_string(parser.parserSource);
+    else if (parser.parserSource instanceof RegExp)
+      return seekTo_fastPath_regex(parser.parserSource);
   }
-  if (isResult(result)) return result;
-  state.position = position;
   return void 0;
+}
+
+const seekTo_fastPath_string = (pattern) => backtrack.mark((state) => {
+  const { position, input } = state;
+  const indexOfStr = input.indexOf(pattern, position);
+  if (indexOfStr === -1) return void 0;
+  state.position = indexOfStr + pattern.length;
+  return pattern;
 });
+
+const seekTo_fastPath_regex = (pattern) => regex(...globalizedRegExpData(pattern));
 
 /**
  * Creates a parser that will apply the given parser, then backtrack and return its result.
@@ -142,11 +211,21 @@ export const peek = (parser) => backtrack.mark((state) => {
 });
 
 /**
- * Creates a parser that will apply the given parser and produce an "empty" value if it matches.
+ * Creates a parser that will apply the given parser and convert a failed match into an empty-result.
  *
  * @export
  * @template T
- * @param {Parser<T>} parser The parser to peek with.
+ * @param {Parser<T>} parser The parser to make optional.
+ * @returns {Parser<T>}
+ */
+export const optional = (parser) => (state) => parser(state) ?? emptyResult;
+
+/**
+ * Creates a parser that will apply the given parser and convert a successful match into an empty-result.
+ *
+ * @export
+ * @template T
+ * @param {Parser<T>} parser The parser whose result to make into the empty-result.
  * @returns {BacktrackingParser<T>}
  */
 export const skip = (parser) => (state) => {
@@ -159,7 +238,7 @@ export const skip = (parser) => (state) => {
  * it will be wrapped in one.
  * 
  * This modifier will return an empty array in the case all the results were empty.  For a more-strict version
- * that expects at least one result to remain, use `filterEmpty.strict`.
+ * that expects at least one result to remain, use `filterEmpty.required`.
  *
  * @export
  * @template T
@@ -169,9 +248,7 @@ export const skip = (parser) => (state) => {
 export const filterEmpty = (parser) => map(parser, (parserResult) => {
   if (isEmpty(parserResult)) return [];
   if (!Array.isArray(parserResult)) return [parserResult];
-  const result = parserResult::arrEx.reject(isEmpty);
-  if (result.length === 0) return [];
-  return result;
+  return parserResult::arrEx.reject(isEmpty);
 });
 
 /**
@@ -186,7 +263,7 @@ export const filterEmpty = (parser) => map(parser, (parserResult) => {
  * @param {Parser<T>} parser The parser whose result to be filtered.
  * @returns {Parser<T[]>} A parser that produces an array containing the results.
  */
-filterEmpty.strict = (parser) => map(parser, (parserResult) => {
+filterEmpty.required = (parser) => map(parser, (parserResult) => {
   if (isEmpty(parserResult)) return void 0;
   if (!Array.isArray(parserResult)) return [parserResult];
   const result = parserResult::arrEx.reject(isEmpty);
@@ -200,17 +277,17 @@ filterEmpty.strict = (parser) => map(parser, (parserResult) => {
  *
  * @export
  * @template T,U
- * @param {Parser<T>} parser The parser to peek with.
- * @param {function(T, ParserState):U} transformationFn The transformation function.
+ * @param {Parser<T>} parser The parser whose result to transform.
+ * @param {TransformationFunction<T, U>} transformationFn The transformation function.
  * @returns {Parser<U>}
  */
 export const map = (parser, transformationFn) => {
   if (typeof transformationFn !== "function")
     throw new Error(`expected \`transformationFn\` to be a function; got \`${transformationFn}\` instead.`);
   return (state) => {
-    const result = parser(state);
-    if (isUndefined(result)) return void 0;
-    return transformationFn(result, state);
+    const value = parser(state);
+    if (isUndefined(value)) return void 0;
+    return transformationFn(value, state);
   };
 }
 
@@ -234,7 +311,7 @@ export const takeWhile = (parser) => parser === premade.any ? stringToArray(prem
 };
 
 /**
- * Creates a parser that will apply the given parser until it fails, joining results the results into a string
+ * Creates a parser that will apply the given parser until it fails, joining the results into a string
  * and returning it.  If the given parser never matched, the string will be empty.
  *
  * @export
@@ -244,26 +321,24 @@ export const takeWhile = (parser) => parser === premade.any ? stringToArray(prem
 takeWhile.string = (parser) => parser === premade.any ? premade.rest : join.all(takeWhile(parser), "");
 
 /**
- * Creates a parser that will apply the given parser and accumulate valid results, until `ending` successfully
- * matches something, then returns those results as an array.  If `parser` fails before the `ending` is located,
- * the parser will fail.
+ * Creates a parser that will apply the given parser and accumulate valid results, until the given `predicateFn`
+ * returns `false` or the end of the input is reached, then returns those results as an array.  If `parser` fails
+ * before the ending condition is reached, the parser will fail.
  *
  * @export
  * @template T,U
  * @param {Parser<T>} parser The parser to accumulate results from.
- * @param {Parser<U>} ending The parser that will signal the end.
+ * @param {PredicateFunction<T>} predicateFn The predicate function.
  * @returns {BacktrackingParser<T[]>} A parser that produces the accumulated results of `parser`.
  */
-export const takeUntil = (parser, ending) => {
-  const fastPath = takeUntil_tryFastPath(parser, ending);
-  if (fastPath) return stringToArray(fastPath);
-
-  const peekForEnding = peek(ending);
+export const takeUntil = (parser, predicateFn) => {
   return backtrack((state) => {
+    const { inputLength } = state.input;
     const result = [];
-    while (isUndefined(peekForEnding(state))) {
+    while (state.position < inputLength) {
       const value = parser(state);
       if (isUndefined(value)) return void 0;
+      if (!predicateFn(value, result, state)) return result;
       result.push(value);
     }
     return result;
@@ -271,63 +346,22 @@ export const takeUntil = (parser, ending) => {
 };
 
 /**
- * Creates a parser that will apply the given parser and accumulate valid results, until `ending` successfully
- * matches something, then joins those results into a string and returns it.  If `parser` fails before the
- * `ending` is located, the parser will fail.
+ * Creates a parser that will apply the given parser and accumulate valid results, until the given `predicateFn`
+ * returns `false` or the end of the input is reached, then joins those results into a string and returns it.
+ * If `parser` fails before the ending condition is reached, the parser will fail.
  *
  * @export
  * @template T
  * @param {Parser<Stringable>} parser The parser to accumulate results from.
- * @param {Parser<T>} ending The parser that will signal the end.
+ * @param {PredicateFunction<T>} predicateFn The predicate function.
  * @returns {BacktrackingParser<string>} A parser that produces the accumulated results of `parser`.
  */
-takeUntil.string = (parser, ending) =>
-  takeUntil_tryFastPath(parser, ending) ?? join.all(takeUntil(parser, ending), "");
-
-const takeUntil_tryFastPath = (parser, ending) => {
-  // There are a few fast-paths we can take if we're using the `any` parser.
-  if (parser === premade.any) {
-    if (ending === premade.endOfInput)
-      return premade.rest;
-    if (ending.parserSource) {
-      if (typeof ending.parserSource === "string")
-        return takeUntil_fastPath_string(ending.parserSource);
-      else if (ending.parserSource instanceof RegExp)
-        return takeUntil_fastPath_regex(ending.parserSource);
-    }
-  }
-  return void 0;
-}
-
-const takeUntil_fastPath_string = (pattern) => backtrack.mark((state) => {
-  const { position, input } = state;
-  const indexOfStr = input.indexOf(pattern, position);
-  if (indexOfStr === -1) return void 0;
-  state.position = indexOfStr;
-  return input.substring(position, indexOfStr);
-});
-
-const takeUntil_fastPath_regex = backtrack.mark((pattern) => {
-  const rgx = !pattern.sticky ? pattern : dew(() => {
-    const set = new Set(pattern.flags[Symbol.iterator]());
-    set.remove("y");
-    set.add("g");
-    return new RegExp(pattern.source, set::iterEx.join(""));
-  });
-  return backtrack.mark((state) => {
-    const { position, input } = state;
-    rgx.lastIndex = position;
-    const indexOfMatch = input.search(rgx);
-    if (indexOfMatch === -1) return void 0;
-    state.position = indexOfMatch;
-    return input.substring(position, indexOfMatch);
-  });
-});
+takeUntil.string = (parser, predicateFn) => join.all(takeUntil(parser, predicateFn), "");
 
 /**
  * Creates a parser that will generate a substring from the current position, through to the new position of
  * the parser after applying `parser`.  This is useful for grabbing all the text between the current position
- * and the location of a global regular-expression match.
+ * and the end of a global regular-expression's match.
  * 
  * @export
  * @template T
@@ -355,7 +389,7 @@ export const cutThrough = (parser) => backtrack((state) => {
  *
  * @export
  * @template T
- * @param {Parser<T>} parser The parser to convert to a string.
+ * @param {Parser<Stringable>} parser The parser to convert to a string.
  * @returns {Parser<string>} A parser that produces a string.
  */
 export const asString = (parser) => map(parser, resultToString);
@@ -366,7 +400,7 @@ export const asString = (parser) => map(parser, resultToString);
  *
  * @export
  * @template T
- * @param {Parser<T>} parser The parser to convert to a string.
+ * @param {Parser} parser The parser to convert to a string.
  * @returns {Parser<string>} A parser that produces a string.
  */
 asString.force = (parser) => map(parser, resultToString.force);
@@ -443,7 +477,7 @@ join.all = (parser, separator = "") => map(parser, (parserResult, state) => {
  * @template T
  * @param {Parser<Mixed<T>|Mixed<T>[]} parser The parser whose result will be transformed.
  * @param {string} [separator=""] The separator to use to join the string.
- * @returns {Parser<Array.<T|string>>} A parser that produces an array of strings or non-stringable objects.
+ * @returns {Parser<Array<T|string>>} A parser that produces an array of strings or non-stringable objects.
  */
 join.adjacent = (parser, separator = "") => map(parser, (parserResult) => {
   if (isStringable(parserResult)) return [resultToString(parserResult)];
@@ -478,7 +512,7 @@ join.adjacent = (parser, separator = "") => map(parser, (parserResult) => {
  *
  * @export
  * @template T
- * @param {Parser<Array.<T|T[]>> parser The parser whose result will be flattened.
+ * @param {Parser<Array<T|T[]>> parser The parser whose result will be flattened.
  * @returns {Parser<T[]>} A parser that produces an array.
  */
 export const flatten = (parser) => flattenBy(parser, 1);
@@ -487,9 +521,9 @@ export const flatten = (parser) => flattenBy(parser, 1);
  * Flattens the result array of `parser` by some number of `levels`.
  *
  * @export
- * @param {Parser<Array<*>} parser The parser whose result will be flattened.
+ * @param {Parser<Array} parser The parser whose result will be flattened.
  * @param {number} levels The number of levels to flatten by.
- * @returns {Parser<Array<*>>} A parser that produces an array.
+ * @returns {Parser<Array>} A parser that produces an array.
  */
 export const flattenBy = (parser, levels) => map(parser, (parserResult) => {
   return parserResult::arrEx.flattenBy(levels);
@@ -513,4 +547,21 @@ export const refine = (parser, refinementParser) => (state) => {
  * 
  * @typedef {T|Stringable} Mixed
  * @template T
+ */
+
+/**
+ * @template T,U
+ * @callback TransformationFunction
+ * @param {T} value The value that was just parsed.
+ * @param {ParserState} state The state of the parser.
+ * @returns {U} The transformed value.
+ */
+
+/**
+ * @template T
+ * @callback PredicateFunction
+ * @param {T} value The value that was just parsed.
+ * @param {T[]} results The array containing the parser's current results.
+ * @param {ParserState} state The state of the parser.
+ * @returns {boolean} Whether the `value` passes the predicate.
  */

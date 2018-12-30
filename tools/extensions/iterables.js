@@ -23,9 +23,9 @@ export const CoercionMethods = {
  * Coerces this object into an iterable.
  *
  * @export
- * @param {function(*): IterableIterator<*>} [coercionMethod=CoercionMethods.arrayLike]
+ * @param {function(*): IterableIterator} [coercionMethod=CoercionMethods.arrayLike]
  *   A function that will produce an iterable that supports this object.
- * @returns {IterableIterator<*>} Yields this object's elements.
+ * @returns {IterableIterator} Yields this object's elements.
  * @throws When the `coercionMethod` fails to produce an iterable object.
  */
 export function coerce(coercionMethod = CoercionMethods.arrayLike) {
@@ -183,9 +183,9 @@ export function flatten() {
  * Flattens this iterable by some number of `levels`.
  *
  * @export
- * @this {Iterable<*>}
+ * @this {Iterable}
  * @param {number} [levels=1] The number of levels to flatten by.
- * @returns {IterableIterator<*>} Yields this iterable's elements, flattened by some number of levels.
+ * @returns {IterableIterator} Yields this iterable's elements, flattened by some number of levels.
  */
 export function* flattenBy(levels = 1) {
   if (levels === 0) {

@@ -283,7 +283,7 @@ export class BufferedStream {
  * @export
  * @template T
  * @param {Promise<T>[]} promises The promises to await.
- * @returns {Promise<Array.<T|undefined>>} A promise that will resolve to an array of resolved values.
+ * @returns {Promise<Array<T|undefined>>} A promise that will resolve to an array of resolved values.
  */
 export async function awaitAll(promises) {
   const len = promises.length;
@@ -369,7 +369,7 @@ export function preloadImage(src, width, height) {
  * @function
  * @template T
  * @param {Promise<T>} mainPromise The promise to make abortable or a nullish value.
- * @param {Promise<*>} signalPromise The promise to use as a signal to abort when it completes.
+ * @param {Promise} signalPromise The promise to use as a signal to abort when it completes.
  * @returns {Promise<T|Symbol>} An abortable promise.
  */
 export function abortable(mainPromise, signalPromise) {
@@ -395,7 +395,7 @@ export function whenFree() {
  * Resolves to the time, according to the rules of `requestAnimationFrame`.
  *
  * @export
- * @param {Promise<*>} [abortSignal] The promise to use as a signal to abort when it completes.
+ * @param {Promise} [abortSignal] The promise to use as a signal to abort when it completes.
  * @returns {Promise<number|Symbol>} A promise, to resolve at the next animation frame.
  */
 export function frameSync(abortSignal) {
@@ -416,7 +416,7 @@ export function frameSync(abortSignal) {
  *
  * @export
  * @template T
- * @param {Promise<*>|function(): Promise<*>} [abortSignal]
+ * @param {Promise|function(): Promise} [abortSignal]
  *  The promise to use as a signal to abort when it completes or a function that returns such when called.
  * @returns {function(T): Promise<T|Symbol>}
  *   A function that will produce a promise which will resolve on the next frame.
@@ -435,7 +435,7 @@ export function delayToNextFrame(abortSignal) {
  *
  * @export
  * @param {number} [delay=0] The number of milliseconds to wait.
- * @param {Promise<*>} [abortSignal] The promise to use as a signal to abort when it completes.
+ * @param {Promise} [abortSignal] The promise to use as a signal to abort when it completes.
  * @returns {Promise<void|Symbol>} A promise that will resolve when the timeout is complete.
  */
 export function wait(delay = 0, abortSignal) {
@@ -458,7 +458,7 @@ export function wait(delay = 0, abortSignal) {
  * @export
  * @template T
  * @param {number} [delay=0] The number of milliseconds to wait.
- * @param {Promise<*>|function(): Promise<*>} [abortSignal]
+ * @param {Promise|function(): Promise} [abortSignal]
  *  The promise to use as a signal to abort when it completes or a function that returns such when called.
  * @returns {function(T): Promise<T|Symbol>}
  *   A function that will produce a promise which will resolve after a delay.

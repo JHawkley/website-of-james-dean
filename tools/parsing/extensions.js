@@ -1,3 +1,4 @@
+import * as helpers from "./helpers";
 import * as modifiers from "./modifiers";
 import * as combinators from "./combinators"; 
 
@@ -24,12 +25,12 @@ export function modify(parserModifier) {
  * console.log(run(joinSpaces, "    Four space indentation!"));
  *
  * @export
- * @this {Parser<*>}
- * @param {...ParserModifier<*, *>} parserModifiers
+ * @this {Parser}
+ * @param {...ParserModifier} parserModifiers
  * @returns
  */
 export function chain(...parserModifiers) {
-  return modifiers.chain(this, parserModifiers);
+  return helpers.chain(this, parserModifiers);
 }
 
 /**
@@ -82,7 +83,7 @@ export function neverExpect(message) {
 }
 
 /**
- * Combines this parser with the next, creating a parser that will yield the array concatenation of the two parsers.
+ * Combines this parser with the next, creating a parser that will yield the array-concatenation of the two parsers.
  *
  * @export
  * @template T
@@ -90,8 +91,20 @@ export function neverExpect(message) {
  * @param {Parser<T>} nextParser The parser whose result to concatenate to this parser.
  * @returns {ConcatParser<T[]>}
  */
-export function then(nextParser) {
+export function concat(nextParser) {
   return combinators.concat(this, nextParser);
+}
+
+/**
+ * Combines this parser with the next, creating a parser that will yield the string-concatenation of the two parsers.
+ *
+ * @export
+ * @this {Parser<Stringable>}
+ * @param {Parser<Stringable>} nextParser The parser whose result to concatenate to this parser.
+ * @returns {ConcatParser<string>}
+ */
+export function then(nextParser) {
+  return combinators.concat.string(this, nextParser);
 }
 
 /**
@@ -112,7 +125,7 @@ export function map(transformationFn) {
  *
  * @export
  * @template T
- * @this {Parser<Array.<T|T[]>>}
+ * @this {Parser<Array<T|T[]>>}
  * @returns {Parser<T[]>} A parser that produces an array.
  */
 export function flatten() {
@@ -123,9 +136,9 @@ export function flatten() {
  * Flattens the result array of this parser by some number of `levels`.
  *
  * @export
- * @this {Parser<Array<*>}
+ * @this {Parser<Array}
  * @param {number} levels The number of levels to flatten by.
- * @returns {Parser<Array<*>>} A parser that produces an array.
+ * @returns {Parser<Array>} A parser that produces an array.
  */
 export function flattenBy(levels) {
   return modifiers.flattenBy(this, levels);
