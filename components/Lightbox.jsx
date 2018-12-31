@@ -1,10 +1,11 @@
 import PropTypes from "prop-types";
-import { is } from "tools/common";
+import { dew, is } from "tools/common";
 import { extensions as numEx } from "tools/numbers";
 import { extensions as fnEx } from "tools/functions";
 import { extensions as maybe, nothing } from "tools/maybe";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faImages } from "@fortawesome/free-solid-svg-icons/faImages";
+import BaseLightbox from "react-image-lightbox";
 
 const galleries = new Map();
 const openFns = new Set();
