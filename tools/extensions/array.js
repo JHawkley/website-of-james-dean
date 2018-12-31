@@ -1,7 +1,11 @@
+import { dew } from "tools/common";
 import { nothing } from "tools/maybe";
 import { isEmpty as maybeIsEmpty } from "tools/extensions/maybe";
 
 const { floor, random: randomNum } = Math;
+
+// Some functions that apply to iterables are good to have for arrays too.
+export { reduceWhile } from "tools/extensions/iterables";
 
 /**
  * Checks to see if this array is empty.
@@ -83,13 +87,13 @@ export function randomElement() {
 }
 
 /**
- * Performs a combination filter + map on each element of the array.  The `collectFn` should return `undefined`
+ * Performs a combination filter + map on each element of the array.  The `partialFn` should return `undefined`
  * for values that should be filtered out.  Any other value will be added to the result array.
  *
  * @export
  * @template T,U
  * @this {T[]} This array.
- * @param {function(T, number, T[]): (U|undefined)} partialFn The collection partial-function.
+ * @param {PartialFunction<T>} partialFn The partial-function.
  * @returns {U[]} A new array.
  */
 export function collect(partialFn) {
@@ -106,6 +110,19 @@ export function collect(partialFn) {
 }
 
 /**
+ * Filters the array to those values that did not pass the given `predicateFn`; the inverse of `filter`.
+ *
+ * @export
+ * @template T
+ * @this {T[]} This array.
+ * @param {PredicateFunction<T>} predicateFn The predicate function.
+ * @returns {T[]}
+ */
+export function reject(predicateFn) {
+  return this.filter((v, i, arr) => !predicateFn(v, i, arr));
+}
+
+/**
  * Partitions this array into two arrays, based on the result of a predicate.  The returned value is a tuple,
  * where the first element contains an array of values where the predicate held true, and the second element
  * contains values where the predicate was false.
@@ -113,7 +130,7 @@ export function collect(partialFn) {
  * @export
  * @template T
  * @this {T[]} This array.
- * @param {function(T, number, T[]): boolean} predicateFn The predicate function.
+ * @param {PredicateFunction<T>} predicateFn The predicate function.
  * @returns {[T[], T[]]} A tuple; element 1 has values that held true, while element 2 all held false.
  */
 export function partition(predicateFn) {
@@ -130,3 +147,110 @@ export function partition(predicateFn) {
 
   return [whenTrue, whenFalse];
 }
+
+/**
+ * Creates an array of arrays based on a segregation function.  When the segregation function returns `true`,
+ * the value will be added to the current group.  It it returns false, the value will create a new group, to which
+ * it will be added.
+ *
+ * @export
+ * @template T
+ * @this {T[]} This array.
+ * @param {SegregationFunction<T>} segregationFn The segregation function.
+ * @returns {T[][]} An array of all the groupings created by the segregation function.
+ */
+export function segregate(segregationFn) {
+  const length = this.length;
+  const result = [];
+  if (length === 0) return result;
+
+  let prevValue = this[0];
+  let currentGroup = [prevValue];
+
+  for (let i = 1; i < length; i++) {
+    const value = this[i];
+    const belongsWithPrevious = segregationFn(prevValue, value, i, this);
+    if (belongsWithPrevious) currentGroup.push(value);
+    else {
+      result.push(currentGroup);
+      currentGroup = [value];
+    }
+    prevValue = value;
+  }
+
+  if (currentGroup.length > 0)
+    result.push(currentGroup);
+
+  return result;
+}
+
+const arrayFlattenBy = Array.prototype.flat ?? dew(() => {
+  return function flattenBy(levels) {
+    if (levels <= 0) return this;
+    return flattenBy_recursive(this, [], levels);
+  }
+
+  function flattenBy_recursive(arr, result, levels) {
+    if (levels < 0) result.push(arr);
+    else {
+      for (let i = 0, len = arr.length; i < len; i++) {
+        const value = arr[i];
+        if (Array.isArray(value)) flattenBy_recursive(value, result, levels - 1);
+        else result.push(value);
+      }
+    }
+    return result;
+  }
+});
+
+/**
+ * Flattens this array by one level.
+ *
+ * @export
+ * @template T
+ * @this {Array<T|T[]>} This array.
+ * @returns {Iterable<T>} An iterable that has been flattened one level.
+ */
+export function flatten() {
+  return this::arrayFlattenBy(1);
+}
+
+/**
+ * Flattens this array by some number of `levels`.
+ *
+ * @export
+ * @this {Array} This array.
+ * @param {number} [levels=1] The number of levels to flatten by.
+ * @returns {Array} A copy of this array that has been flattened by some number of levels.
+ */
+export function flattenBy(levels = 1) {
+  return this::arrayFlattenBy(levels);
+}
+
+/**
+ * @template T,U
+ * @callback PartialFunction
+ * @param {T} value The current value.
+ * @param {number} index The current index into the array.
+ * @param {T[]} arr The array being iterated.
+ * @returns {U|void} A new value or `undefined` in the case the function could not be applied to the value.
+ */
+
+/**
+ * @template T
+ * @callback PredicateFunction
+ * @param {T} value The current value.
+ * @param {number} index The current index into the array.
+ * @param {T[]} arr The array being iterated.
+ * @returns {boolean} Whether the `value` passes the predicate.
+ */
+
+/**
+ * @template T
+ * @callback SegregationFunction
+ * @param {T} previousValue The previous value.
+ * @param {T} currentValue The current value.
+ * @param {number} index The current index into the array.
+ * @param {T[]} arr The array being iterated.
+ * @returns {boolean} Whether the `currentValue` should belong to the same group as `previousValue`.
+ */

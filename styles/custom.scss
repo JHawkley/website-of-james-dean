@@ -171,11 +171,6 @@ a.work-item {
   position: relative !important;
   max-width: 100% !important;
 
-  .image & {
-    /* Ensures the noise overlay appears as intended. */
-    z-index: -1;
-  }
-
   .fluid {
     position: absolute !important;
     top: 0px !important;
@@ -184,4 +179,9 @@ a.work-item {
     height: 100% !important;
     max-width: inherit !important;
   }
+}
+
+/* Fixes image over lay with `.fluid-container`.  */
+.image:before {
+  z-index: 1;
 }

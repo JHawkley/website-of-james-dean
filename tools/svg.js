@@ -1,6 +1,6 @@
 import ReactDOMServer from "react-dom/server";
 import { Text } from '@vx/text';
-import { dew } from "tools/common";
+import { dew, is } from "tools/common";
 import { base64 } from "tools/strings";
 import { extensions as numEx } from "tools/numbers";
 import { extensions as strEx } from "tools/strings";
@@ -67,7 +67,7 @@ export function generateSvg(coreDef, iconDef, textDefs = []) {
     const textHeight = height - buffer - buffer;
 
     const [x, y]
-      = typeof position === "function"
+      = position::is.function()
       ? position(textWidth, textHeight, size)
       : dew(() => {
         const [scalarX = 0.0, scalarY = 0.0] = position ?? [];

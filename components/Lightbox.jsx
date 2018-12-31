@@ -1,11 +1,10 @@
 import PropTypes from "prop-types";
-import { dew } from "tools/common";
+import { is } from "tools/common";
 import { extensions as numEx } from "tools/numbers";
 import { extensions as fnEx } from "tools/functions";
 import { extensions as maybe, nothing } from "tools/maybe";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faImages } from "@fortawesome/free-solid-svg-icons";
-import BaseLightbox from "react-image-lightbox";
+import { faImages } from "@fortawesome/free-solid-svg-icons/faImages";
 
 const galleries = new Map();
 const openFns = new Set();
@@ -150,9 +149,8 @@ class Lightbox extends React.Component {
     if (!isOpen) return nothing;
     const images = galleries.get(galleryName);
     if (images::maybe.isEmpty()) return nothing;
-
-    const image = (index) => typeof images[index] === "object" ? images[index].i : images[index];
-    const desc = (index) => typeof images[index] === "object" ? (<p>{images[index].d}</p>) : nothing;
+    const image = (index) => images[index]::is.object() ? images[index].i : images[index];
+    const desc = (index) => images[index]::is.object() ? (<p>{images[index].d}</p>) : nothing;
     return (
       <ReactLightbox
         reactModalProps={reactModalProps}

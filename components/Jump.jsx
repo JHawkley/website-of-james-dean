@@ -1,11 +1,12 @@
 import { withRouter } from "next/router";
 import Link from "next/link";
-import Page from "components/Page";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faImage } from "@fortawesome/free-regular-svg-icons";
-import { faExternalLinkAlt, faFilm, faImages } from "@fortawesome/free-solid-svg-icons";
-import { parse as parseUrl } from "url";
-import { extensions as objEx, dew } from "tools/common";
+import { faImage } from "@fortawesome/free-regular-svg-icons/faImage";
+import { faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons/faExternalLinkAlt";
+import { faFilm } from "@fortawesome/free-solid-svg-icons/faFilm";
+import { faImages } from "@fortawesome/free-solid-svg-icons/faImages";
+import { Url, parse as parseUrl } from "url";
+import { extensions as objEx, dew, is } from "tools/common";
 import { extensions as maybe, nothing } from "tools/maybe";
 
 const buildIcon = (props) => {
@@ -34,13 +35,8 @@ const getLocationOrigin = () => {
   return `${protocol}//${hostname}${port ? ":" + port : ""}`;
 }
 
-const buildHref = (props) => {
-  const { href = nothing, page = nothing } = props;
-  return Page.hrefFor(href, page);
-};
-
 const doesItScroll = (href, router) => {
-  const parsedHref = parseUrl(href);
+  const parsedHref = href::is.string() ? parseUrl(href) : Object.assign(new Url(), href);
   if (parsedHref.host::maybe.isDefined()) {
     if (typeof window === "undefined") return void 0;
     const parsedOrigin = parseUrl(getLocationOrigin());
@@ -54,7 +50,7 @@ const doesItScroll = (href, router) => {
   return true;
 };
 
-const ownPropKeys = new Set(["children", "icon", "page", "href", "scroll", "router"]);
+const ownPropKeys = new Set(["children", "icon", "href", "scroll", "router"]);
 const linkPropKeys = new Set(["as", "prefetch", "replace", "shallow", "passHref"]);
 
 const Jump = (props) => {
@@ -66,7 +62,7 @@ const Jump = (props) => {
     pool[key] = value;
   });
 
-  const href = buildHref(props);
+  const href = props.href;
   const shouldScroll = props.scroll ?? doesItScroll(href, props.router);
 
   return (

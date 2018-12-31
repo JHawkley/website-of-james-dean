@@ -1,16 +1,16 @@
 import PropTypes from "prop-types";
-import Lightbox from "./Lightbox";
-import Page from "./Page";
-import { ImageSync } from "./AsyncImage";
+import Lightbox from "components/Lightbox";
+import { ImageSync } from "components/AsyncImage";
+import { extensions as mapEx } from "tools/maps";
 
-export default class Main extends React.Component {
+export default class Main extends React.PureComponent {
 
   static propTypes = {
     article: PropTypes.string,
-    articlePages: PropTypes.arrayOf((arr, i) => Page.isPage(arr[i])).isRequired,
     articleTimeout: PropTypes.bool.isRequired,
     timeout: PropTypes.bool.isRequired,
-    imageSync: PropTypes.instanceOf(ImageSync)
+    imageSync: PropTypes.instanceOf(ImageSync),
+    articlePages: PropTypes.instanceOf(Map).isRequired
   };
 
   componentDidUpdate(prevProps) {
@@ -28,9 +28,8 @@ export default class Main extends React.Component {
 
     return (
       <div id="main" className={klass} style={{display}}>
-        {articlePages.map(SomePage => {
-          const pageName = SomePage.pageName;
-          return <SomePage key={pageName} active={article === pageName} imageSync={imageSync} />;
+        {articlePages::mapEx.mapToArray(([pageName, SomePage]) => {
+          return <SomePage key={pageName} id={pageName} active={article === pageName} imageSync={imageSync} />;
         })}
         <Lightbox />
       </div>

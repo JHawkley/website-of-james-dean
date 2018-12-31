@@ -1,13 +1,13 @@
 import PropTypes from "prop-types";
-import Jump from "./Jump";
-import { ImageSync } from "./AsyncImage";
+import { Goto } from "components/Article";
+import { ImageSync } from "components/AsyncImage";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCode } from "@fortawesome/free-solid-svg-icons";
+import { faCode } from "@fortawesome/free-solid-svg-icons/faCode";
 
-import Intro from "./pages/Intro";
-import Work from "./pages/Work";
-import Questions from "./pages/Questions";
-import Contact from "./pages/Contact";
+import $intro from "components/articles/Intro?name";
+import $work from "components/articles/Work?name";
+import $questions from "components/articles/Questions?name";
+import $contact from "components/articles/Contact?name";
 
 const Header = ({timeout}) => (
   <header id="header" style={timeout ? {display: 'none'} : null}>
@@ -23,10 +23,10 @@ const Header = ({timeout}) => (
     </div>
     <nav>
       <ul>
-        <li><Jump page={Intro}>Intro</Jump></li>
-        <li><Jump page={Work}>Work</Jump></li>
-        <li><Jump page={Questions}>Q&amp;A</Jump></li>
-        <li><Jump page={Contact}>Contact</Jump></li>
+        <li><Goto article={$intro}>Intro</Goto></li>
+        <li><Goto article={$work}>Work</Goto></li>
+        <li><Goto article={$questions}>Q&amp;A</Goto></li>
+        <li><Goto article={$contact}>Contact</Goto></li>
       </ul>
     </nav>
   </header>
