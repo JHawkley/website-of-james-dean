@@ -4,18 +4,15 @@ const toLower = require('lodash/toLower');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const DefinePlugin = require('webpack/lib/DefinePlugin');
 
+const jsconfig = require('./jsconfig.json');
+
 const isProduction = process.env.NODE_ENV === 'production';
 
 module.exports = {
   webpack: (config, { dir, isServer, defaultLoaders }) => {
 
     // Resolver settings.
-    config.resolve.alias['~'] = dir;
-    config.resolve.alias['components'] = '~/components';
-    config.resolve.alias['pages'] = '~/pages';
-    config.resolve.alias['tools'] = '~/tools';
-    config.resolve.alias['styles'] = '~/styles';
-
+    mapAliases(jsconfig.compilerOptions.paths, config, dir);
     config.resolveLoader.modules.unshift('webpack');
 
     // Module rules.
@@ -102,11 +99,11 @@ module.exports = {
   pageExtensions: ['jsx', 'js']
 }
 
-function patchMain(patches, config) {
+function patchMain(patches, webkitConfig) {
   if (patches.length === 0) return;
 
-  const originalEntry = config.entry;
-  config.entry = async () => {
+  const originalEntry = webkitConfig.entry;
+  webkitConfig.entry = async () => {
     const entries = await originalEntry();
     if (!entries['main.js']) return entries;
 
@@ -116,4 +113,17 @@ function patchMain(patches, config) {
 
     return entries;
   };
+}
+
+function mapAliases(jsPaths, webkitConfig, dir) {
+  const wkResolve = webkitConfig.resolve;
+  for (const jsAlias of Object.keys(jsPaths)) {
+    const jsTargets = jsPaths[jsAlias];
+    if (jsTargets.length !== 1)
+      throw new Error(`expected key \`${jsAlias}\` in \`paths\` entry of \`jsconfig.json\` to have 1 entry`);
+    const [jsTarget] = jsTargets;
+    const wkAlias = jsAlias.endsWith('/*') ? jsAlias.slice(0, -2) : jsAlias;
+    const wkTarget = jsTarget.endsWith('/*') ? jsTarget.slice(0, -2) : jsTarget;
+    wkResolve.alias[wkAlias] = path.join(dir, wkTarget);
+  }
 }
