@@ -6,7 +6,7 @@ import ImgHeader from "static/images/miscprogramming/header.png";
 import $work from "components/articles/Work?name";
 
 const MiscProgramming = (props) => {
-  const { imageSync, active } = props;
+  const { appContext: { imageSync }, active } = props;
   const phase = active ? 0 : 1;
   return (
     <Article {...props} parent={$work}>

@@ -14,9 +14,8 @@ import DynamicLoader from "components/DynamicLoader";
 
 import { ImageSync } from "components/AsyncImage";
 import NoJavaScript from "components/NoJavaScript";
-import Header from "components/Header";
-import Main from "components/Main";
-import Footer from "components/Footer";
+import Wrapper from "components/Wrapper";
+import Lightbox from "components/Lightbox";
 
 import bgImage from "static/images/placeholder_bg.jpg";
 
@@ -54,7 +53,17 @@ class IndexPage extends React.PureComponent {
     return { expectedArticle };
   }
 
-  imageSync = new ImageSync();
+  appContext = dew(() => {
+    const openLightbox = (data, index = 0) => this.setState({ lightboxData: data, lightboxIndex: index });
+    const closeLightbox = () => this.setState({ lightboxData: nothing, lightboxIndex: 0 });
+
+    return Object.freeze({
+      imageSync: new ImageSync(),
+      makeGallery: (data) => Lightbox.makeGallery(data, openLightbox, closeLightbox),
+      openLightbox: openLightbox,
+      closeLightbox: closeLightbox
+    });
+  });
 
   whenMountedFuture = new Future();
 
@@ -79,7 +88,9 @@ class IndexPage extends React.PureComponent {
       timeout: false,
       articleTimeout: false,
       loading: true,
-      ...this.initialStateFor(props)
+      ...this.initialStateFor(props),
+      lightboxData: nothing,
+      lightboxIndex: 0
     };
   }
 
@@ -99,7 +110,7 @@ class IndexPage extends React.PureComponent {
     });
 
     // Bundle our image-related promises.
-    const imagesPromise = awaitAll([bgPromise, this.imageSync.loadToPhase(0)]);
+    const imagesPromise = awaitAll([bgPromise, this.appContext.imageSync.loadToPhase(0)]);
 
     // Put a max limit before we load anyways.
     const timerPromise = this.wait(2000);
@@ -125,14 +136,16 @@ class IndexPage extends React.PureComponent {
     this.whenMountedFuture.resolve();
 
     this.doLoading().then(
-      () => !this.didUnmount && this.setState({ loading: false }, this.imageSync.loadAllPhases),
+      () => !this.didUnmount && this.setState({ loading: false }, this.appContext.imageSync.loadAllPhases),
       (asyncError) => !this.didUnmount && this.setState({ loading: false, asyncError })
     );
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (this.props.expectedArticle !== prevProps.expectedArticle)
+    if (this.props.expectedArticle !== prevProps.expectedArticle) {
+      this.appContext.closeLightbox();
       this.transitionToArticle();
+    }
     
     if (this.state.asyncError && this.state.asyncError !== prevState.asyncError)
       throw this.state.asyncError;
@@ -145,9 +158,13 @@ class IndexPage extends React.PureComponent {
 
   render() {
     const {
-      imageSync,
+      appContext,
       props: { elementRef },
-      state: { timeout, articleTimeout, actualArticle, knownArticles }
+      state: {
+        lightboxData: lbData, lightboxIndex: lbIndex,
+        timeout, articleTimeout,
+        actualArticle, knownArticles
+      }
     } = this;
   
     return (
@@ -173,18 +190,14 @@ class IndexPage extends React.PureComponent {
         {/* The normal version of the website. */}
         <div className={this.bodyClass()} ref={elementRef}>
           <div className="prevent-scroll">
-            <div id="wrapper">
-              <Header timeout={timeout} transition={transitionsSupported} imageSync={imageSync} />
-              <Main
-                article={actualArticle}
-                articlePages={knownArticles}
-                articleTimeout={articleTimeout}
-                timeout={timeout}
-                transition={transitionsSupported}
-                imageSync={imageSync}
-              />
-              <Footer timeout={timeout} transition={transitionsSupported} imageSync={imageSync} />
-            </div>
+            <Wrapper
+              article={actualArticle}
+              articlePages={knownArticles}
+              articleTimeout={articleTimeout}
+              timeout={timeout}
+              appContext={appContext}
+            />
+            <Lightbox images={lbData} initialIndex={lbIndex} onCloseRequest={appContext.closeLightbox} />
             <div id="bg" />
           </div>
         </div>

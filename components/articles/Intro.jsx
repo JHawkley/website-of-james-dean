@@ -5,7 +5,7 @@ import ImgPlaceholderPhoto from "static/images/placeholder_photo.jpg";
 import $work from "components/articles/Work?name";
 
 const Intro = (props) => {
-  const { imageSync, active } = props;
+  const { appContext: { imageSync }, active } = props;
   const headerPhase = active ? 0 : 1;
   return (
     <Article {...props}>

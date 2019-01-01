@@ -3,7 +3,6 @@ import { withRouter } from "next/router";
 import { resolve as urlResolve } from "url";
 import toLower from "lodash/toLower";
 import Jump from "components/Jump";
-import { ImageSync } from "components/AsyncImage";
 import { dew } from "tools/common";
 import { extensions as maybe, nothing } from "tools/maybe";
 
@@ -31,7 +30,6 @@ Article.propTypes = {
   id: PropTypes.string.isRequired,
   parent: PropTypes.string,
   active: PropTypes.bool,
-  imageSync: PropTypes.instanceOf(ImageSync),
   children: PropTypes.node
 };
 

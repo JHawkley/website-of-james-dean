@@ -19,7 +19,7 @@ const workItem = (description, title, article) => (
 );
 
 const Work = (props) => {
-  const { imageSync, active } = props;
+  const { appContext: { imageSync }, active } = props;
   const phase = active ? 0 : 1;
   return (
     <Article {...props}>
