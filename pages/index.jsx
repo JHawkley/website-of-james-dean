@@ -21,7 +21,6 @@ import Footer from "components/Footer";
 import bgImage from "static/images/placeholder_bg.jpg";
 
 const isProduction = process.env.NODE_ENV === 'production';
-const isServer = !process.browser;
 
 const { Fragment } = React;
 
@@ -121,7 +120,7 @@ class IndexPage extends React.PureComponent {
   }
 
   componentDidMount() {
-    if (isServer) return;
+    if (!process.browser) return;
     this.whenMountedFuture.resolve();
 
     this.doLoading().then(
@@ -587,6 +586,6 @@ function resolve(article) {
   };
 }
 
-const TheIndexPage = transitionsSupported || isServer ? SoftIndexPage : HardIndexPage;
+const TheIndexPage = transitionsSupported || !process.browser ? SoftIndexPage : HardIndexPage;
 
 export default TheIndexPage;
