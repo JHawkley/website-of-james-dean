@@ -1,42 +1,16 @@
 import PropTypes from "prop-types";
-import { dew, is } from "tools/common";
+import { is } from "tools/common";
 import { extensions as numEx } from "tools/numbers";
 import { extensions as fnEx } from "tools/functions";
 import { extensions as maybe, nothing } from "tools/maybe";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faImages } from "@fortawesome/free-solid-svg-icons/faImages";
-import BaseLightbox from "react-image-lightbox";
-
-const KEYS = {
-  ARROW_UP: { code: 38, key: "ArrowUp" },
-  ARROW_DOWN: { code: 40, key: "ArrowDown" }
-}
+import ReactLightbox from "react-image-lightbox";
 
 const reactModalProps = {
   parentSelector: () => document.getElementById("__next"),
   appElement: void 0
 };
-
-class ReactLightbox extends BaseLightbox {
-  handleKeyInput(event) {
-    const key = event.key ?? dew(() => {
-      switch (event.which ?? event.keyCode) {
-        case KEYS.ARROW_UP.code: return KEYS.ARROW_UP.key;
-        case KEYS.ARROW_DOWN.code: return KEYS.ARROW_DOWN.key;
-        default: return "Unidentified";
-      }
-    });
-
-    switch (key) {
-      case KEYS.ARROW_UP.key:
-      case KEYS.ARROW_DOWN.key:
-        event.stopPropagation();
-        event.preventDefault();
-        break;
-      default: super.handleKeyInput(event);
-    }
-  }
-}
 
 class Lightbox extends React.PureComponent {
 

@@ -53,15 +53,37 @@ class IndexPage extends React.PureComponent {
     return { expectedArticle };
   }
 
+  scrollPrevention = new Set();
+
   appContext = dew(() => {
-    const openLightbox = (data, index = 0) => this.setState({ lightboxData: data, lightboxIndex: index });
-    const closeLightbox = () => this.setState({ lightboxData: nothing, lightboxIndex: 0 });
+    const openLightbox = (data, index = 0) => {
+      const { lightboxData: curData } = this.state;
+      if (curData && curData !== data)
+        throw new Error("only one gallery may be shown by the lightbox at a time");
+      this.scrollPrevention.add(data);
+      this.setState({ lightboxData: data, lightboxIndex: index, preventScroll: this.scrollPrevention.size > 0 });
+    };
+    const closeLightbox = () => {
+      const { lightboxData: curData } = this.state;
+      this.scrollPrevention.delete(curData);
+      this.setState({ lightboxData: nothing, lightboxIndex: 0, preventScroll: this.scrollPrevention.size > 0 });
+    };
+    const enableScroll = (source) => {
+      if (!source) throw new Error("a source object must be provided to enable scrolling");
+      this.scrollPrevention.delete(source);
+      this.setState({ preventScroll: this.scrollPrevention.size > 0 });
+    };
+    const disableScroll = (source) => {
+      if (!source) throw new Error("a source object must be provided to disable scrolling");
+      this.scrollPrevention.add(source);
+      this.setState({ preventScroll: this.scrollPrevention.size > 0 });
+    };
 
     return Object.freeze({
       imageSync: new ImageSync(),
       makeGallery: (data) => Lightbox.makeGallery(data, openLightbox, closeLightbox),
-      openLightbox: openLightbox,
-      closeLightbox: closeLightbox
+      openLightbox, closeLightbox,
+      enableScroll, disableScroll
     });
   });
 
@@ -90,7 +112,8 @@ class IndexPage extends React.PureComponent {
       loading: true,
       ...this.initialStateFor(props),
       lightboxData: nothing,
-      lightboxIndex: 0
+      lightboxIndex: 0,
+      preventScroll: false
     };
   }
 
@@ -162,6 +185,7 @@ class IndexPage extends React.PureComponent {
       props: { elementRef },
       state: {
         lightboxData: lbData, lightboxIndex: lbIndex,
+        preventScroll,
         timeout, articleTimeout,
         actualArticle, knownArticles
       }
@@ -191,6 +215,7 @@ class IndexPage extends React.PureComponent {
         <div className={this.bodyClass()} ref={elementRef}>
           <div className="hide-overflow">
             <Wrapper
+              preventScroll={preventScroll}
               article={actualArticle}
               articlePages={knownArticles}
               articleTimeout={articleTimeout}
