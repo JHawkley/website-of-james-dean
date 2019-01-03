@@ -1,3 +1,5 @@
+/* global module, __dirname */
+
 const path = require('path');
 const glob = require('glob');
 const toLower = require('lodash/toLower');
