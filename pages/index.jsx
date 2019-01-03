@@ -178,7 +178,7 @@ class IndexPage extends React.PureComponent {
           <style dangerouslySetInnerHTML={{ __html: ".js-only { display: none !important; }"}} />
           
           <div className="body is-article-visible">
-            <div className="prevent-scroll">
+            <div className="hide-overflow">
               <div id="wrapper">
                 <NoJavaScript />
               </div>
@@ -189,7 +189,7 @@ class IndexPage extends React.PureComponent {
 
         {/* The normal version of the website. */}
         <div className={this.bodyClass()} ref={elementRef}>
-          <div className="prevent-scroll">
+          <div className="hide-overflow">
             <Wrapper
               article={actualArticle}
               articlePages={knownArticles}
