@@ -1,4 +1,8 @@
 import Modal from "react-modal";
+import { timespan } from "tools/css";
+import styleVars from "styles/vars.json";
+
+const modalTransition = timespan(styleVars.duration.modal);
 
 const overlayClasses = {
   base: "modal-overlay",
@@ -19,7 +23,7 @@ const ModalPopup = (props) => (
     portalClassName="modal-popup"
     overlayClassName={overlayClasses}
     className={contentClasses}
-    closeTimeoutMS={350}
+    closeTimeoutMS={modalTransition}
   />
 );
 

@@ -1,25 +1,7 @@
 import * as iterEx from "tools/extensions/iterables";
 import { dew } from "tools/common";
-import { emptyResult } from "./core";
-import { backtrack, skip } from "./modifiers";
-
-/**
- * Creates a parser that will parse the exact, given string.
- *
- * @export
- * @param {string} pattern The string to parse.
- * @returns {Parser<string>}
- */
-export const str = (pattern) => str_impl(pattern, pattern);
-
-/**
- * Creates a parser that will parse the exact, given string, but return an empty-result instead of the string.
- *
- * @export
- * @param {string} pattern The string to parse.
- * @returns {Parser<emptyResult>}
- */
-str.skip = (pattern) => str_impl(pattern, emptyResult);
+import { tag } from "./tag";
+import { skip } from "../modifiers/skip";
 
 /**
  * Creates a parser that will parse a string value using a regular-expression.
@@ -53,17 +35,6 @@ export const regex = (pattern, flags = "y") => {
 regex.skip = (pattern, flags = "y") => {
   const parser = regex(parser, flags);
   return tag(parser.parserSource, skip(parser));
-};
-
-const str_impl = (pattern, result) => {
-  if (!pattern) throw new Error("an empty-string cannot be matched");
-
-  return tag(pattern, (state) => {
-    const { input, position } = state;
-    if (!input.startsWith(pattern, position)) return void 0;
-    state.position += pattern.length;
-    return result;
-  });
 };
 
 const stickySupported = dew(() => {
@@ -117,8 +88,3 @@ const nonStickRegex = (rgx) => tag(rgx, (state) => {
   state.position = rgx.lastIndex;
   return result;
 });
-
-const tag = (pattern, parser) => {
-  parser.parserSource = pattern;
-  return backtrack.mark(parser);
-};

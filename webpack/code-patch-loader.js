@@ -1,3 +1,5 @@
+/* global module */
+
 const loaderUtils = require("loader-utils");
 
 function codePatchLoader(content) {

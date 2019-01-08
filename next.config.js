@@ -1,5 +1,8 @@
+/* global module, __dirname */
+
 const path = require('path');
 const glob = require('glob');
+const jsonImporter = require('node-sass-json-importer');
 const toLower = require('lodash/toLower');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const DefinePlugin = require('webpack/lib/DefinePlugin');
@@ -33,6 +36,7 @@ module.exports = {
         use: ['babel-loader', 'raw-loader', 'postcss-loader',
           { loader: 'sass-loader',
             options: {
+              importer: jsonImporter(),
               outputStyle: 'compressed', // These options are from node-sass: https://github.com/sass/node-sass
               includePaths: ['styles', 'node_modules']
                 .map((d) => path.join(dir, d))

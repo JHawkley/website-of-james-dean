@@ -1,3 +1,5 @@
+/* global module */
+
 const sizeOf = require("image-size");
 const loaderUtils = require("loader-utils");
 
