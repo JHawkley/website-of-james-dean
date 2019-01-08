@@ -1,22 +1,3 @@
-import { copyOwn } from "tools/extensions/common";
-
-/**
- * Represents the empty-result.
- *
- * @export
- * @param {*} v The value to test.
- * @returns {boolean}
- */
-export const emptyResult = null;
-
-export class ParsingError extends Error {
-  constructor(state, message) {
-    super(message);
-    this.parserPosition = state.position + state.nestedOffset;
-    this.parserState = state::copyOwn();
-  }
-}
-
 /**
  * Runs the given `parser` on the given `input` string.
  * 
