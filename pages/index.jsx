@@ -4,6 +4,7 @@ import Head from "next/head";
 import { canScrollRestore as transitionsSupported } from "pages/_app"
 
 import { dew, is, singleton } from "tools/common";
+import { timespan } from "tools/css";
 import { Future, CallSync, Stream, wait as asyncWaitFn } from "tools/async";
 import { extensions as asyncEx, delayToNextFrame, awaitAll, awaitWhile, abortable } from "tools/async";
 import { extensions as maybe, nothing } from "tools/maybe";
@@ -18,11 +19,14 @@ import Header from "components/Header";
 import Main from "components/Main";
 import Footer from "components/Footer";
 
+import styleVars from "styles/vars.json";
 import bgImage from "static/images/placeholder_bg.jpg";
 
 const isProduction = process.env.NODE_ENV === 'production';
 
 const { Fragment } = React;
+
+const articleTransition = timespan(styleVars.duration.article);
 
 const $$dynError = Symbol("dynamic-import:error");
 const $$dynPastDelay = Symbol("dynamic-import:past-delay");
@@ -397,7 +401,7 @@ class SoftIndexPage extends IndexPage {
         case $$transFromIndex: {
           // Start transitioning from index.
           await this.promiseState({ isArticleVisible: true });
-          await this.wait(325);
+          await this.wait(articleTransition);
           // Deactivate the previous article.
           await this.promiseState({ timeout: true, actualArticle: nothing });
           break;
@@ -405,7 +409,7 @@ class SoftIndexPage extends IndexPage {
         case $$transFromArticle: {
           // Start transitioning from article.
           await this.promiseState({ articleTimeout: false });
-          await this.wait(325);
+          await this.wait(articleTransition);
           // Deactivate the previous article.
           await this.promiseState({ actualArticle: nothing });
           break;
