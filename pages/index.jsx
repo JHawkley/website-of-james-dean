@@ -17,6 +17,7 @@ import { ImageSync } from "components/AsyncImage";
 import NoJavaScript from "components/NoJavaScript";
 import Wrapper from "components/Wrapper";
 import Lightbox from "components/Lightbox";
+import LoadingSpinner from "components/LoadingSpinner";
 
 import styleVars from "styles/vars.json";
 import bgImage from "static/images/placeholder_bg.jpg";
@@ -26,6 +27,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 const { Fragment } = React;
 
 const articleTransition = timespan(styleVars.duration.article);
+const throbberFadeTime = timespan(styleVars.duration.modal);
 
 const $$dynError = Symbol("dynamic-import:error");
 const $$dynPastDelay = Symbol("dynamic-import:past-delay");
@@ -37,6 +39,8 @@ const $$transFromIndex = Symbol("transition:from-index");
 const $$transFromArticle = Symbol("transition:from-article");
 const $$transFinalizeIndex = Symbol("transition:finalize-index");
 const $$transDone = Symbol("transition:done");
+
+const fixedLoaderStyle = { zIndex: 3 };
 
 class IndexPage extends React.PureComponent {
 
@@ -182,6 +186,10 @@ class IndexPage extends React.PureComponent {
     this.whenUnmountedFuture.resolve();
   }
 
+  extraContent() {
+    return null;
+  }
+
   render() {
     const {
       appContext,
@@ -189,7 +197,7 @@ class IndexPage extends React.PureComponent {
       state: {
         lightboxData: lbData, lightboxIndex: lbIndex,
         preventScroll,
-        timeout, articleTimeout,
+        loading, timeout, articleTimeout,
         actualArticle, knownArticles
       }
     } = this;
@@ -227,6 +235,8 @@ class IndexPage extends React.PureComponent {
               appContext={appContext}
             />
             <Lightbox images={lbData} initialIndex={lbIndex} onCloseRequest={appContext.closeLightbox} />
+            <LoadingSpinner size="3x" fadeTime={throbberFadeTime} show={loading} style={fixedLoaderStyle} fixed />
+            { this.extraContent() }
             <div id="bg" />
           </div>
         </div>
@@ -482,14 +492,39 @@ class SoftIndexPage extends IndexPage {
     return `${super.bodyClass()} with-transitions`;
   }
 
+  extraContent() {
+    const { loading, actualArticle } = this.state;
+
+    return (
+      <LoadingSpinner
+        delay={200}
+        fadeTime={throbberFadeTime}
+        size="3x"
+        show={loading ? false : actualArticle::maybe.isEmpty()}
+        style={fixedLoaderStyle}
+        background
+        fixed
+      />
+    );
+  }
+
 }
 
 class HardIndexPage extends IndexPage {
 
+  static propTypes = {
+    ...IndexPage.propTypes,
+    routeChanging: PropTypes.bool.isRequired
+  };
+
   static async getRenderProps(props) {
     const { expectedArticle } = props;
     const preloadedArticle = expectedArticle ? (await resolve(expectedArticle).promise) : LandingPageComponent;
-    return { ...props, preloadedArticle };
+    return { ...props, preloadedArticle, routeChanging: false };
+  }
+
+  static getRouteChangeProps(props) {
+    return { ...props, routeChanging: true };
   }
 
   initialStateFor(props) {
@@ -523,6 +558,21 @@ class HardIndexPage extends IndexPage {
       throw new Error("`transitionToArticle` was called before the component has finished mounting");
     if (this.didUnmount) return;
     this.setState(this.initialStateFor(this.props), this.props.notifyPageReady);
+  }
+
+  extraContent() {
+    const { props: { routeChanging }, state: { loading } } = this;
+    
+    return (
+      <LoadingSpinner
+        delay={200}
+        fadeTime={throbberFadeTime}
+        hPos="right" vPos="bottom" size="2x"
+        show={loading ? false : routeChanging}
+        style={fixedLoaderStyle}
+        fixed
+      />
+    );
   }
 
 }
