@@ -111,9 +111,8 @@ function patchMain(patches, webkitConfig) {
     const entries = await originalEntry();
     if (!entries['main.js']) return entries;
 
-    for (const patch of patches)
-      if (!entries['main.js'].includes(patch))
-        entries['main.js'].unshift(patch);
+    const unincluded = patches.filter(patch => !entries['main.js'].includes(patch));
+    if (unincluded.length > 0) entries['main.js'].unshift(...unincluded);
 
     return entries;
   };
