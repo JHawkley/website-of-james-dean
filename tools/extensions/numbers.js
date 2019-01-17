@@ -1,4 +1,4 @@
-const { PI, abs, min, max, round } = Math;
+const { PI, abs, min, max, round: _round } = Math;
 const PI2 = PI * 2;
 const e = 0.00000001;
 
@@ -11,14 +11,24 @@ function normalizeAngle_Rad(input) {
 }
 
 /**
- * Rounds the number to the number of `decimals` specified.
+ * Rounds this number to the nearest integer.
+ *
+ * @export
+ * @returns {number} An integer.
+ */
+export function round() {
+  return _round(this);
+}
+
+/**
+ * Rounds this number to the number of `decimals` specified.
  *
  * @export
  * @param {number} decimals The number of decimals to round to.
- * @returns {number} The number, rounded to the number of significant digits.
+ * @returns {number} This number, rounded to the number of significant digits.
  */
 export function roundTo(decimals) {
-  if (!decimals) return round(this);
+  if (!decimals) return _round(this);
   return +(this.toFixed(decimals));
 }
 
