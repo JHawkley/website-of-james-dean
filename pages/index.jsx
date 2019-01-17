@@ -198,6 +198,7 @@ class IndexPage extends React.PureComponent {
       <Fragment>
         <Head>
           <title>A Programmer's Place</title>
+          <style dangerouslySetInnerHTML={{ __html: "body { overflow-y: scroll; }"}} />
         </Head>
 
         {/* A special no-script version of the website. */}
