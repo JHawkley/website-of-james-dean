@@ -7,32 +7,33 @@ const {
   combinators: { seq, oneOf },
   modifiers: { skip, filterEmpty, join, map, asString },
   template: { parser: p },
+  extensions: { chain, specify },
   run
 } = parsing;
 
-const strToInt = (radix) => (value) => {
+const strToInt = (radix) => map::specify((value) => {
   const result = parseInt(value, radix);
   if (Number.isNaN(result)) return void 0;
   return result;
-}
+});
 
-const strToFloat = (value) => {
+const strToFloat = map::specify((value) => {
   const result = parseFloat(value);
   if (Number.isNaN(result)) return void 0;
   return result;
-}
+});
 
 const clamp01 = (n) => n::numEx.clamp(0.0, 1.0);
-const intParser = map(regex(/[-+]?\d+/), strToInt(10));
-const floatParser = map(join.all(p`${/[-+]?\d+/}${"."}${/\d+/}`), strToFloat);
+const intParser = regex(/[-+]?\d+/)::chain(strToInt(10));
+const floatParser = p`${/[-+]?\d+/}${"."}${/\d+/}`::chain(join.all, strToFloat);
 const numParser = oneOf(floatParser, intParser);
 const byteParser = dew(() => {
   const hexValue = regex(/[0-9a-f]/i);
-  return map(join.all(seq(hexValue, hexValue)), strToInt(16));
+  return seq(hexValue, hexValue)::chain(join.all, strToInt(16));
 });
 
 const timeParser = dew(() => {
-  const unitParser = map(asString(regex(/m?s/i)), (v) => v.toLowerCase());
+  const unitParser = regex(/m?s/i)::chain(asString, map::specify((v) => v.toLowerCase()));
   return seq(numParser, unitParser);
 });
 
@@ -60,7 +61,7 @@ const hslToRgb = ([h, s, l]) => {
   }
 
   return [r, g, b];
-}
+};
 
 const rgbToHsl = ([r, g, b]) => {
   let max = Math.max(r, g, b), min = Math.min(r, g, b);
@@ -80,32 +81,34 @@ const rgbToHsl = ([r, g, b]) => {
   }
 
   return [h, s, l];
-}
+};
 
 const colorParser = dew(() => {
-  const addAlpha = ([r, g, b]) => [r, g, b, 1.0];
-  const hexToScalar = (n) => clamp01(n::numEx.map(0, 255, 0.0, 1.0));
-  const degToScalar = (n) => n::numEx.map(0, 360, 0.0, 1.0)::numEx.reflow(1.0);
-  const hexVal = map(byteParser, hexToScalar);
-  const hexColor = map(p`#${hexVal}${hexVal}${hexVal}`, addAlpha);
+  const addAlpha = map::specify(([r, g, b]) => [r, g, b, 1.0]);
+  const byteToScalar = map::specify((n) => clamp01(n::numEx.map(0, 255, 0.0, 1.0)));
+  const degToScalar = map::specify((n) => n::numEx.map(0, 360, 0.0, 1.0)::numEx.reflow(1.0));
+  const percToScalar = map::specify((n) => clamp01(n::numEx.map(0, 100, 0.0, 1.0)));
+  const hexVal = byteParser::chain(byteToScalar);
+  const hexColor = p`#${hexVal}${hexVal}${hexVal}`::chain(addAlpha);
 
   const ws = skip(regex(/[ \t]*/));
   const c = skip(p`${ws},${ws}`);
-  const vRgb = map(intParser, hexToScalar);
-  const rgbColor = map(filterEmpty(p`rgb(${ws}${vRgb}${c}${vRgb}${c}${vRgb}${ws})`), addAlpha);
+  const vRgb = intParser::chain(byteToScalar);
+  const rgbColor = p`rgb(${ws}${vRgb}${c}${vRgb}${c}${vRgb}${ws})`::chain(filterEmpty, addAlpha);
 
   const vAlpha = map(numParser, clamp01);
   const rgbaColor = filterEmpty(p`rgba(${ws}${vRgb}${c}${vRgb}${c}${vRgb}${c}${vAlpha}${ws})`);
 
-  const vDeg = map(numParser, degToScalar);
-  const vPerc = map(p`${numParser}%`, (arr) => {
-    if (arr.length !== 1) return void 0;
-    return clamp01(arr[0]::numEx.map(0, 100, 0.0, 1.0));
-  });
-  const hslColor = map(filterEmpty(p`hsl(${ws}${vDeg}${c}${vPerc}${c}${vPerc}${ws})`), hslToRgb);
-  const hslaColor = map(
-    filterEmpty(p`hsla(${ws}${vDeg}${c}${vPerc}${c}${vPerc}${c}${vAlpha}${ws})`),
-    (v) => [...hslToRgb(v), v[3]]
+  const vDeg = numParser::chain(degToScalar);
+  const vPerc = p`${numParser}%`::chain(map::specify((arr) => arr.length !== 1 ? void 0 : arr[0]), percToScalar);
+  const hslColor = p`hsl(${ws}${vDeg}${c}${vPerc}${c}${vPerc}${ws})`::chain(
+    filterEmpty,
+    map::specify(hslToRgb),
+    addAlpha
+  );
+  const hslaColor = p`hsla(${ws}${vDeg}${c}${vPerc}${c}${vPerc}${c}${vAlpha}${ws})`::chain(
+    filterEmpty,
+    map::specify((v) => [...hslToRgb(v), v[3]])
   );
 
   return oneOf(hexColor, rgbColor, rgbaColor, hslColor, hslaColor);
@@ -113,9 +116,9 @@ const colorParser = dew(() => {
 
 const colorError = (valueStr) => new Error(`failed to parse \`${valueStr}\` as a CSS color`);
 
-const mapRgb = (n) => n::numEx(0.0, 1.0, 0, 255)::numEx.round();
-const mapDeg = (n) => n::numEx(0.0, 1.0, 0, 360)::numEx.round();
-const mapPerc = (n) => n::numEx(0.0, 1.0, 0, 100)::numEx.round();
+const mapRgb = (n) => n::numEx.map(0.0, 1.0, 0, 255)::numEx.round();
+const mapDeg = (n) => n::numEx.map(0.0, 1.0, 0, 360)::numEx.round();
+const mapPerc = (n) => n::numEx.map(0.0, 1.0, 0, 100)::numEx.round();
 
 class Color {
 
@@ -129,7 +132,7 @@ class Color {
   set b(v) { this.rgb[2] = clamp01(v); this._hsl = null; }
 
   get h() { return this.hsl[0]; }
-  set h(v) { this.hsl[0] = clamp01(v); this._rgb = null; }
+  set h(v) { this.hsl[0] = v::numEx.reflow(1.0); this._rgb = null; }
 
   get s() { return this.hsl[1]; }
   set s(v) { this.hsl[1] = clamp01(v); this._rgb = null; }
@@ -152,12 +155,16 @@ class Color {
   }
 
   constructor(rgbaArr) {
-    if (!Array.isArray(rgbaArr) || rgbaArr.length !== 3 || rgbaArr.length !== 4)
+    if (!Array.isArray(rgbaArr) || (rgbaArr.length !== 3 && rgbaArr.length !== 4))
       throw new Error(`could not construct color from \`${rgbaArr}\``);
     const [r, g, b, a = 1.0] = rgbaArr;
     this._rgb = [r, g, b];
     this._alpha = a;
     this._hsl = null;
+  }
+
+  transparentize(amount) {
+    return new Color([this.r, this.g, this.b, clamp01(this.a - amount)]);
   }
 
   toString() { return this.asRgba(); }
