@@ -1,11 +1,17 @@
 import { hashScroll } from "patch/client-router";
 
 import App, { createUrl } from "next/app";
+import Head from "next/head";
 import { getUrl, loadGetInitialProps, loadGetRenderProps } from "next/dist/lib/utils";
 
 import Modal from "react-modal";
+import { config as faConfig, dom as faDom } from "@fortawesome/fontawesome-svg-core";
 import { dew, is } from "tools/common";
 import { extensions as maybe } from "tools/maybe";
+
+const { Fragment } = React;
+
+faConfig.autoAddCss = false;
 
 const updateHistoryState = (fn) => {
   const { url = getUrl(), as = url, options: oldOptions = {} } = window.history.state ?? {};
@@ -179,11 +185,14 @@ export default class ScrollRestoringApp extends App {
   render() {
     const { props: { router, Component }, state: { pageProps } } = this;
     return (
-      <Component {...pageProps}
-        elementRef={Modal.setAppElement}
-        url={createUrl(router)}
-        notifyPageReady={this.restoreScrollPosition}
-      />
+      <Fragment>
+        <Head><style dangerouslySetInnerHTML={{ __html: faDom.css() }} /></Head>
+        <Component {...pageProps}
+          elementRef={Modal.setAppElement}
+          url={createUrl(router)}
+          notifyPageReady={this.restoreScrollPosition}
+        />
+      </Fragment>
     );
   }
 
