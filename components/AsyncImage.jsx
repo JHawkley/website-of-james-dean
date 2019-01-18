@@ -7,15 +7,6 @@ import { generateSvgPlaceholder } from "tools/svg";
 const isProduction = process.env.NODE_ENV === 'production';
 
 export default class AsyncImage extends React.PureComponent {
-
-  future = new Future();
-
-  get isCompleted() { return this.future.isCompleted; }
-
-  get currentlyLoading() {
-    const { isCompleted, props: { imageSync, phase } } = this;
-    return !isCompleted && (imageSync?.loadASAP(phase) ?? true);
-  }
   
   static propTypes = {
     src: PropTypes.string.isRequired,
@@ -46,6 +37,15 @@ export default class AsyncImage extends React.PureComponent {
     phase: 1
   };
 
+  future = new Future();
+
+  get isCompleted() { return this.future.isCompleted; }
+
+  get currentlyLoading() {
+    const { isCompleted, props: { imageSync, phase } } = this;
+    return !isCompleted && (imageSync?.loadASAP(phase) ?? true);
+  }
+
   constructor(props) {
     super(props);
     const { imageSync, phase } = props;
@@ -61,7 +61,7 @@ export default class AsyncImage extends React.PureComponent {
   }
 
   onPhaseReady = () => {
-    const { future, props: { src } } = this;
+    const { future, props: { src, width, height } } = this;
 
     // Short-circuit in case the future is already complete.
     if (future.isCompleted) return future.promise;
@@ -72,13 +72,13 @@ export default class AsyncImage extends React.PureComponent {
       this.setState({ error: false });
     };
   
-    const onImageError = () => {
+    const onImageError = (reason) => {
       if (future.isCompleted) return;
-      future.reject();
+      future.reject(reason);
       this.setState({ error: true });
     };
 
-    preloadImage(src).then(onImageLoad, onImageError);
+    preloadImage(src, width, height, future.promise).then(onImageLoad, onImageError);
     this.setState({ display: true });
     
     return future.promise;
@@ -98,6 +98,11 @@ export default class AsyncImage extends React.PureComponent {
     if (this.props.imageSync::maybe.isEmpty() && !isProduction)
       console.warn(`Warning: AsyncImage where 'src = ${this.props.src}' had no 'imageSync' property.`);
     this.attachHandler();
+  }
+
+  componentWillUnmount() {
+    if (!this.future.isCompleted)
+      this.future.reject(new Error("hosting `AsyncImage` unmounted before loading could complete"));
   }
 
   componentDidUpdate(prevProps) {
@@ -127,13 +132,14 @@ export default class AsyncImage extends React.PureComponent {
   }
 
   render() {
-    const { display } = this.state;
-    
     const {
-      src, width, height, fluid, placeholderColor, className,
-      imageSync, phase, // eslint-disable-line no-unused-vars
-      ...imgProps
-    } = this.props;
+      props: {
+        src, width, height, fluid, placeholderColor, className,
+        imageSync, phase, // eslint-disable-line no-unused-vars
+        ...imgProps // Treat anything else as props for the `<img>` element.
+      },
+      state: { display }
+    } = this;
 
     const imageSrc = display ? src : generateSvgPlaceholder({
       width, height,
