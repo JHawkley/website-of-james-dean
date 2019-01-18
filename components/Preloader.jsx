@@ -10,6 +10,8 @@ const $always = "always";
 const $loaded = "loaded";
 const $never = "never";
 
+const $$preloadable = Symbol("preloadable");
+
 const $$fresh = Symbol("preload-sync:fresh");
 const $$preloading = Symbol("preload-sync:preloading");
 const $$preloaded = Symbol("preload-sync:preloaded");
@@ -20,7 +22,7 @@ class Preloader extends React.PureComponent {
     children: PropTypes.node.isRequired,
     preloadSync: PropTypes.instanceOf(PreloadSync),
     onPreload: PropTypes.func,
-    onReady: PropTypes.func,
+    onLoad: PropTypes.func,
     onError: PropTypes.func,
     className: PropTypes.string,
     style: PropTypes.object,
@@ -117,7 +119,7 @@ class Preloader extends React.PureComponent {
           this.props.onPreload?.();
           break;
         case $$preloaded:
-          this.props.onReady?.();
+          this.props.onLoad?.();
           break;
       }
     }
@@ -168,7 +170,7 @@ class Preloader extends React.PureComponent {
 
 class Preloadable extends React.PureComponent {
 
-  static preloadable = true;
+  static [$$preloadable] = true;
 
   static propTypes = { preloadSync: PropTypes.instanceOf(PreloadSync) };
 
@@ -186,6 +188,8 @@ class Preloadable extends React.PureComponent {
   }
 
   static wrapped(Component, name = nameOf(Component)) {
+    if (Component[$$preloadable] === true) return Component;
+
     return class extends Preloadable {
 
       static displayName = `Preloadable.wrapped(${name})`;
@@ -204,14 +208,6 @@ class Preloadable extends React.PureComponent {
       static propTypes = { ...super.propTypes, component: PropTypes.bool };
 
       static displayName = `Preloadable.promised(${name})`;
-
-      get childProps() {
-        const {
-          preloadSync, component, // eslint-disable-line no-unused-vars
-          ...childProps
-        } = this.props;
-        return childProps;
-      }
 
       constructor(props) {
         super(props);
@@ -240,13 +236,19 @@ class Preloadable extends React.PureComponent {
       }
 
       render() {
-        const { rendered } = this.state;
+        const {
+          props: { preloadSync, component, ...childProps },
+          state: { rendered }
+        } = this;
 
         if (!rendered) return null;
-        if (!this.props.component) return rendered;
+        if (!component) return rendered;
 
         const Component = rendered;
-        return <Component {...this.childProps} />;
+        if (Component[$$preloadable] === true)
+          return <Component {...childProps} preloadSync={preloadSync} />;
+        else
+          return <Component {...childProps} />;
       }
 
     };
@@ -370,7 +372,7 @@ const processChildren = (children, preloadSync) => {
     if (child.type::is.function()) {
       if (child.type::classEx.inheritsFrom(Preloader))
         return child;
-      if (child.type.preloadable === true)
+      if (child.type[$$preloadable] === true)
         return React.cloneElement(child, { preloadSync });
     }
 
@@ -393,4 +395,4 @@ const processChildren = (children, preloadSync) => {
 const nameOf = (Component) => Component.displayName ?? Component.name ?? "[anonymous component]";
 
 export default Preloader;
-export { Preloadable };
+export { Preloadable, $$preloadable as symbol };
