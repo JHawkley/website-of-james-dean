@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import ReactDOMServer from "react-dom/server";
 import Head from "next/head";
-import { canScrollRestore as transitionsSupported } from "pages/_app"
+import { canScrollRestore as transitionsSupported } from "pages/_app";
 
 import { dew, is, singleton } from "tools/common";
 import { timespan } from "tools/css";
