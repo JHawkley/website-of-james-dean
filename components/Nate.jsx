@@ -11,31 +11,31 @@ const Fragment = React.Fragment;
 const Sounds = ({nate, bullets}) => (
   <Fragment>
     <audio ref={nate.sounds.bark}>
-      <source src="static/sounds/nate-game/bow-wow.ogg" type="audio/ogg; codecs=vorbis" />
-      <source src="static/sounds/nate-game/bow-wow.mp3" type="audio/mpeg" />
+      <source src="/static/sounds/nate-game/bow-wow.ogg" type="audio/ogg; codecs=vorbis" />
+      <source src="/static/sounds/nate-game/bow-wow.mp3" type="audio/mpeg" />
     </audio>
     <audio ref={nate.sounds.aroo}>
-      <source src="static/sounds/nate-game/aroo.ogg" type="audio/ogg; codecs=vorbis" />
-      <source src="static/sounds/nate-game/aroo.mp3" type="audio/mpeg" />
+      <source src="/static/sounds/nate-game/aroo.ogg" type="audio/ogg; codecs=vorbis" />
+      <source src="/static/sounds/nate-game/aroo.mp3" type="audio/mpeg" />
     </audio>
     <audio ref={nate.sounds.land}>
-      <source src="static/sounds/nate-game/land.ogg" type="audio/ogg; codecs=vorbis" />
-      <source src="static/sounds/nate-game/land.mp3" type="audio/mpeg" />
+      <source src="/static/sounds/nate-game/land.ogg" type="audio/ogg; codecs=vorbis" />
+      <source src="/static/sounds/nate-game/land.mp3" type="audio/mpeg" />
     </audio>
     {bullets.map((bullet, i) => {
       return (
         <Fragment key={i}>
           <audio ref={bullet.sounds.spawned}>
-            <source src="static/sounds/nate-game/pew.ogg" type="audio/ogg; codecs=vorbis" />
-            <source src="static/sounds/nate-game/pew.mp3" type="audio/mpeg" />
+            <source src="/static/sounds/nate-game/pew.ogg" type="audio/ogg; codecs=vorbis" />
+            <source src="/static/sounds/nate-game/pew.mp3" type="audio/mpeg" />
           </audio>
           <audio ref={bullet.sounds.hit}>
-            <source src="static/sounds/nate-game/pop1.ogg" type="audio/ogg; codecs=vorbis" />
-            <source src="static/sounds/nate-game/pop1.mp3" type="audio/mpeg" />
+            <source src="/static/sounds/nate-game/pop1.ogg" type="audio/ogg; codecs=vorbis" />
+            <source src="/static/sounds/nate-game/pop1.mp3" type="audio/mpeg" />
           </audio>
           <audio ref={bullet.sounds.timedOut}>
-            <source src="static/sounds/nate-game/pop2.ogg" type="audio/ogg; codecs=vorbis" />
-            <source src="static/sounds/nate-game/pop2.mp3" type="audio/mpeg" />
+            <source src="/static/sounds/nate-game/pop2.ogg" type="audio/ogg; codecs=vorbis" />
+            <source src="/static/sounds/nate-game/pop2.mp3" type="audio/mpeg" />
           </audio>
         </Fragment>
       );

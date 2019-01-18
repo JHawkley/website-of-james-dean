@@ -143,13 +143,14 @@ export function makeRandomJump(minTime, addedTime, symbolName = "nateCommon/rand
 }
 
 /**
- * Plays the given sound, if Nate is in his aggressive behavior.
+ * Plays the given sound, if sound is enabled and Nate is in his aggressive behavior.
  *
  * @export
  * @param {*} nate Nate's current state.
  * @param {*} sound The React reference for the `audio` element to play.
  */
 export function playSound(nate, sound) {
-  if (nate.brain.behavior === behaviorModes.aggressive)
-    sound.current?.play();
+  if (!nc.sound.enabled) return;
+  if (nate.brain.behavior !== behaviorModes.aggressive) return;
+  sound.current?.play();
 }

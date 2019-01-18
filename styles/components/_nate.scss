@@ -81,7 +81,7 @@ $bullet-burst-size: 17px;
     height: $nate-size;
     position: absolute;
     z-index: 3;
-    background: url('/static/images/nate-game/nate_sprite.png');
+    background: url(val($nate, nate-sprite));
     @include vendor('transform', $offset);
   
     &.idle {
@@ -140,7 +140,7 @@ $bullet-burst-size: 17px;
     width: $bullet-size;
     height: $bullet-size;
     position: absolute;
-    background: url('/static/images/nate-game/bullet_sprite.png');
+    background: url(val($nate, bullet-sprite));
     @include vendor('transform', 'translate(-#{$half-size}, #{$half-size})');
     @include vendor('animation', 'bullet-flight 0.2s steps(2) infinite');
 
@@ -157,7 +157,7 @@ $bullet-burst-size: 17px;
     height: $bullet-burst-size;
     position: absolute;
     z-index: 4;
-    background: url('/static/images/nate-game/bullet_burst_sprite.png');
+    background: url(val($nate, bullet-burst-sprite));
     @include vendor('transform', 'translate(-#{$half-size}, #{$half-size})');
     @include vendor('animation', 'bullet-burst 0.075s steps(1) 1 forwards');
   }
