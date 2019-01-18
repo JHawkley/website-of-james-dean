@@ -22,6 +22,8 @@ class Preloader extends React.PureComponent {
     onPreload: PropTypes.func,
     onReady: PropTypes.func,
     onError: PropTypes.func,
+    className: PropTypes.string,
+    style: PropTypes.object,
     display: PropTypes.oneOfType([
       PropTypes.bool,
       PropTypes.oneOf([$always, $loaded, $never])
@@ -138,7 +140,11 @@ class Preloader extends React.PureComponent {
   }
 
   render() {
-    const { display, state: { mustRender, error, preloadSync, preloadState } } = this;
+    const {
+      display,
+      props: { style: customStyle, className },
+      state: { mustRender, error, preloadSync, preloadState }
+    } = this;
 
     if (!mustRender || error)
       return null;
@@ -149,11 +155,13 @@ class Preloader extends React.PureComponent {
       switch (display) {
         case $always: return false;
         case $never: return true;
-        default: return preloadState === $$preloading;
+        default: return preloadState !== $$preloaded;
       }
     });
 
-    return <div style={hide ? { display: "none" } : null}>{children}</div>;
+    const style = Object.assign({}, customStyle, hide ? { display: "none" } : null);
+
+    return <div className={className} style={style}>{children}</div>;
   }
 
 }
