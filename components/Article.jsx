@@ -15,10 +15,10 @@ const Article = (props) => {
   
   const close = <Goto scroll={false}><div className="close"></div></Goto>;
   
-  const klass = "active"::maybe.when(active);
+  const className = "active"::maybe.when(active);
   
   return (
-    <article id={id} className={klass}>
+    <article id={id} className={className}>
       {back}
       {close}
       {children}

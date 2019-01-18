@@ -156,10 +156,10 @@ class IndexPage extends React.PureComponent {
 
   bodyClass() {
     const { loading, isArticleVisible } = this.state;
-    const klass = ["body", "js-only"];
-    if (loading) klass.push("is-loading");
-    if (isArticleVisible) klass.push("is-article-visible");
-    return klass.join(" ");
+    const className = ["body", "js-only"];
+    if (loading) className.push("is-loading");
+    if (isArticleVisible) className.push("is-article-visible");
+    return className.join(" ");
   }
 
   componentDidMount() {

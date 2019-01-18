@@ -134,7 +134,7 @@ export default class AsyncImage extends React.PureComponent {
   render() {
     const {
       props: {
-        src, width, height, fluid, placeholderColor, className,
+        src, width, height, fluid, placeholderColor, className: customClass,
         imageSync, phase, // eslint-disable-line no-unused-vars
         ...imgProps // Treat anything else as props for the `<img>` element.
       },
@@ -153,15 +153,15 @@ export default class AsyncImage extends React.PureComponent {
         width: `${width}px`,
         paddingBottom: `${100.0 / (width / height)}%`
       };
-      const klass = className ? `${className} fluid` : "fluid";
+      const className = customClass ? `${customClass} fluid` : "fluid";
       return (
         <div className="fluid-container" style={divStyle}>
-          <img {...imgProps} key={key} className={klass} src={imageSrc} width={width} height={height} />
+          <img {...imgProps} key={key} className={className} src={imageSrc} width={width} height={height} />
         </div>
       );
     }
     else {
-      return <img {...imgProps} key={key} className={className} src={imageSrc} width={width} height={height} />;
+      return <img {...imgProps} key={key} className={customClass} src={imageSrc} width={width} height={height} />;
     }
   }
 

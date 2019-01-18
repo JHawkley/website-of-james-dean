@@ -15,10 +15,10 @@ export default class Main extends React.PureComponent {
     const { article, timeout, articleTimeout, articlePages, appContext } = this.props;
 
     const display = timeout ? "flex" : "none";
-    const klass = articleTimeout ? "article-timeout" : null;
+    const className = articleTimeout ? "article-timeout" : null;
 
     return (
-      <div id="main" className={klass} style={{display}}>
+      <div id="main" className={className} style={{display}}>
         {articlePages::mapEx.mapToArray(([pageName, SomePage]) => {
           return <SomePage key={pageName} id={pageName} active={article === pageName} appContext={appContext} />;
         })}

@@ -111,9 +111,9 @@ class LoadingSpinner extends React.PureComponent {
       state: { shown, vanishing }
     } = this;
 
-    const klass = ["root"];
-    if (customClass) klass.push(customClass);
-    if (background) klass.push("bg");
+    const className = ["root"];
+    if (customClass) className.push(customClass);
+    if (background) className.push("bg");
 
     const style = {
       ...customStyle,
@@ -150,7 +150,7 @@ class LoadingSpinner extends React.PureComponent {
     });
 
     return (
-      <div className={klass.join(" ")} style={style}>
+      <div className={className.join(" ")} style={style}>
         <FontAwesomeIcon icon={faSpinner} size={size === "1x" ? null : size} spin />
         <style jsx>
           {`
