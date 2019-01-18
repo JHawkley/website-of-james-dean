@@ -58,7 +58,7 @@ export function* reverse() {
  * @export
  * @template T
  * @this {Iterable<T>}
- * @param {function(T): void} iteratorFn
+ * @param {function(T): void} iteratorFn The iterator function.
  */
 export function forEach(iteratorFn) {
   if (Array.isArray(this))

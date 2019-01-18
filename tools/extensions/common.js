@@ -1,8 +1,28 @@
 function newObjectBasedOn(original) {
-  const proto = Object.getPrototypeOf(original);
-  if (proto == null) return Object.create(null);
-  if (proto === Object.prototype) return {};
-  throw new Error(`cannot base a new object on \`${original}\`; it is not a simple object`);
+  switch (Object.getPrototypeOf(original)) {
+    case Object.prototype: return {};
+    case null: return Object.create(null);
+    default: throw new Error(`cannot base a new object on \`${original}\`; it is not a simple object`);
+  }
+}
+
+/**
+ * Determines if this is an empty simple object.  A "simple object" is one that has a prototype that
+ * is `Object.prototype` or `null`.
+ *
+ * @export
+ * @template T
+ * @this {Object.<string, T>} This object.
+ * @returns {boolean}
+ */
+export function isEmpty() {
+  switch (Object.getPrototypeOf(this)) {
+    case Object.prototype:
+    case null:
+      return Object.keys(this).length === 0;
+    default:
+      return false;
+  }
 }
 
 /**

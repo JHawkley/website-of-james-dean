@@ -7,6 +7,7 @@ import { dew, is, singleton } from "tools/common";
 import { timespan } from "tools/css";
 import { Future, CallSync, Stream, wait as asyncWaitFn } from "tools/async";
 import { extensions as asyncEx, delayToNextFrame, awaitAll, awaitWhile, abortable } from "tools/async";
+import { extensions as asyncIterEx } from "tools/asyncIterables";
 import { extensions as maybe, nothing } from "tools/maybe";
 import { extensions as mapEx } from "tools/maps";
 import * as parsing from "tools/parsing/index";
@@ -620,7 +621,7 @@ function resolve(article) {
     throw new Error("cannot resolve the landing-page component");
 
   const progress = new Stream();
-  const progressUpdates = progress::asyncEx.fromLatest();
+  const progressUpdates = progress::asyncIterEx.fromLatest();
   const Component = dynamic(() => articlesCtx(article), {
     loading: DynamicLoader.bindCallbacks({
       onError(error, retryLoader) {

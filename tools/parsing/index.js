@@ -10,8 +10,8 @@ export * from "./core";
 /**
  * A basic parser function.
  * 
- * @typedef {function(ParserState): T} Parser
  * @template T
+ * @typedef {function(ParserState): T} Parser
  * @param {ParserState} state The state for the current parse run.
  * @returns {T|undefined} The result of the parse; `undefined` if the parse failed.
  */
@@ -19,8 +19,8 @@ export * from "./core";
 /**
  * A parser that will backtrack on failures.
  * 
- * @typedef {Parser<T>} BacktrackingParser
  * @template T
+ * @typedef {Parser<T>} BacktrackingParser
  * @property {true} _willBacktrackOnFailure Identifies the parser as one that will backtrack.
 */
 
