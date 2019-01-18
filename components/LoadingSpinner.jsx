@@ -24,6 +24,7 @@ class LoadingSpinner extends React.PureComponent {
     hOffset: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     vPos: PropTypes.oneOf([$middle, $top, $bottom]),
     vOffset: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    className: PropTypes.string,
     style: PropTypes.object,
     size: PropTypes.oneOf(["xs", "sm", "lg", "1x", "2x", "3x", "4x", "5x", "6x", "7x", "8x", "9x", "10x"]),
     background: PropTypes.bool,
@@ -106,11 +107,12 @@ class LoadingSpinner extends React.PureComponent {
 
   render() {
     const {
-      props: { style: customStyle, size, fixed, background, fadeTime, show },
+      props: { className: customClass, style: customStyle, size, fixed, background, fadeTime, show },
       state: { shown, vanishing }
     } = this;
 
     const klass = ["root"];
+    if (customClass) klass.push(customClass);
     if (background) klass.push("bg");
 
     const style = {
