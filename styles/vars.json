@@ -35,8 +35,8 @@
     "border-bg-alt": "rgba(255,255,255,0.175)"
   },
   "nate": {
-    "nate-sprite": "/static/images/nate-game/nate_sprite.png",
-    "bullet-sprite": "/static/images/nate-game/bullet_sprite.png",
-    "bullet-burst-sprite": "/static/images/nate-game/bullet_burst_sprite.png"
+    "nate-sprite": "'/static/images/nate-game/nate_sprite.png'",
+    "bullet-sprite": "'/static/images/nate-game/bullet_sprite.png'",
+    "bullet-burst-sprite": "'/static/images/nate-game/bullet_burst_sprite.png'"
   }
 }
