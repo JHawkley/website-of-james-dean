@@ -7,6 +7,7 @@ import { str } from "../atomic/str";
 import { regex } from "../atomic/regex";
 import { seq } from "../combinators/seq";
 import { interpose } from "../combinators/interpose";
+import { oneOf } from "../combinators/oneOf";
 import { map } from "../modifiers/map";
 import { asString } from "../modifiers/asString";
 import { isUndefined } from "../helpers/isUndefined";
@@ -21,16 +22,23 @@ const emptyToVoid = (v) => v === "" ? void 0 : str.skip(v);
 const mark = (p) => (p.preserveResult = true, p);
 const wrap = (parser) => Object.assign((state) => parser(state), parser);
 
+const isAnInterpolation = (parser) => parser === interpolate || parser instanceof AppliedInterpolation;
+
 const prepareParser = (parser) => {
   if (parser == null) throw new Error("a placeholder in the template-literal contained `null` or `undefined`");
   // Ignore the interpolation placeholders.  We'll deal with them later.
-  if (parser === interpolate) return parser;
-  if (parser instanceof AppliedInterpolation) return parser;
+  if (isAnInterpolation(parser)) return parser;
   // Wrap functional parsers so we can attach our marker to it safely.
   if (typeof parser === "function") return mark(wrap(parser));
   // Otherwise, build the standard parsers.
   if (typeof parser === "string") return mark(str(parser));
   if (parser instanceof RegExp) return mark(regex(parser));
+  // Treat an array as a `oneOf` combinator.
+  if (Array.isArray(parser)) {
+    if (parser.some(isAnInterpolation))
+      throw new Error(`arrays used in the template-literal cannot contain an interpolation`);
+    return oneOf(...parser.map(prepareParser));
+  }
   throw new Error(`no parser could be located for \`${parser}\` in the template-literal`);
 };
 
