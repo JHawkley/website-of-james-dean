@@ -74,6 +74,38 @@ export function map(inStart, inEnd, outStart, outEnd) {
 }
 
 /**
+ * Maps `this` number from the range of `inStart` to `inEnd` to the range of `outStart` to `outEnd`.
+ * If the result falls outside of the range `outStart..outEnd`, it will be clamped to that range.
+ *
+ * @export
+ * @this {number} This number.
+ * @param {number} inStart The start of the input range.
+ * @param {number} inEnd The end of the input range.
+ * @param {number} outStart The start of the output range.
+ * @param {number} outEnd The end of the output range.
+ * @returns {number} The number, remapped and clamped.
+ */
+export function mapClamp(inStart, inEnd, outStart, outEnd) {
+  return this::map(inStart, inEnd, outStart, outEnd)::clamp(outStart, outEnd);
+}
+
+/**
+ * Maps `this` number from the range of `inStart` to `inEnd` to the range of `outStart` to `outEnd`.
+ * If the result falls outside of the range `outStart..outEnd`, it will be reflowed to that range.
+ *
+ * @export
+ * @this {number} This number.
+ * @param {number} inStart The start of the input range.
+ * @param {number} inEnd The end of the input range.
+ * @param {number} outStart The start of the output range.
+ * @param {number} outEnd The end of the output range.
+ * @returns {number} The number, remapped and reflowed.
+ */
+export function mapReflow(inStart, inEnd, outStart, outEnd) {
+  return this::map(inStart, inEnd, outStart, outEnd)::reflowRange(outStart, outEnd);
+}
+
+/**
  * Clamps this number between the inclusive range of `start` and `end`.  If only `start` is provided, then
  * it will clamp between 0.0 and `start`.
  *
