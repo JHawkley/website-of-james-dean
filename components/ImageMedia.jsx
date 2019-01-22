@@ -53,7 +53,13 @@ class ImageMedia extends Preloadable {
   render() {
     const {
       handlePreloaded: onLoad, handlePreloadError: onError,
-      props: { src: srcSet, className: customClass, width, height, fluid, ...imgProps }
+      props: {
+        src: srcSet,
+        className: customClass,
+        width, height, fluid,
+        preloadSync, // eslint-disable-line no-unused-vars
+        ...imgProps
+      }
     } = this;
     const haveArray = srcSet::is.array();
 
@@ -121,6 +127,7 @@ function importWrapper(src, width, height, type) {
   return Object.assign(
     Preloadable.mark(ImportedImage),
     {
+      [$$sourceable]: true,
       propTypes: { asSource: PropTypes.bool, preloadSync: PropTypes.instanceOf(PreloadSync) },
       displayName: `importedImage("${src}")`,
       preload: () => preloadImage(src, width, height)
