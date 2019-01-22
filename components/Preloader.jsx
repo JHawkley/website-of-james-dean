@@ -40,10 +40,6 @@ class Preloader extends React.PureComponent {
     once: false
   };
 
-  static sync() {
-    return new PreloadSync();
-  }
-
   static getDerivedStateFromProps(props, state) {
     const newState = new Composition();
 
@@ -173,6 +169,15 @@ class Preloadable extends React.PureComponent {
   static [$$preloadable] = true;
 
   static propTypes = { preloadSync: PropTypes.instanceOf(PreloadSync) };
+
+  static mark(Component) {
+    Component[$$preloadable] = true;
+    return Component;
+  }
+
+  static test(Component) {
+    return Component[$$preloadable] === true;
+  }
 
   static rendered(renderFn, name = renderFn.name ?? "[unknown]") {
     return class extends Preloadable {
@@ -395,4 +400,4 @@ const processChildren = (children, preloadSync) => {
 const nameOf = (Component) => Component.displayName ?? Component.name ?? "[anonymous component]";
 
 export default Preloader;
-export { Preloadable, $$preloadable as symbol };
+export { Preloadable, PreloadSync };

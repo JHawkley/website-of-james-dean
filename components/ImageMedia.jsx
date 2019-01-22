@@ -2,7 +2,7 @@ import PropTypes from "prop-types";
 import { is } from "tools/common";
 import { preloadImage } from "tools/async";
 import { extensions as propTypeEx } from "tools/propTypes";
-import { Preloadable, symbol as $$preloadable } from "components/Preloader";
+import { Preloadable, PreloadSync } from "components/Preloader";
 
 const $$sourceable = Symbol("image-media:sourceable");
 
@@ -119,12 +119,11 @@ function importWrapper(src, width, height, type) {
   };
 
   return Object.assign(
-    ImportedImage,
+    Preloadable.mark(ImportedImage),
     {
-      propTypes: { asSource: PropTypes.bool, ...Preloadable.propTypes },
+      propTypes: { asSource: PropTypes.bool, preloadSync: PropTypes.instanceOf(PreloadSync) },
       displayName: `importedImage("${src}")`,
-      preload: () => preloadImage(src, width, height),
-      [$$preloadable]: true
+      preload: () => preloadImage(src, width, height)
     },
     type == null ? { src, width, height } : { src, width, height, type }
   );
