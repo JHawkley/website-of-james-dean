@@ -2,7 +2,7 @@ import PropTypes from "prop-types";
 import { is } from "tools/common";
 import { preloadImage } from "tools/async";
 import { extensions as propTypeEx } from "tools/propTypes";
-import { Preloadable, symbol as $$preloadable } from "components/preloader";
+import { Preloadable, symbol as $$preloadable } from "components/Preloader";
 
 const $$sourceable = Symbol("image-media:sourceable");
 
@@ -13,24 +13,25 @@ const isSourceable = (fn) => {
   return `the provided function was not a sourceable component`;
 }
 
-const notEmpty = (arr) => arr.length > 0 || "array may not be empty";
+const arrayNotEmpty = (arr) => arr.length > 0 || "array may not be empty";
+const stringNotEmpty = (str) => str === "" || "string may not be empty";
 
 class ImageMedia extends Preloadable {
 
   static propTypes = {
-    ...super.propTypes,
+    ...Preloadable.propTypes,
     src: PropTypes.oneOfType([
       PropTypes.string,
       PropTypes.arrayOf(
         PropTypes.oneOfType([
-          PropTypes.string,
-          PropTypes.function::propTypeEx.predicate(isSourceable),
+          PropTypes.string::propTypeEx.predicate(stringNotEmpty),
+          PropTypes.func::propTypeEx.predicate(isSourceable),
           PropTypes.shape({
             src: PropTypes.string.isRequired,
             type: PropTypes.string.isRequired
           })
         ])
-      )::propTypeEx.predicate(notEmpty)
+      )::propTypeEx.predicate(arrayNotEmpty)
     ]).isRequired,
     className: PropTypes.string,
     width: PropTypes.number,
