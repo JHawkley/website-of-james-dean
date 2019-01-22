@@ -11,9 +11,10 @@ function imageToModule(src, width, height, type) {
   if (typeof type === "string") args.push(quote(type));
 
   return (`
-    var ImageMedia = require("components/ImageMedia");
+    var importWrapper = require("components/ImageMedia").importWrapper;
     module.exports.__esModule = true;
-    module.exports.default = ImageMedia.importWrapper(${args.join(", ")});
+    module.exports.default = importWrapper(${args.join(", ")});
+    module.exports.src = "${src}";
     module.exports.toString = () => "${src}";
   `);
 }
@@ -28,7 +29,7 @@ function imageMediaLoader(contentBuffer) {
     catch { return null; }
   })();
   
-  const src = loaderUtils.interpolateName(this, "[path][name].[ext]", {
+  const src = loaderUtils.interpolateName(this, "/[path][name].[ext]", {
     context: this.rootContext || this.context
   });
 
