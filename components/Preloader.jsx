@@ -205,7 +205,7 @@ class Preloadable extends React.PureComponent {
   static promised(promise, name = "[unknown]") {
     return class extends Preloadable {
 
-      static propTypes = { ...super.propTypes, component: PropTypes.bool };
+      static propTypes = { ...Preloadable.propTypes, component: PropTypes.bool };
 
       static displayName = `Preloadable.promised(${name})`;
 
