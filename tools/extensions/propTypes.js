@@ -106,12 +106,14 @@ export function dependsOn(propKeys) {
     propKeys = [propKeys];
 
   if (!propKeys::is.array())
-    throw new TypeError("invalid argument for `propKeys`; expected either a string or and array-of-strings");
+    throw new TypeError("invalid argument for `propKeys`; expected either a string or an array-of-strings");
+  else if (!propKeys.every(v => v::is.string()))
+    throw new TypeError("invalid argument for `propKeys`; when an array, it can only contain strings");
 
   const validationFn = (value, key, props) => {
     if (value === false) return;
 
-    const missingProps = props.filter(k => props[k]::is.undefined())
+    const missingProps = propKeys.filter(k => props[k] == null).map(k => `\`${k}\``);
 
     if (missingProps.length > 0)
       return `the \`${key}\` property requires the following properties to also be set: ${missingProps.join(", ")}`;
@@ -124,12 +126,12 @@ const name = (strings, fn, ...rest) => {
   if (!fn::is.function())
     throw new TypeError("expected first template interpolation to be a function");
 
-  const name = fn.name::is.undefined() ? void 0 : `\`${fn.name}\``;
+  const name = fn.name::is.string() ? `\`${fn.name}\``: null;
 
   const result = [];
   let trimLeft = false;
   for (const str of fold(strings, [name, ...rest.map(v => v.toString())])) {
-    if (str::is.undefined()) trimLeft = true;
+    if (str == null) trimLeft = true;
     else if (!trimLeft) result.push(str);
     else {
       result.push(str.startsWith(" ") ? str.substring(1) : str);
