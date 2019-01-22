@@ -1,7 +1,7 @@
 /* global module */
 
 const sizeOf = require("image-size");
-const typeOf = require("image-type");
+const mime = require("mime-types");
 const loaderUtils = require("loader-utils");
 
 const quote = (str) => `"${str}"`;
@@ -24,14 +24,11 @@ function imageMediaLoader(contentBuffer) {
   this.addDependency(this.resourcePath);
 
   const { width, height } = sizeOf(contentBuffer);
-  const type = (() => {
-    try { return typeOf(contentBuffer).mime; }
-    catch { return null; }
-  })();
-  
-  const src = loaderUtils.interpolateName(this, "/[path][name].[ext]", {
-    context: this.rootContext || this.context
-  });
+  const type = mime.lookup(this.resourcePath);
+  const src = loaderUtils.interpolateName(
+    this, "/[path][name].[ext]",
+    { context: this.rootContext || this.context }
+  );
 
   return imageToModule(src, width, height, type);
 }
