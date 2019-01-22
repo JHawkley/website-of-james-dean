@@ -2,15 +2,18 @@ import Article from "components/Article";
 import Jump from "components/Jump";
 
 import ImgHeader from "static/images/terravu/header.png";
+import { src as $gallery$1 } from "static/images/terravu/1.png";
+import { src as $gallery$2 } from "static/images/terravu/2.png";
+import { src as $gallery$3 } from "static/images/terravu/3.png";
 
 import $work from "components/articles/Work?name";
 
 class TerraVu extends React.PureComponent {
 
   Gallery = this.props.appContext.makeGallery([
-    { i: "static/images/terravu/1.png", d: "TerraVu's minimalist interface gives it an unassuming appearance.  Note the help bar at the bottom guiding the user through the software." },
-    { i: "static/images/terravu/2.png", d: "The Dip Changer appears only when it's in a state where it is needed; in this case, when there is an active segment." },
-    { i: "static/images/terravu/3.png", d: "The LAS loader is by far the most worked on component of this software.  My latest update to TerraVu was even a small bug-fix to the data-loader." }
+    { i: $gallery$1, d: "TerraVu's minimalist interface gives it an unassuming appearance.  Note the help bar at the bottom guiding the user through the software." },
+    { i: $gallery$2, d: "The Dip Changer appears only when it's in a state where it is needed; in this case, when there is an active segment." },
+    { i: $gallery$3, d: "The LAS loader is by far the most worked on component of this software.  My latest update to TerraVu was even a small bug-fix to the data-loader." }
   ]);
 
   render() {

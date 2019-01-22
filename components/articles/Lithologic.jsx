@@ -2,15 +2,18 @@ import Article from "components/Article";
 import Jump from "components/Jump";
 
 import ImgHeader from "static/images/lithologic/header.png";
+import { src as $gallery$1 } from "static/images/lithologic/1.png";
+import { src as $gallery$2 } from "static/images/lithologic/2.png";
+import { src as $gallery$3 } from "static/images/lithologic/3.png";
 
 import $work from "components/articles/Work?name";
 
 class Lithologic extends React.PureComponent {
 
   Gallery = this.props.appContext.makeGallery([
-    { i: "static/images/lithologic/1.png", d: "A video plays in the screenshot above, demonstrating a test that can determine if a sandstone sample's cementation is calcium-based.  Above the video, the dictionary defines the selected term; below it, a mud-logger focused explanation is provided." },
-    { i: "static/images/lithologic/2.png", d: "Lithologic features many niceties, such as color swatches or a magnifier to take a closer look at a library photograph." },
-    { i: "static/images/lithologic/3.png", d: "Lithologic's original design concept (top) compared to the final product (bottom)." }
+    { i: $gallery$1, d: "A video plays in the screenshot above, demonstrating a test that can determine if a sandstone sample's cementation is calcium-based.  Above the video, the dictionary defines the selected term; below it, a mud-logger focused explanation is provided." },
+    { i: $gallery$2, d: "Lithologic features many niceties, such as color swatches or a magnifier to take a closer look at a library photograph." },
+    { i: $gallery$3, d: "Lithologic's original design concept (top) compared to the final product (bottom)." }
   ]);
 
   render() {

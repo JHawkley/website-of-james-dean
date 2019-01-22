@@ -5,6 +5,10 @@ import NateWidget from "components/Nate";
 import ImgHeader from "static/images/nate-game/header.png";
 import ImgTwo from "static/images/nate-game/2.jpg";
 import ImgThreeInset from "static/images/nate-game/3_inset.jpg";
+import { src as $gallery$1 } from "static/images/nate-game/1.gif";
+import { src as $gallery$2 } from "static/images/nate-game/2.jpg";
+import { src as $gallery$3 } from "static/images/nate-game/3.jpg";
+import { src as $gallery$4 } from "static/images/nate-game/4.jpg";
 
 import $work from "components/articles/Work?name";
 import $miscprogramming from "components/articles/MiscProgramming?name";
@@ -12,10 +16,10 @@ import $miscprogramming from "components/articles/MiscProgramming?name";
 class Nate extends React.PureComponent {
 
   Gallery = this.props.appContext.makeGallery([
-    { i: "static/images/nate-game/1.gif", d: "Nate jumps about in the test level.  Unfortunately, the build I have right now has shooting disabled; I believe I was reworking it at the time.  The gnarly design of the final room was intended to help work out issues with auto-tiling." },
-    { i: "static/images/nate-game/2.jpg", d: "Basic sketches of Nate himself; I wish I had more concept art of him to show.  This artwork was done by my partner on this project, Tderek99." },
-    { i: "static/images/nate-game/3.jpg", d: "Chie's kind-of-cute appearance conceals the frightening power she has at her command.  This artwork was done by my partner on this project, Tderek99." },
-    { i: "static/images/nate-game/4.jpg", d: "These early concept sketches of enemies show that Chie had some fun looking playmates for her \"pet\" in mind.  This artwork was done by my partner on this project, Tderek99." }
+    { i: $gallery$1, d: "Nate jumps about in the test level.  Unfortunately, the build I have right now has shooting disabled; I believe I was reworking it at the time.  The gnarly design of the final room was intended to help work out issues with auto-tiling." },
+    { i: $gallery$2, d: "Basic sketches of Nate himself; I wish I had more concept art of him to show.  This artwork was done by my partner on this project, Tderek99." },
+    { i: $gallery$3, d: "Chie's kind-of-cute appearance conceals the frightening power she has at her command.  This artwork was done by my partner on this project, Tderek99." },
+    { i: $gallery$4, d: "These early concept sketches of enemies show that Chie had some fun looking playmates for her \"pet\" in mind.  This artwork was done by my partner on this project, Tderek99." }
   ]);
 
   render() {

@@ -7,15 +7,18 @@ import ImgOilSandsBar from "static/images/3drenders/oilsands_bar.jpg";
 import ImgBlackholeInset from "static/images/3drenders/blackhole_anim_inset.jpg";
 import ImgLandscapeInset from "static/images/3drenders/landscape1_inset.jpg";
 import ImgIceCaveInset from "static/images/3drenders/icecave_inset.jpg";
+import { src as $gallery$landscape1 } from "static/images/3drenders/landscape1.jpg";
+import { src as $gallery$landscape2 } from "static/images/3drenders/landscape2.jpg";
+import { src as $gallery$icecave } from "static/images/3drenders/icecave.jpg";
 
 import $work from "components/articles/Work?name";
 
 class ThreeDee extends React.PureComponent {
 
   Gallery = this.props.appContext.makeGallery([
-    { i: "static/images/3drenders/landscape1.jpg", d: "The far LOD portion of the blackhole strike scene.  The procedural generation includes both trees and buildings of a small city far in the distance." },
-    { i: "static/images/3drenders/landscape2.jpg", d: "The unfinished near LOD portion of the blackhole strike scene.  These trees were hard to render; I believe I was searching for ways to make them render faster, while still being high quality for the near shot.  These would have burst into flames the moment of the bright blast beyond the distant mountain." },
-    { i: "static/images/3drenders/icecave.jpg", d: "Everyone tells me this render would be right at home in a Myst-like game.  The internal reflections from the ice and the metal are quite neat.  I really love the atmosphere here." },
+    { i: $gallery$landscape1, d: "The far LOD portion of the blackhole strike scene.  The procedural generation includes both trees and buildings of a small city far in the distance." },
+    { i: $gallery$landscape2, d: "The unfinished near LOD portion of the blackhole strike scene.  These trees were hard to render; I believe I was searching for ways to make them render faster, while still being high quality for the near shot.  These would have burst into flames the moment of the bright blast beyond the distant mountain." },
+    { i: $gallery$icecave, d: "Everyone tells me this render would be right at home in a Myst-like game.  The internal reflections from the ice and the metal are quite neat.  I really love the atmosphere here." },
   ]);
 
   render() {

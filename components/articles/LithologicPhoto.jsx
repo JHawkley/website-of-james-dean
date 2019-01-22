@@ -4,17 +4,22 @@ import Jump from "components/Jump";
 import ImgHeader from "static/images/lithologic-photo/header.png";
 import ImgFourInset from "static/images/lithologic-photo/4_inset.jpg";
 import ImgFiveInset from "static/images/lithologic-photo/5_inset.jpg";
+import { src as $gallery$1 } from "static/images/lithologic-photo/1.png";
+import { src as $gallery$2 } from "static/images/lithologic-photo/2.png";
+import { src as $gallery$3 } from "static/images/lithologic-photo/3.png";
+import { src as $gallery$4 } from "static/images/lithologic-photo/4.jpg";
+import { src as $gallery$5 } from "static/images/lithologic-photo/5.jpg";
 
 import $work from "components/articles/Work?name";
 
 class LithologicPhoto extends React.PureComponent {
 
   Gallery = this.props.appContext.makeGallery([
-    { i: "static/images/lithologic-photo/1.png", d: "The administrative interface.  Along with managing users, wells could be shared between organizations." },
-    { i: "static/images/lithologic-photo/2.png", d: "A couple of example samples in a small example well.  The image processor automatically cropped out and squared off the sample area of the image, ensuring visual consistency between samples." },
-    { i: "static/images/lithologic-photo/3.png", d: "The diagnostics view of a sample, revealing various properties of the color correction process.  If the process failed, this would provide error information explaining why." },
-    { i: "static/images/lithologic-photo/4.jpg", d: "Example of some micro-photography done using version 1 of the special photography plate.  The markers used for image detection have been cropped out." },
-    { i: "static/images/lithologic-photo/5.jpg", d: "A render of the plate I designed.  A 3D printing company was used to produce a prototype, which we used internally to test the application." }
+    { i: $gallery$1, d: "The administrative interface.  Along with managing users, wells could be shared between organizations." },
+    { i: $gallery$2, d: "A couple of example samples in a small example well.  The image processor automatically cropped out and squared off the sample area of the image, ensuring visual consistency between samples." },
+    { i: $gallery$3, d: "The diagnostics view of a sample, revealing various properties of the color correction process.  If the process failed, this would provide error information explaining why." },
+    { i: $gallery$4, d: "Example of some micro-photography done using version 1 of the special photography plate.  The markers used for image detection have been cropped out." },
+    { i: $gallery$5, d: "A render of the plate I designed.  A 3D printing company was used to produce a prototype, which we used internally to test the application." }
   ]);
 
   render() {

@@ -4,17 +4,22 @@ import Jump from "components/Jump";
 import ImgHeader from "static/images/3drenders/br_header.jpg";
 import ImgAnimInset from "static/images/3drenders/br_anim_inset.jpg";
 import ImgFiveInset from "static/images/3drenders/br5_inset.jpg";
+import { src as $gallery$br1 } from "static/images/3drenders/br1.jpg";
+import { src as $gallery$br2 } from "static/images/3drenders/br2.jpg";
+import { src as $gallery$br3 } from "static/images/3drenders/br3.jpg";
+import { src as $gallery$br4 } from "static/images/3drenders/br4.jpg";
+import { src as $gallery$br5 } from "static/images/3drenders/br5.png";
 
 import $work from "components/articles/Work?name";
 
 class Solar extends React.PureComponent {
 
   Gallery = this.props.appContext.makeGallery([
-    { i: "static/images/3drenders/br1.jpg", d: "A glory shot of the solar bio-reactor with a sprawling Tibet-inspired mountain landscape behind it." },
-    { i: "static/images/3drenders/br2.jpg", d: "An overview of the rendered installation.  The control script had a low chance to keep some of the mirrors unaimed so as to make them appear as if they were being cleaned and maintained." },
-    { i: "static/images/3drenders/br3.jpg", d: "A cutaway of a mirror, showing its structure.  A thin membrane was intended to be flexed by controlling the air pressure inside it, which would deform the mirror and control its focus." },
-    { i: "static/images/3drenders/br4.jpg", d: "Along with the algae, more mundane farming could also potentially be done.  These simple greenhouses would allow diffuse light inside, keeping it bright and balmy inside for plants." },
-    { i: "static/images/3drenders/br5.png", d: "Another greenhouse concept; definitely a lot more detailed.  I think the idea here was to integrate a basic water desalination system into a greenhouse.  Salty water would be sprayed onto the curtains in the center and allowed to evaporate, while fresh water would condense on the plastic enclosing the greenhouse and drip down into collectors." }
+    { i: $gallery$br1, d: "A glory shot of the solar bio-reactor with a sprawling Tibet-inspired mountain landscape behind it." },
+    { i: $gallery$br2, d: "An overview of the rendered installation.  The control script had a low chance to keep some of the mirrors unaimed so as to make them appear as if they were being cleaned and maintained." },
+    { i: $gallery$br3, d: "A cutaway of a mirror, showing its structure.  A thin membrane was intended to be flexed by controlling the air pressure inside it, which would deform the mirror and control its focus." },
+    { i: $gallery$br4, d: "Along with the algae, more mundane farming could also potentially be done.  These simple greenhouses would allow diffuse light inside, keeping it bright and balmy inside for plants." },
+    { i: $gallery$br5, d: "Another greenhouse concept; definitely a lot more detailed.  I think the idea here was to integrate a basic water desalination system into a greenhouse.  Salty water would be sprayed onto the curtains in the center and allowed to evaporate, while fresh water would condense on the plastic enclosing the greenhouse and drip down into collectors." }
   ]);
 
   render() {
