@@ -2,7 +2,7 @@ import PropTypes from "prop-types";
 import Header from "components/Header";
 import Main from "components/Main";
 import Footer from "components/Footer";
-import { ImageSync } from "components/AsyncImage";
+import { PreloadSync } from "components/Preloader";
 
 class Wrapper extends React.PureComponent {
 
@@ -13,7 +13,7 @@ class Wrapper extends React.PureComponent {
     articleTimeout: PropTypes.bool.isRequired,
     timeout: PropTypes.bool.isRequired,
     appContext: PropTypes.shape({
-      imageSync: PropTypes.instanceOf(ImageSync).isRequired,
+      preloadSync: PropTypes.instanceOf(PreloadSync).isRequired,
       makeGallery: PropTypes.func.isRequired,
       openLightbox: PropTypes.func.isRequired,
       closeLightbox: PropTypes.func.isRequired,

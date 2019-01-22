@@ -14,13 +14,12 @@ class Lithologic extends React.PureComponent {
   ]);
 
   render() {
-    const { Gallery, props: { appContext: { imageSync }, active } } = this;
-    const phase = active ? 0 : 1;
+    const { Gallery, props: { appContext: { preloadSync } } } = this;
     return (
       <Article {...this.props} parent={$work}>
         <h2 className="major">Lithologic</h2>
         <span className="image main javascript-link" onClick={Gallery.openCallback(0)}>
-          <ImgHeader fluid phase={phase} imageSync={imageSync} alt="Lithologic Gallery" />
+          <ImgHeader fluid preloadSync={preloadSync} alt="Lithologic Gallery" />
           <div className="label-right">Gallery</div>
         </span>
         <p>Lithologic is a tool to assist mud-loggers in their task of producing rock descriptions.  It was my second major application coded in C# using .NET's <Jump href="https://docs.microsoft.com/en-us/dotnet/framework/winforms/">Windows Forms API</Jump>.  I believe this project started in 2011 when someone came to us with the idea and was seeking a software developer to make it a reality.</p>

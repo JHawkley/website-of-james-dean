@@ -19,12 +19,11 @@ const workItem = (description, title, article) => (
 );
 
 const Work = (props) => {
-  const { appContext: { imageSync }, active } = props;
-  const phase = active ? 0 : 1;
+  const { preloadSync } = props.appContext;
   return (
     <Article {...props}>
       <h2 className="major">Work</h2>
-      <span className="image main"><ImgHeader fluid phase={phase} imageSync={imageSync} alt="Variety of Work" /></span>
+      <span className="image main"><ImgHeader fluid preloadSync={preloadSync} alt="Variety of Work" /></span>
       <p>Much of my work was done at my previous employer, <strong><Jump href="http://www.terradomain.us/">TerraDom Corporation</Jump></strong> (formerly Terra Domain Consulting).  My best and biggest software projects were done there.  You can read about them from the selection below:</p>
       {workItem("Enterprise Geosteering", "TerraVu 2", $terravu)}
       {workItem("Mud-Logger's Tool", "Lithologic", $lithologic)}

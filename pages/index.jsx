@@ -6,7 +6,7 @@ import { canScrollRestore as transitionsSupported } from "pages/_app";
 import { dew, is, singleton } from "tools/common";
 import { timespan } from "tools/css";
 import { Future, CallSync, Stream, wait as asyncWaitFn } from "tools/async";
-import { extensions as asyncEx, delayToNextFrame, awaitAll, awaitWhile, abortable } from "tools/async";
+import { extensions as asyncEx, delayToNextFrame, awaitWhile, abortable } from "tools/async";
 import { extensions as asyncIterEx } from "tools/asyncIterables";
 import { extensions as maybe, nothing } from "tools/maybe";
 import { extensions as mapEx } from "tools/maps";
@@ -14,7 +14,7 @@ import * as parsing from "tools/parsing/index";
 import dynamic from "next/dynamic";
 import DynamicLoader from "components/DynamicLoader";
 
-import { ImageSync } from "components/AsyncImage";
+import { PreloadSync } from "components/Preloader";
 import NoJavaScript from "components/NoJavaScript";
 import Wrapper from "components/Wrapper";
 import Lightbox from "components/Lightbox";
@@ -88,7 +88,7 @@ class IndexPage extends React.PureComponent {
     };
 
     return Object.freeze({
-      imageSync: new ImageSync(),
+      preloadSync: new PreloadSync(),
       makeGallery: (data) => Lightbox.makeGallery(data, openLightbox, closeLightbox),
       openLightbox, closeLightbox,
       enableScroll, disableScroll
@@ -135,19 +135,16 @@ class IndexPage extends React.PureComponent {
   }
 
   async doLoading() {
-    // Synchronize on when the CSS background image and the phase 0 images have loaded.
+    // Synchronize on when the CSS background image has loaded.
     const bgPromise = isProduction ? bgImage.preload() : bgImage.preload().catch(() => {
       console.warn(`Warning: failed to load the background image: ${bgImage.src}`);
     });
-
-    // Bundle our image-related promises.
-    const imagesPromise = awaitAll([bgPromise, this.appContext.imageSync.loadToPhase(0)]);
 
     // Put a max limit before we load anyways.
     const timerPromise = this.wait(2000);
     
     // Now race to see which resolves first!
-    await Promise.race([imagesPromise, timerPromise]);
+    await Promise.race([bgPromise, timerPromise]);
   }
 
   transitionToArticle() {
@@ -167,7 +164,7 @@ class IndexPage extends React.PureComponent {
     this.whenMountedFuture.resolve();
 
     this.doLoading().then(
-      () => !this.didUnmount && this.setState({ loading: false }, this.appContext.imageSync.loadAllPhases),
+      () => !this.didUnmount && this.setState({ loading: false }),
       (asyncError) => !this.didUnmount && this.setState({ loading: false, asyncError })
     );
   }

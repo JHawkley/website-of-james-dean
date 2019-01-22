@@ -5,13 +5,12 @@ import ImgPlaceholderPhoto from "static/images/placeholder_photo.jpg";
 import $work from "components/articles/Work?name";
 
 const Intro = (props) => {
-  const { appContext: { imageSync }, active } = props;
-  const headerPhase = active ? 0 : 1;
+  const { preloadSync } = props.appContext;
   return (
     <Article {...props}>
       <h2 className="major">Intro</h2>
       <span className="image right">
-        <ImgPlaceholderPhoto fluid phase={headerPhase} imageSync={imageSync} alt="A Photo of James Dean" />
+        <ImgPlaceholderPhoto fluid preloadSync={preloadSync} alt="A Photo of James Dean" />
       </span>
       <p>Welcome!  I'm James!  I'm a software developer from Texas, USA.</p>
       <p>I have been working professionally since 2002.  In that time, I've put together and maintained three big applications for my former employer.  You can read all about it in the <Goto article={$work}>work section of the site</Goto>.</p>

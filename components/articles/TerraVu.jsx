@@ -14,13 +14,12 @@ class TerraVu extends React.PureComponent {
   ]);
 
   render() {
-    const { Gallery, props: { appContext: { imageSync }, active } } = this;
-    const phase = active ? 0 : 1;
+    const { Gallery, props: { appContext: { preloadSync } } } = this;
     return (
       <Article {...this.props} parent={$work}>
         <h2 className="major">TerraVu 2</h2>
         <span className="image main javascript-link" onClick={Gallery.openCallback(0)}>
-          <ImgHeader fluid phase={phase} imageSync={imageSync} alt="TerraVu Gallery" />
+          <ImgHeader fluid preloadSync={preloadSync} alt="TerraVu Gallery" />
           <div className="label-right">Gallery</div>
         </span>
         <p>TerraVu 2 is a geosteering software package that I first started development on in 2002, programmed in C# using .NET's <Jump href="https://docs.microsoft.com/en-us/dotnet/framework/winforms/">Windows Forms API</Jump>.  It was my very first professional project.  It was used internally by Terra Domain until 2004 or so, when licenses began to be sold to other businesses in the Oil &amp; Gas industry.</p>

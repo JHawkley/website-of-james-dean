@@ -165,22 +165,6 @@ a.work-item {
   margin: 0 0 _size(element-margin) 0;
 }
 
-.fluid-container {
-  /* Styling for `padding-bottom` and `width` must be set on the element. */
-  display: block !important;
-  position: relative !important;
-  max-width: 100% !important;
-
-  .fluid {
-    position: absolute !important;
-    top: 0px !important;
-    left: 0px !important;
-    width: 100% !important;
-    height: 100% !important;
-    max-width: inherit !important;
-  }
-}
-
 /* Fixes image overlay with `.fluid-container`.  */
 .image:before {
   z-index: 1;
