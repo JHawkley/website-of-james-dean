@@ -112,19 +112,22 @@ class ImageMedia extends Preloadable {
 
 }
 
-function importWrapper(src, type, width, height) {
+function importWrapper(src, width, height, type) {
   const ImportedImage = ({asSource, ...props}) => {
     if (asSource) return <source srcSet={src} type={type} />;
     return <ImageMedia {...props} src={src} width={width} height={height} />;
   };
 
-  return Object.assign(ImportedImage, {
-    propTypes: { asSource: PropTypes.bool, ...Preloadable.propTypes },
-    displayName: `importedImage("${src}")`,
-    preload: () => preloadImage(src, width, height),
-    [$$preloadable]: true,
-    src, type, width, height
-  });
+  return Object.assign(
+    ImportedImage,
+    {
+      propTypes: { asSource: PropTypes.bool, ...Preloadable.propTypes },
+      displayName: `importedImage("${src}")`,
+      preload: () => preloadImage(src, width, height),
+      [$$preloadable]: true
+    },
+    type == null ? { src, width, height } : { src, width, height, type }
+  );
 }
 
 const processSource = (givenSrc) => {

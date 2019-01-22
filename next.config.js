@@ -2,8 +2,9 @@
 
 const path = require('path');
 const glob = require('glob');
-const jsonImporter = require('node-sass-json-importer');
 const toLower = require('lodash/toLower');
+const jsonImporter = require('node-sass-json-importer');
+const imageMediaLoader = require('./webpack/image-media-loader');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const DefinePlugin = require('webpack/lib/DefinePlugin');
 
@@ -12,7 +13,7 @@ const jsconfig = require('./jsconfig.json');
 const isProduction = process.env.NODE_ENV === 'production';
 
 module.exports = {
-  webpack: (config, { dir, isServer, defaultLoaders }) => {
+  webpack: (config, { dir, isServer }) => {
 
     // Resolver settings.
     mapAliases(jsconfig.compilerOptions.paths, config, dir);
@@ -47,11 +48,8 @@ module.exports = {
         ]
       },
       {
-        test: /\.(gif|jpeg|jpg|png|svg)$/,
-        use: [
-          defaultLoaders.babel,
-          'async-image-loader'
-        ]
+        test: new RegExp(`\\.(${imageMediaLoader.supportedTypes.join('|')})$`, 'i'),
+        loader: 'image-media-loader'
       },
       {
         enforce: 'post',
