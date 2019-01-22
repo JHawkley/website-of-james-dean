@@ -449,7 +449,7 @@ export async function awaitWhile(promiseGetterFn, options) {
   let promise = promiseGetterFn();
 
   if (promise == null) {
-    if (defaultResult::is.function()) return defaultResult();
+    if (defaultResult::is.func()) return defaultResult();
     return defaultResult;
   }
 
@@ -563,7 +563,7 @@ export function frameSync(abortSignal) {
  */
 export function delayToNextFrame(abortSignal) {
   return (value) => {
-    const abortSignalPromise = abortSignal::is.function() ? abortSignal() : abortSignal;
+    const abortSignalPromise = abortSignal::is.func() ? abortSignal() : abortSignal;
     return frameSync(abortSignalPromise).then((result) => {
       return result === abortable.signal ? result : value;
     });
@@ -607,7 +607,7 @@ export function wait(delay = 0, abortSignal) {
  */
 export function delayFor(delay = 0, abortSignal) {
   return (value) => {
-    const abortSignalPromise = abortSignal::is.function() ? abortSignal() : abortSignal;
+    const abortSignalPromise = abortSignal::is.func() ? abortSignal() : abortSignal;
     return wait(delay, abortSignalPromise).then((result) => {
       return result === abortable.signal ? result : value;
     });

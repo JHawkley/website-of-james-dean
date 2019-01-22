@@ -18,10 +18,10 @@ import { run } from "tools/parsing";
  * @returns {module:tools/propTypes.Validator} A prop-type validator function.
  */
 export function predicate(predicate) {
-  if (!this::is.function())
+  if (!this::is.func())
     throw new TypeError("expected to be bound to a prop-type validator function");
 
-  if (!predicate::is.function())
+  if (!predicate::is.func())
     throw new TypeError("invalid argument for `predicate`; expected a function");
 
   const validationFn = (value, key, props) => {
@@ -74,7 +74,7 @@ export function match(failureText) {
  * @returns {module:tools/propTypes.Validator} A prop-type validator function.
  */
 export function parse(failureText) {
-  if (!this::is.function())
+  if (!this::is.func())
     throw new TypeError("expected to be bound to a function, to be treated as a parser");
   
   const validationFn = (value) => {
@@ -99,7 +99,7 @@ export function parse(failureText) {
  * @returns {module:tools/propTypes.Validator} A prop-type validator function.
  */
 export function dependsOn(propKeys) {
-  if (!this::is.function())
+  if (!this::is.func())
     throw new TypeError("expected to be bound to a function");
   
   if (propKeys::is.string())
@@ -123,7 +123,7 @@ export function dependsOn(propKeys) {
 }
 
 const name = (strings, fn, ...rest) => {
-  if (!fn::is.function())
+  if (!fn::is.func())
     throw new TypeError("expected first template interpolation to be a function");
 
   const name = fn.name::is.string() ? `\`${fn.name}\``: null;

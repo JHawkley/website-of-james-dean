@@ -33,7 +33,7 @@ export function validateAll(propTypes) {
 
 export function makeValidator(validationFn, requirement) {
   // Validating `requirement` using a throw-expression.
-  requirement == null || requirement::is.boolean() || requirement::is.function() || throw new TypeError(
+  requirement == null || requirement::is.boolean() || requirement::is.func() || throw new TypeError(
     `invalid argument for \`requirement\`; got ${requirement}`
   );
 
@@ -52,7 +52,7 @@ export function makeValidator(validationFn, requirement) {
         return ValidationError.required(componentName, location, propFullName, value);
       default:
         // Defer to the `requirement` function.
-        if (requirement::is.function()) {
+        if (requirement::is.func()) {
           const result = requirement(...args);
           if (result != null) return result;
         }

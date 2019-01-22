@@ -129,7 +129,7 @@ export const is = {
   string() { "use strict"; return typeof this === "string"; },
   array() { "use strict"; return Array.isArray(this); },
   number() { "use strict"; return typeof this === "number"; },
-  function() { "use strict"; return typeof this === "function"; },
+  func() { "use strict"; return typeof this === "function"; },
   symbol() { "use strict"; return typeof this === "symbol"; },
   boolean() { "use strict"; return typeof this === "boolean"; },
   undefined() { "use strict"; return typeof this === "undefined"; },

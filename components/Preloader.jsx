@@ -228,7 +228,7 @@ class Preloadable extends React.PureComponent {
 
         if (!isProduction && this.state.rendered !== prevState.rendered) {
           const rendered = this.state.rendered;
-          if (this.props.component && !rendered::is.function()) {
+          if (this.props.component && !rendered::is.func()) {
             console.warn(`the promise provided to \`Preloadable.promised(${name})\` did not result in a component`);
             console.dir({ rendered, childProps: this.childProps });
           }
@@ -369,7 +369,7 @@ const processChildren = (children, preloadSync) => {
   const processChild = (child) => {
     if (!child || !child::is.object()) return child;
 
-    if (child.type::is.function()) {
+    if (child.type::is.func()) {
       if (child.type::classEx.inheritsFrom(Preloader))
         return child;
       if (child.type[$$preloadable] === true)

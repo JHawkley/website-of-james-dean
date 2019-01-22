@@ -67,7 +67,7 @@ export function generateSvg(coreDef, iconDef, textDefs = []) {
     const textHeight = height - buffer - buffer;
 
     const [x, y]
-      = position::is.function()
+      = position::is.func()
       ? position(textWidth, textHeight, size)
       : dew(() => {
         const [scalarX = 0.0, scalarY = 0.0] = position ?? [];

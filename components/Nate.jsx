@@ -328,12 +328,12 @@ Nate.supported = dew(() => {
   }
 
   const detectRequestAnimationFrame = () => {
-    if (!g["requestAnimationFrame"]::is.function()) return false;
-    if (!g["cancelAnimationFrame"]::is.function()) return false;
+    if (!g["requestAnimationFrame"]::is.func()) return false;
+    if (!g["cancelAnimationFrame"]::is.func()) return false;
     return true;
   }
 
-  const detectSet = () => g["Set"]::is.function();
+  const detectSet = () => g["Set"]::is.func();
 
   return () => {
     if (supported::maybe.isDefined()) return supported;

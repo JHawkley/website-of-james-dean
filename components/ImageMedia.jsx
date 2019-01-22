@@ -130,7 +130,7 @@ const processSource = (givenSrc) => {
   if (givenSrc::is.string())
     return <source key={givenSrc} srcSet={givenSrc} />;
   
-  if (givenSrc::is.function()) {
+  if (givenSrc::is.func()) {
     const Component = givenSrc;
     return <Component key={givenSrc.src} asSource />;
   }
