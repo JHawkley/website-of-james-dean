@@ -100,7 +100,7 @@ export function parse(failureText) {
  */
 export function dependsOn(propKeys) {
   if (!this::is.func())
-    throw new TypeError("expected to be bound to a function");
+    throw new TypeError("expected to be bound to a prop-type validator function");
   
   if (propKeys::is.string())
     propKeys = [propKeys];
