@@ -14,14 +14,14 @@ const isSourceable = (fn) => {
 }
 
 const arrayNotEmpty = (arr) => arr.length > 0 || "array may not be empty";
-const stringNotEmpty = (str) => str === "" || "string may not be empty";
+const stringNotEmpty = (str) => str !== "" || "string may not be empty";
 
 class ImageMedia extends Preloadable {
 
   static propTypes = {
     ...Preloadable.propTypes,
     src: PropTypes.oneOfType([
-      PropTypes.string,
+      PropTypes.string::propTypeEx.predicate(stringNotEmpty),
       PropTypes.arrayOf(
         PropTypes.oneOfType([
           PropTypes.string::propTypeEx.predicate(stringNotEmpty),
@@ -46,7 +46,7 @@ class ImageMedia extends Preloadable {
   componentDidMount() {
     super.componentDidMount();
     const { src } = this.props;
-    if (src::is.array() && src.length === 0)
+    if (!src || (src::is.array() && src.length === 0))
       this.handlePreloaded();
   }
 
@@ -61,11 +61,13 @@ class ImageMedia extends Preloadable {
         ...imgProps
       }
     } = this;
-    const haveArray = srcSet::is.array();
 
+    const haveArray = srcSet::is.array();
     if (haveArray && srcSet.length === 0) return null;
 
     const src = haveArray ? srcSet[0].src : srcSet;
+    if (!src) return null;
+
     const classNameBuilder = [];
     if (customClass) classNameBuilder.push(customClass);
     if (fluid) classNameBuilder.push("fluid");
