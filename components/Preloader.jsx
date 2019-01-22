@@ -10,7 +10,7 @@ const $always = "always";
 const $loaded = "loaded";
 const $never = "never";
 
-const $$preloadable = Symbol("preloadable");
+const $$preloadable = Symbol("preloader:preloadable");
 
 const $$fresh = Symbol("preload-sync:fresh");
 const $$preloading = Symbol("preload-sync:preloading");

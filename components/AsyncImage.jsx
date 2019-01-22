@@ -9,7 +9,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 const gteZero = (v) => v >= 0 || `supplied value \`${v}\` is not greater-than-or-equal to zero`;
 
-export default class AsyncImage extends React.PureComponent {
+class AsyncImage extends React.PureComponent {
   
   static propTypes = {
     src: PropTypes.string.isRequired,
@@ -157,7 +157,7 @@ export default class AsyncImage extends React.PureComponent {
 
 }
 
-export class ImageSync {
+class ImageSync {
 
   nextPhaseToDo = 0;
   phasedCallbacks = {};
@@ -223,7 +223,7 @@ export class ImageSync {
   
 }
 
-export function importWrapper(src, width, height) {
+function importWrapper(src, width, height) {
   const ImportedImage = ({phase = 1, ...props}) => (
     <AsyncImage
       {...props}
@@ -238,3 +238,6 @@ export function importWrapper(src, width, height) {
   ImportedImage.preload = () => preloadImage(src, width, height);
   return ImportedImage;
 }
+
+export default AsyncImage;
+export { ImageSync, importWrapper };
