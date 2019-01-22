@@ -2,9 +2,12 @@ import PropTypes from "prop-types";
 import { dew } from "tools/common";
 import { extensions as maybe, nothing } from "tools/maybe";
 import { preloadImage, awaitAll, Future } from "tools/async";
+import { extensions as propTypeEx } from "tools/propTypes";
 import { generateSvgPlaceholder } from "tools/svg";
 
 const isProduction = process.env.NODE_ENV === 'production';
+
+const gteZero = (v) => v >= 0 || `supplied value \`${v}\` is not greater-than-or-equal to zero`;
 
 export default class AsyncImage extends React.PureComponent {
   
@@ -15,20 +18,7 @@ export default class AsyncImage extends React.PureComponent {
     fluid: PropTypes.bool,
     imageSync: (...args) => PropTypes.instanceOf(ImageSync)(...args),
     placeholderColor: PropTypes.string,
-    phase: (...args) => {
-      const result = PropTypes.number.isRequired(...args);
-      if (result::maybe.isDefined()) return result;
-
-      const [props, propName, componentName, location, propFullName] = args;
-      const value = props[propName];
-
-      if (value >= 0) return null;
-
-      return new Error([
-        `Invalid ${location} \`${propFullName}\` supplied to \`${componentName}\``,
-        `supplied value \`${value}\` is not greater-than-or-equal to zero`
-      ].join("; "));
-    }
+    phase: PropTypes.number::propTypeEx.predicate(gteZero)
   };
 
   static defaultProps = {
