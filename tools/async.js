@@ -253,7 +253,7 @@ export class Stream {
     Object.defineProperties(this, Stream.mixin({
       callSync: new CallSync(promiseDecorator),
       error: null,
-      done: null
+      done: false
     }));
   }
 
@@ -354,7 +354,7 @@ export class BufferedStream {
       callSync: new CallSync(promiseDecorator),
       buffer: [],
       error: null,
-      done: null
+      done: false
     }));
   }
 
