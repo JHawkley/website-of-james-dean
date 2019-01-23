@@ -93,7 +93,7 @@ export function randomElement() {
  * @export
  * @template T,U
  * @this {T[]} This array.
- * @param {PartialFunction<T>} partialFn The partial-function.
+ * @param {PartialFunction<T, U>} partialFn The partial-function.
  * @returns {U[]} A new array.
  */
 export function collect(partialFn) {
@@ -107,6 +107,28 @@ export function collect(partialFn) {
     resultArray.push(collectedValue);
   }
   return resultArray;
+}
+
+/**
+ * Finds the first element in the array that does not cause the given `partialFn` to return `undefined`.
+ * If all elements return `undefined`, the result will be `undefined`.
+ *
+ * @export
+ * @template T,U
+ * @this {T[]} This array.
+ * @param {PartialFunction<T, U>} partialFn The partial-function.
+ * @returns {U | undefined} 
+ */
+export function collectFirst(partialFn) {
+  const length = this.length;
+  if (length === 0) return void 0;
+
+  for (let i = 0; i < length; i++) {
+    const collectedValue = partialFn(this[i], i, this);
+    if (typeof collectedValue === "undefined") continue;
+    return collectedValue;
+  }
+  return void 0;
 }
 
 /**
