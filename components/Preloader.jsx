@@ -242,8 +242,14 @@ class Preloadable extends React.PureComponent {
       static displayName = `Preloadable.rendered(${name})`;
 
       render() {
-        const { handlePreloaded, handlePreloadError, childProps } = this;
-        return renderFn(childProps, handlePreloaded, handlePreloadError);
+        const {
+          handlePreloaded, handlePreloadError, handleResetPreload,
+          props: {
+            preloadSync, // eslint-disable-line no-unused-vars
+            ...childProps
+          }
+        } = this;
+        return renderFn(childProps, handlePreloaded, handlePreloadError, handleResetPreload);
       }
       
     };
@@ -257,7 +263,13 @@ class Preloadable extends React.PureComponent {
       static displayName = `Preloadable.wrapped(${name})`;
 
       render() {
-        const { handlePreloaded, handlePreloadError, childProps } = this;
+        const {
+          handlePreloaded, handlePreloadError,
+          props: {
+            preloadSync, // eslint-disable-line no-unused-vars
+            ...childProps
+          }
+        } = this;
         return <Component {...childProps} onLoaded={handlePreloaded} onError={handlePreloadError} />;
       }
       
@@ -290,9 +302,11 @@ class Preloadable extends React.PureComponent {
 
         if (!isProduction && this.state.rendered !== prevState.rendered) {
           const rendered = this.state.rendered;
-          if (this.props.component && !rendered::is.func()) {
+          // eslint-disable-next-line no-unused-vars
+          const { preloadSync, component, ...childProps } = this.props;
+          if (component && !rendered::is.func()) {
             console.warn(`the promise provided to \`Preloadable.promised(${name})\` did not result in a component`);
-            console.dir({ rendered, childProps: this.childProps });
+            console.dir({ rendered, childProps: childProps });
           }
         }
       }
@@ -305,6 +319,7 @@ class Preloadable extends React.PureComponent {
 
         if (!rendered) return null;
         if (!component) return rendered;
+        if (!rendered::is.func()) return null;
 
         const Component = rendered;
         if (Component[$$preloadable] === true)
@@ -323,15 +338,14 @@ class Preloadable extends React.PureComponent {
 
   isUnmounted = false;
 
-  get childProps() {
-    const {
-      preloadSync, // eslint-disable-line no-unused-vars
-      ...childProps
-    } = this.props;
-    return childProps;
+  get isCompleted() {
+    return Boolean(this.isUnmounted || this.state.preloaded || this.state.error);
   }
 
-  get isCompleted() { return this.state.preloaded || this.state.error || this.isUnmounted }
+  handleResetPreload = () => {
+    if (this.isUnmounted) return;
+    this.setState({ preloaded: false, error: null });
+  }
 
   handlePreloaded = () => {
     if (this.isCompleted) return;
