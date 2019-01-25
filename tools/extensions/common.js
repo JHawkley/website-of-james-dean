@@ -135,5 +135,6 @@ export const is = {
   undefined() { "use strict"; return typeof this === "undefined"; },
   null() { "use strict"; return this === null; },
   object() { "use strict"; return typeof this === "object" && this !== null; },
+  error() { "use strict"; return this instanceof Error },
   instanceOf(klass) { "use strict"; return this instanceof klass; }
 };
