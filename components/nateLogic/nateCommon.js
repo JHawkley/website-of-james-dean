@@ -152,5 +152,7 @@ export function makeRandomJump(minTime, addedTime, symbolName = "nateCommon/rand
 export function playSound(nate, sound) {
   if (!nc.sound.enabled) return;
   if (nate.brain.behavior !== behaviorModes.aggressive) return;
-  sound.current?.play();
+  try { sound.current?.play(); }
+  // Will throw if the user has not clicked on the browser.  Just black-hole it.
+  catch (ex) { ex instanceof DOMException && throw ex; }
 }
