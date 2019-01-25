@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { dew, is, Composition } from "tools/common";
-import { Stream, CallSync, debounce } from "tools/async";
+import { Future, Stream, CallSync, debounce } from "tools/async";
 import { extensions as asyncIterEx } from "tools/asyncIterables";
 import { extensions as classEx } from "tools/classes";
 
@@ -79,9 +79,11 @@ class Preloader extends React.PureComponent {
   static propTypes = {
     children: PropTypes.node.isRequired,
     preloadSync: PropTypes.instanceOf(PreloadSync),
+    promise: PropTypes.func,
     onPreload: PropTypes.func,
     onLoad: PropTypes.func,
     onError: PropTypes.func,
+    id: PropTypes.string,
     className: PropTypes.string,
     style: PropTypes.object,
     display: PropTypes.oneOfType([
@@ -112,6 +114,8 @@ class Preloader extends React.PureComponent {
     return newState.composed ? newState.result : null;
   }
 
+  preloadedFuture = null;
+
   cancelAsync = new CallSync();
 
   state = {
@@ -122,6 +126,18 @@ class Preloader extends React.PureComponent {
     mustRender: !this.props.wait,
     error: null
   };
+
+  get promise() {
+    if (this.preloadedFuture) return this.preloadedFuture.promise;
+
+    const { error, preloadState } = this.state;
+
+    if (error) return Promise.reject(error);
+    if (preloadState === $$preloaded) return Promise.resolve(true);
+
+    this.preloadedFuture = new Future();
+    return this.preloadedFuture.promise;
+  }
 
   get display() {
     switch (this.props.display) {
@@ -137,10 +153,10 @@ class Preloader extends React.PureComponent {
     if (preloadState === newPreloadState) return;
     if (error) return;
 
-    const newState = new Composition({ preloadState: newPreloadState });
+    const newState = { preloadState: newPreloadState };
     if (newPreloadState === $$preloaded && !preloadedOnce)
-      newState.compose({ preloadedOnce: true });
-    this.setState(newState.result);
+      newState.preloadedOnce = true;
+    this.setState(newState);
   }
 
   attachToPreloadSync() {
@@ -151,54 +167,98 @@ class Preloader extends React.PureComponent {
     preloadSync.rendered();
   }
 
+  handleBeginPreload() {
+    const { promise: promiseFn, onPreload } = this.props;
+    promiseFn?.(this.promise);
+    onPreload?.();
+  }
+
+  handleEndPreload(success) {
+    if (this.preloadedFuture) {
+      this.preloadedFuture.resolve(success);
+      this.preloadedFuture = null;
+      this.props.promise?.(null);
+    }
+
+    if (success) this.props.onLoad?.();
+  }
+
+  handlePreloadError(error) {
+    const { onError } = this.props;
+    let announcedError = false;
+
+    if (this.preloadedFuture) {
+      this.preloadedFuture.reject(error);
+      this.preloadedFuture = null;
+      this.props.promise?.(null);
+      announcedError = true;
+    }
+
+    if (onError) {
+      onError(error);
+      announcedError = true;
+    }
+    
+    if (!announcedError) throw error;
+  }
+
   componentDidMount() {
     this.attachToPreloadSync();
   }
 
   componentDidUpdate(prevProps, prevState) {
     const {
-      props: { once },
+      props: { once, promise: promiseFn },
       state: { error, preloadSync, preloadState, ownedPreloadSync }
     } = this;
 
-    if (error !== prevState.error && error) {
-      const { onError } = this.props;
-      if (!onError) throw error;
-      return onError(error);
+    if (promiseFn !== prevProps.promiseFn) {
+      prevProps.promise?.(null);
+      promiseFn?.(this.promise);
+    }
+
+    if (error) {
+      if (error !== prevState.error) this.handlePreloadError(error);
+      return;
+    }
+
+    if (preloadSync !== prevState.preloadSync) {
+      const prevPreloadState = prevState.preloadSync.state;
+      const curPreloadState = preloadSync.state;
+
+      if (ownedPreloadSync) prevState.preloadSync.done();
+      this.cancelAsync.resolve();
+      this.attachToPreloadSync();
+
+      // Skip the rest if there is a difference between the states of the
+      // new and old `preloadSync.state`.  Another update will come as a
+      // consequence of the `attachToPreloadSync` call.
+      if (prevPreloadState !== curPreloadState) return;
     }
     
     if (preloadState !== prevState.preloadState) {
-      switch (preloadState) {
-        case $$preloading:
-          this.props.onPreload?.();
-          break;
-        case $$preloaded:
-          this.props.onLoad?.();
-          break;
-      }
+      if (preloadState === $$preloading) this.handleBeginPreload();
+      else if (preloadState === $$preloaded) this.handleEndPreload(true);
     }
 
     if (once !== prevProps.once && !once)
       if (preloadSync.state !== preloadState)
         this.preloadSyncUpdated(preloadSync.state);
-    
-    if (preloadSync !== prevState.preloadSync) {
-      if (ownedPreloadSync) prevState.preloadSync.done();
-      this.cancelAsync.resolve();
-      this.attachToPreloadSync();
-    }
   }
 
   componentWillUnmount() {
-    const { ownedPreloadSync, error, preloadSync } = this.state;
-    if (ownedPreloadSync && !error) preloadSync.done();
+    const { preloadState, ownedPreloadSync, error, preloadSync } = this.state;
+    if (preloadState !== $$preloaded)
+      this.handleEndPreload(false);
+    if (ownedPreloadSync && !error)
+      preloadSync.done();
     this.cancelAsync.resolve();
   }
 
   render() {
     const {
       display,
-      props: { style: customStyle, className },
+      props: { id, style: customStyle, className },
       state: { mustRender, error, preloadSync, preloadState }
     } = this;
 
@@ -217,7 +277,7 @@ class Preloader extends React.PureComponent {
 
     const style = Object.assign({}, customStyle, hide ? { display: "none" } : null);
 
-    return <div className={className} style={style}>{children}</div>;
+    return <div id={id} className={className} style={style}>{children}</div>;
   }
 
 }
