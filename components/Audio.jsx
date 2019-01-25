@@ -192,7 +192,7 @@ const processChildren = (childrenTree) => {
       return child;
     
     if (isSourceable(type))
-      return React.cloneElement(child, { asSource: true });
+      return props.asSource ? child : React.cloneElement(child, { asSource: true });
     
     const sourceFromType = Audio.sourceFromObj(type);
     if (sourceFromType) return sourceFromType;
