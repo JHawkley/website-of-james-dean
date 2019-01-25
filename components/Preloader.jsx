@@ -403,10 +403,9 @@ const processChildren = (children, preloadSync) => {
   };
 
   const processChildren = (children) => {
-    if (!children) return children;
-    const arrayOfChildren = Array.isArray(children) ? children : [children];
-    if (arrayOfChildren.length === 0) return children;
-    return arrayOfChildren.map(processChild);
+    const newChildren = React.Children.toArray(children).map(processChild);
+    if (!newChildren || newChildren.length === 0) return children;
+    return newChildren;
   };
   
   return processChildren(children);
