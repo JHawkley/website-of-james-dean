@@ -1,50 +1,37 @@
 import PropTypes from "prop-types";
 import { is, Composition } from "tools/common";
-import { extensions as arrEx } from "tools/array";
 import { preloadImage } from "tools/async";
-import { extensions as propTypeEx } from "tools/propTypes";
+import { extensions as propTypeEx, hasOwn as propTypeHasOwn } from "tools/propTypes";
 import { Preloadable, PreloadSync } from "components/Preloader";
-
-const imagePropType = PropTypes.oneOfType([
-  PropTypes.string::propTypeEx.notEmpty(),
-  PropTypes.shape({
-    src: PropTypes.string::propTypeEx.notEmpty().isRequired,
-    type: PropTypes.string::propTypeEx.notEmpty()
-  })
-]);
 
 class ImageMedia extends Preloadable {
 
   static propTypes = {
     ...Preloadable.propTypes,
-    src: PropTypes.oneOfType([
-      imagePropType,
-      PropTypes.arrayOf(imagePropType)::propTypeEx.notEmpty()
-    ]).isRequired,
+    src: PropTypes.string::propTypeEx.notEmpty().isRequired,
     className: PropTypes.string,
-    width: PropTypes.number,
-    height: PropTypes.number,
-    fluid: PropTypes.bool::propTypeEx.dependsOn("width", "height")
+    width: PropTypes.number::propTypeEx.dependsOn("height"),
+    height: PropTypes.number::propTypeEx.dependsOn("width"),
+    fluid: PropTypes.bool::propTypeEx.dependsOn(["width", "height"]),
+    imgRef: PropTypes.oneOfType([
+      PropTypes.func, 
+      PropTypes.shape({ current: propTypeHasOwn })
+    ])
   };
 
   static defaultProps = {
     fluid: false
   };
 
-  static getDerivedStateFromProps(props) {
-    const { src } = props;
-    const mainSrc = getSrc(src);
-    if (!mainSrc) return { mainSrc: null, sourceElements: null };
-    if (!src::is.array()) return { mainSrc, sourceElements: null };
-
-    const sourceElements = src::arrEx.collect(processSource);
-    if (sourceElements.length === 0) return { mainSrc: null, sourceElements: null };
-    return { mainSrc, sourceElements };
-  }
-
   imgIsComplete = false;
 
   checkComplete = (img) => {
+    // Forward the img-ref.
+    const { imgRef } = this.props;
+    if (imgRef) {
+      if (imgRef::is.func()) imgRef(img);
+      else imgRef.current = img;
+    }
     if (!img) return;
     this.imgIsComplete = img.complete;
     if (this.imgIsComplete) this.handlePreloaded();
@@ -61,17 +48,17 @@ class ImageMedia extends Preloadable {
 
   componentDidMount() {
     super.componentDidMount();
-    const { mainSrc } = this.state;
-    if (!mainSrc) this.handlePreloaded();
+    const { src } = this.props;
+    if (!src) this.handlePreloaded();
   }
 
   componentDidUpdate(prevProps, prevState) {
     super.componentDidUpdate(prevProps, prevState);
-    const { props: { src }, state: { mainSrc } } = this;
-    if (src !== prevProps.src && !this.imgIsComplete)
-      this.handleResetPreload();
-    if (mainSrc !== prevState.mainSrc && !mainSrc)
-      this.handlePreloaded();
+    const { src } = this.props;
+    if (src !== prevProps.src) {
+      if (!this.imgIsComplete) this.handleResetPreload();
+      if (!src) this.handlePreloaded();
+    }
   }
 
   render() {
@@ -79,14 +66,13 @@ class ImageMedia extends Preloadable {
       checkComplete, onLoad, onError,
       props: {
         className: customClass,
-        width, height, fluid,
-        src, preloadSync, // eslint-disable-line no-unused-vars
+        src, width, height, fluid,
+        preloadSync, // eslint-disable-line no-unused-vars
         ...imgProps
-      },
-      state: { mainSrc, sourceElements }
+      }
     } = this;
 
-    if (!mainSrc) return null;
+    if (!src) return null;
 
     const classNameBuilder = [];
     if (customClass) classNameBuilder.push(customClass);
@@ -98,21 +84,16 @@ class ImageMedia extends Preloadable {
         {...imgProps}
         ref={checkComplete}
         width={width} height={height}
-        src={mainSrc} className={className}
+        src={src} className={className}
         onLoad={onLoad} onError={onError}
       />
     );
 
-    const renderedElement
-      = sourceElements::is.array()
-      ? <picture>{sourceElements}{imgElement}</picture>
-      : imgElement;
-
-    if (!fluid) return renderedElement;
+    if (!fluid) return imgElement;
 
     return (
       <div className="fluid-container">
-        {renderedElement}
+        {imgElement}
         <style jsx>
           {`
             .fluid-container {
@@ -162,25 +143,6 @@ function importWrapper(src, width, height, type) {
     composition.result
   );
 }
-
-const getSrc = (obj) => {
-  if (!obj) return void 0;
-  if (obj::is.string()) return obj;
-  if (obj::is.array()) return obj::arrEx.collectFirst(getSrc);
-  if (obj.src::is.string()) return obj.src;
-  return void 0;
-};
-
-const processSource = (givenSrc) => {
-  if (!givenSrc) return void 0;
-
-  if (givenSrc::is.string())
-    return <source key={givenSrc} srcSet={givenSrc} />;
-
-  const { src, type } = givenSrc;
-  if (!src) return void 0;
-  return <source key={src} srcSet={src} type={type} />;
-};
 
 export default ImageMedia;
 export { importWrapper };
