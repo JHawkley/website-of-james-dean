@@ -1,3 +1,4 @@
+import React from "react";
 import Article, { Goto } from "components/Article";
 import Jump from "components/Jump";
 import NateWidget from "components/Nate";

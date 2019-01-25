@@ -1,3 +1,4 @@
+import React from "react";
 import PropTypes from "prop-types";
 import { dew } from "tools/common";
 import { extensions as maybe, nothing } from "tools/maybe";

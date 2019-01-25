@@ -1,3 +1,4 @@
+import React from "react";
 import PropTypes from "prop-types";
 import ModalPopup from "./ModalPopup";
 import { dew } from "tools/common";

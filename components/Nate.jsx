@@ -1,3 +1,4 @@
+import React from "react";
 import { extensions as objEx, dew, is } from "tools/common";
 import { makeArray, forZipped } from "tools/array";
 import { extensions as maybe, nothing, some } from "tools/maybe";

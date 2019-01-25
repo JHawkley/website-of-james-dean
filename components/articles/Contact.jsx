@@ -1,3 +1,4 @@
+import React from "react";
 import Article from "components/Article";
 import ContactForm from "components/ContactForm";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";

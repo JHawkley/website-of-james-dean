@@ -1,3 +1,4 @@
+import React from "react";
 import PropTypes from "prop-types";
 import { dew, is, Composition } from "tools/common";
 import { Stream, CallSync, debounce } from "tools/async";

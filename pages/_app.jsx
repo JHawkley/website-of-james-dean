@@ -1,3 +1,4 @@
+import React from "react";
 import { hashScroll } from "patch/client-router";
 
 import App, { createUrl } from "next/app";
