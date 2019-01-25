@@ -1,6 +1,7 @@
+import React from "react";
 import PropTypes from "prop-types";
 import { is } from "tools/common";
-import { fold } from "tools/array";
+import { extensions as arrEx, fold } from "tools/array";
 import { makeValidator } from "tools/propTypes";
 import { run } from "tools/parsing";
 
@@ -90,15 +91,25 @@ export function parse(failureText) {
 }
 
 /**
- * Adds an expectation to this validator that, when this property is present and its value is not `false`,
- * the properties in the `propKeys` array should also be present.
+ * Adds an expectation to this validator that when this property is available, the properties listed in
+ * `propKeys` must also be available.
+ * 
+ * The `strictOther` and `strictSelf` arguments modify what it means to be available.  A value handled
+ * strictly must not only be set, but also truthy or otherwise non-empty, to be considered available.
+ * 
+ * Note: the "children" property will always be handled strictly.
  *
  * @export
  * @this {module:tools/propTypes.Validator}
- * @param {string[]} propKeys
+ * @param {string[]} propKeys The list of property keys to require.
+ * @param {boolean} [strictOther=true]
+ *   Whether properties from the `propKeys` list should be treated strictly.
+ * @param {boolean} [strictSelf]
+ *   Whether the value of this property should be treated strictly.  Defaults to `true` when this
+ *   property's value is `boolean` and `false` otherwise.
  * @returns {module:tools/propTypes.Validator} A prop-type validator function.
  */
-export function dependsOn(propKeys) {
+export function dependsOn(propKeys, strictOther = true, strictSelf) {
   if (!this::is.func())
     throw new TypeError("expected to be bound to a prop-type validator function");
   
@@ -110,16 +121,95 @@ export function dependsOn(propKeys) {
   else if (!propKeys.every(v => v::is.string()))
     throw new TypeError("invalid argument for `propKeys`; when an array, it can only contain strings");
 
-  const validationFn = (value, key, props) => {
-    if (value === false) return;
+  if (strictOther != null && !strictOther::is.boolean())
+    throw new TypeError("invalid argument for `strictOther`; expected a boolean or `null`");
+  
+  if (strictSelf != null && !strictSelf::is.boolean())
+    throw new TypeError("invalid argument for `strictSelf`; expected a boolean or `null`");
 
-    const missingProps = propKeys.filter(k => props[k] == null).map(k => `\`${k}\``);
+  const makeMsg = (key, exclusiveProps) => {
+    const start = `the \`${key}\` property requires the following properties to be`;
+    const conditions = strictOther ? "set, a truthy-value, or otherwise not-empty": "set";
+    return `${start} ${conditions}: ${exclusiveProps.join(", ")}`;
+  }
 
-    if (missingProps.length > 0)
-      return `the \`${key}\` property requires the following properties to also be set: ${missingProps.join(", ")}`;
+  const validationFn = (ownValue, key, props, typeCheckArgs) => {
+    const ownPreds = predicatesFor(key, ownValue, strictSelf ?? ownValue::is.boolean());
+    if (ownPreds.some(fn => fn(ownValue))) return;
+
+    const missingProps = propKeys::arrEx.collect((k) => {
+      const otherValue = props[k];
+      const otherPreds = predicatesFor(k, otherValue, strictOther);
+      return otherPreds.some(fn => fn(props[k])) ? `\`${k}\`` : void 0;
+    });
+    
+    if (missingProps.length === 0) return this(...typeCheckArgs);
+
+    return makeMsg(key, missingProps);
   };
 
-  return makeValidator(validationFn, this);
+  return makeValidator(validationFn, false);
+}
+
+/**
+ * Adds an expectation to this validator that when this property is available, the properties listed in
+ * `propKeys` must not be available.
+ * 
+ * The `strictOther` and `strictSelf` arguments modify what it means to be available.  A value handled
+ * strictly must not only be set, but also truthy or otherwise non-empty, to be considered available.
+ * 
+ * Note: the "children" property will always be handled strictly.
+ *
+ * @export
+ * @this {module:tools/propTypes.Validator}
+ * @param {string[]} propKeys The list of property keys to be exclusive to.
+ * @param {boolean} [strictOther=true]
+ *   Whether properties from the `propKeys` list should be treated strictly.
+ * @param {boolean} [strictSelf]
+ *   Whether the value of this property should be treated strictly.  Defaults to `true` when this
+ *   property's value is `boolean` and `false` otherwise.
+ * @returns {module:tools/propTypes.Validator} A prop-type validator function.
+ */
+export function exclusiveTo(propKeys, strictOther = true, strictSelf) {
+  if (!this::is.func())
+    throw new TypeError("expected to be bound to a prop-type validator function");
+  
+  if (propKeys::is.string())
+    propKeys = [propKeys];
+
+  if (!propKeys::is.array())
+    throw new TypeError("invalid argument for `propKeys`; expected either a string or an array-of-strings");
+  else if (!propKeys.every(v => v::is.string()))
+    throw new TypeError("invalid argument for `propKeys`; when an array, it can only contain strings");
+
+  if (strictOther != null && !strictOther::is.boolean())
+    throw new TypeError("invalid argument for `strictOther`; expected a boolean or `null`");
+  
+  if (strictSelf != null && !strictSelf::is.boolean())
+    throw new TypeError("invalid argument for `strictSelf`; expected a boolean or `null`");
+
+  const makeMsg = (key, exclusiveProps) => {
+    const start = `the \`${key}\` property requires the following properties to be`;
+    const conditions = strictOther ? "unset, a falsy-value, or otherwise empty": "unset";
+    return `${start} ${conditions}: ${exclusiveProps.join(", ")}`;
+  }
+
+  const validationFn = (ownValue, key, props, typeCheckArgs) => {
+    const ownPreds = predicatesFor(key, ownValue, strictSelf ?? ownValue::is.boolean());
+    if (ownPreds.some(fn => fn(ownValue))) return;
+    
+    const exclusiveProps = propKeys::arrEx.collect((k) => {
+      const otherValue = props[k];
+      const otherPreds = predicatesFor(k, otherValue, strictOther);
+      return otherPreds.every(fn => fn(otherValue)) ? void 0 : `\`${k}\``;
+    });
+    
+    if (exclusiveProps.length === 0) return this(...typeCheckArgs);
+
+    return makeMsg(key, exclusiveProps);
+  };
+
+  return makeValidator(validationFn, false);
 }
 
 /**
@@ -134,18 +224,36 @@ export function notEmpty() {
     throw new TypeError("expected to be bound to a prop-type validator function");
   
   const validationFn = (value) => {
-    if (value::is.string() && value === "") return "string may not be empty";
-    if (value::is.array() && value.length === 0) return "array may not be empty";
+    if (isEmptyString(value)) return "string may not be empty";
+    if (isEmptyArray(value)) return "array may not be empty";
   };
 
   return makeValidator(validationFn, this);
 }
 
+const isUnset = (v) => v == null;
+const isFalse = (v) => v === false;
+const isEmptyString = (v) => v === "";
+const isEmptyArray = (v) => v.length === 0;
+const isEmptyChildren = (v) => !React.Children.count(v);
+
+const predicatesFor = (key, value, strict) => {
+  if (key === "children") return [isEmptyChildren];
+  if (!strict) return [isUnset];
+  
+  switch (true) {
+    case value::is.boolean(): return [isUnset, isFalse];
+    case value::is.string(): return [isUnset, isEmptyString];
+    case value::is.array(): return [isUnset, isEmptyArray];
+    default: return [isUnset];
+  }
+};
+
 const name = (strings, fn, ...rest) => {
   if (!fn::is.func())
     throw new TypeError("expected first template interpolation to be a function");
 
-  const name = fn.name::is.string() ? `\`${fn.name}\``: null;
+  const name = fn.name && fn.name::is.string() ? `\`${fn.name}\``: null;
 
   const result = [];
   let trimLeft = false;

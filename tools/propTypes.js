@@ -6,20 +6,18 @@ import { is } from "tools/common";
 export * as extensions from "tools/extensions/propTypes";
 
 export function validateAll(propTypes) {
+  if (!propTypes::is.array())
+    throw new TypeError("invalid argument for `propTypes`; expected an array");
 
   const validator = (...args) => {
-    const [propValue, key, componentName, location, propFullName] = args;
-    const value = propValue[key];
-
-    if (value::is.undefined()) return;
-
     for (const ptFn of propTypes) {
       const result = ptFn(...args);
 
       if (result == null) continue;
       if (result::is.instanceOf(Error)) return result;
 
-      return new ValidationError(componentName, location, propFullName, [
+      const [key, componentName, location, propFullName] = args.slice(1);
+      return new ValidationError(componentName, location, propFullName ?? key, [
         "expected a validator to only return `undefined`, `null`, or an error instance",
         `got \`${result}\``
       ]);
@@ -49,7 +47,7 @@ export function makeValidator(validationFn, requirement) {
         break;
       // `validationFn` always requires the value be present.
       case requirement === true && valueIsMissing:
-        return ValidationError.required(componentName, location, propFullName, value);
+        return ValidationError.required(componentName, location, propFullName ?? key, value);
       default:
         // Defer to the `requirement` function.
         if (requirement::is.func()) {
@@ -60,24 +58,26 @@ export function makeValidator(validationFn, requirement) {
     }
 
     try {
-      const result = validationFn(value, key, propValue);
+      const result = validationFn(value, key, propValue, args);
 
       switch (true) {
         case result == null:
           return;
+        case result::is.error():
+          return result;
         case result::is.string():
         case result::is.array():
-          return new ValidationError(componentName, location, propFullName, result);
+          return new ValidationError(componentName, location, propFullName ?? key, result);
         default:
-          return new ValidationError(componentName, location, propFullName, [
-            "expected the validation function to return `undefined`, `null`, a string, or an array",
+          return new ValidationError(componentName, location, propFullName ?? key, [
+            "expected the validation function to return `undefined`, `null`, an Error instance, a string, or an array",
             `got \`${result}\``
           ]);
       }
     }
     catch (ex) {
       return new ValidationError(
-        componentName, location, propFullName,
+        componentName, location, propFullName ?? key,
         ["the validation function threw an error while running", "check `innerError` for more information"],
         ex
       );
@@ -91,15 +91,12 @@ export function makeValidator(validationFn, requirement) {
 
 export function makeRequiredValidator(validator) {
   return function isRequired(...args) {
-    const [
-      propValue, key, // eslint-disable-line no-unused-vars
-      componentName, location, propFullName
-    ] = args;
+    const [propValue, key, componentName, location, propFullName] = args;
 
     const value = propValue[key];
 
     if (value == null)
-      return ValidationError.required(componentName, location, propFullName, value);
+      return ValidationError.required(componentName, location, propFullName ?? key, value);
   
     return validator(...args);
   }
@@ -130,6 +127,32 @@ export class ValidationError extends Error {
   }
 
 }
+
+/**
+ * A prop-type that asserts that the property must not be set to anything.
+ * 
+ * @exports
+ * @type {Validator}
+ */
+export const unset = makeValidator(
+  (value) => value == null ? null : "this property is not supported",
+  false
+);
+
+/**
+ * A prop-type that asserts that the property must be on the object as an own-property, even if it is
+ * set to `undefined` or `null`.
+ * 
+ * @exports
+ * @type {Validator}
+ */
+export const hasOwn = makeValidator(
+  (value, key, props) => {
+    if (Object.prototype.hasOwnProperty.call(props, key)) return null;
+    return "this property must be provided, even if it is set to `undefined` or `null`";
+  },
+  false
+);
 
 /**
  * @callback Validator
