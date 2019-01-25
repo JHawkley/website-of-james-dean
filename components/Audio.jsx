@@ -74,11 +74,16 @@ class Audio extends Preloadable {
     ])
   };
 
-  static getDerivedStateFromProps(props) {
-    if (props.src) return { sources: null };
-    const sources = processChildren(props.children);
-    if (sources.length === 0) return { sources: null };
-    return { sources };
+  static getDerivedStateFromProps({ src, children }, { renderData }) {
+    if (src) return { renderData: null };
+    if (renderData && children === renderData.children) return null;
+    const sources = processChildren(children);
+    return { renderData: { children, sources } };
+  }
+
+  get haveRenderData() {
+    const { renderData } = this.state;
+    return renderData && renderData.sources.length > 0;
   }
 
   audioIsReady = false;
@@ -107,19 +112,26 @@ class Audio extends Preloadable {
 
   componentDidMount() {
     super.componentDidMount();
-    const { sources } = this.state;
-    if (!sources) this.handlePreloaded();
+    if (!this.haveRenderData) this.handlePreloaded();
   }
 
   componentDidUpdate(prevProps, prevState) {
     super.componentDidUpdate(prevProps, prevState);
-    const { sources } = this.state;
-    if (sources !== prevState.sources) {
-      if (sources && !this.audioIsReady)
-        this.handleResetPreload();
+    const { props: { src, children }, haveRenderData } = this;
+    let resetPreload = false;
+    let preloadDone = false;
+
+    if (src !== prevProps.src) preloadDone = Boolean(src);
+
+    if (!src && children !== prevProps.children) {
+      if (haveRenderData && !this.audioIsReady)
+        resetPreload = true;
       else
-        this.handlePreloaded();
+        preloadDone = true;
     }
+
+    if (resetPreload) this.handleResetPreload();
+    if (preloadDone) this.handlePreloaded();
   }
 
   render() {
@@ -130,7 +142,7 @@ class Audio extends Preloadable {
         children, // eslint-disable-line no-unused-vars
         ...audioProps
       },
-      state: { sources }
+      state: { renderData }
     } = this;
 
     if (src)
@@ -143,7 +155,7 @@ class Audio extends Preloadable {
         onCanPlayThrough={onCanPlayThrough}
         onError={onError}
       >
-        { sources }
+        { renderData?.sources }
       </audio>
     );
   }
