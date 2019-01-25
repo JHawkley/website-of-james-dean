@@ -5,9 +5,9 @@ import Head from "next/head";
 import { canScrollRestore as transitionsSupported } from "pages/_app";
 
 import { dew, is, singleton } from "tools/common";
-import { timespan } from "tools/css";
+import { timespan, dequote } from "tools/css";
 import { Future, CallSync, Stream, wait as asyncWaitFn } from "tools/async";
-import { extensions as asyncEx, delayToNextFrame, awaitWhile, abortable } from "tools/async";
+import { extensions as asyncEx, delayToNextFrame, awaitWhile, abortable, preloadImage } from "tools/async";
 import { extensions as asyncIterEx } from "tools/asyncIterables";
 import { extensions as maybe, nothing } from "tools/maybe";
 import { extensions as mapEx } from "tools/maps";
@@ -22,7 +22,6 @@ import Lightbox from "components/Lightbox";
 import LoadingSpinner from "components/LoadingSpinner";
 
 import styleVars from "styles/vars.json";
-import bgImage from "static/images/placeholder_bg.jpg";
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -137,8 +136,12 @@ class IndexPage extends React.PureComponent {
 
   async doLoading() {
     // Synchronize on when the CSS background image has loaded.
-    const bgPromise = isProduction ? bgImage.preload() : bgImage.preload().catch(() => {
-      console.warn(`Warning: failed to load the background image: ${bgImage.src}`);
+    const bgPromise = dew(() => {
+      const bgImageSrc = dequote(styleVars.misc["bg-image"]);
+      const bgPromise = preloadImage(bgImageSrc);
+      return isProduction ? bgPromise : bgPromise.catch(() => {
+        console.warn(`warning: failed to load the background image: ${bgImageSrc}`);
+      });
     });
 
     // Put a max limit before we load anyways.
