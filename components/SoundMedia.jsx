@@ -1,35 +1,30 @@
 import PropTypes from "prop-types";
 import { is, Composition } from "tools/common";
-import { extensions as arrEx } from "tools/array";
-import { extensions as propTypeEx } from "tools/propTypes";
+import { extensions as propTypeEx, hasOwn as propTypeHasOwn } from "tools/propTypes";
 import { Preloadable, PreloadSync } from "components/Preloader";
-
-const soundPropType = PropTypes.oneOfType([
-  PropTypes.string::propTypeEx.notEmpty(),
-  PropTypes.shape({
-    src: PropTypes.string::propTypeEx.notEmpty().isRequired,
-    type: PropTypes.string::propTypeEx.notEmpty(),
-    codec: PropTypes.string::propTypeEx.notEmpty()::propTypeEx.dependsOn("type")
-  })
-]);
+import Audio from "components/Audio";
 
 class SoundMedia extends Preloadable {
 
   static propTypes = {
     ...Preloadable.propTypes,
-    src: PropTypes.oneOfType([
-      soundPropType,
-      PropTypes.arrayOf(soundPropType)::propTypeEx.notEmpty()
-    ]).isRequired
+    src: PropTypes.string::propTypeEx.notEmpty().isRequired,
+    audioRef: PropTypes.oneOfType([
+      PropTypes.func, 
+      PropTypes.shape({ current: propTypeHasOwn })
+    ])
   };
-
-  static getDerivedStateFromProps(props) {
-    return { renderProps: getRenderProps(props.src) };
-  }
 
   audioIsReady = false;
 
   checkReadiness = (audio) => {
+    // Forward the audio-ref.
+    const { audioRef } = this.props;
+    if (audioRef) {
+      if (audioRef::is.func()) audioRef(audio);
+      else audioRef.current = audio;
+    }
+    // Do our logic.
     if (!audio) return;
     this.audioIsReady = audio.readyState === HTMLMediaElement.HAVE_ENOUGH_DATA;
     if (this.audioIsReady) this.handlePreloaded();
@@ -38,7 +33,7 @@ class SoundMedia extends Preloadable {
   onCanPlayThrough = this.handlePreloaded;
 
   onError = () => {
-    const src = getSrc(this.props.src);
+    const src = this.props.src;
     const msg = ["sound failed to load"];
     if (src) msg.push(src);
     this.handlePreloadError(new Error(msg.join(": ")));
@@ -46,35 +41,35 @@ class SoundMedia extends Preloadable {
 
   componentDidMount() {
     super.componentDidMount();
-    const { renderProps } = this.state;
-    if (!renderProps) this.handlePreloaded();
+    const { src } = this.props;
+    if (!src) this.handlePreloaded();
   }
 
   componentDidUpdate(prevProps, prevState) {
     super.componentDidUpdate(prevProps, prevState);
-    const { props: { src }, state: { renderProps } } = this;
-    if (src !== prevProps.src && !this.audioIsReady)
-      this.handleResetPreload();
-    if (renderProps !== prevState.renderProps && !renderProps)
-      this.handlePreloaded();
+    const { src } = this.props;
+    if (src !== prevProps.src) {
+      if (!this.audioIsReady) this.handleResetPreload();
+      if (!src) this.handlePreloaded();
+    }
   }
 
   render() {
     const {
       checkReadiness, onCanPlayThrough, onError,
       props: {
-        src, preloadSync, // eslint-disable-line no-unused-vars
+        src,
+        audioRef, preloadSync, // eslint-disable-line no-unused-vars
         ...audioProps
-      },
-      state: { renderProps }
+      }
     } = this;
 
-    if (!renderProps) return null;
+    if (!src) return null;
 
     return (
       <audio
         {...audioProps}
-        {...renderProps}
+        src={src}
         ref={checkReadiness}
         onCanPlayThrough={onCanPlayThrough}
         onError={onError}
@@ -85,64 +80,30 @@ class SoundMedia extends Preloadable {
 }
 
 function importWrapper(src, type, codec) {
-  const ImportedSound = (props) => {
-    if (!type) return <SoundMedia {...props} src={src} />;
-    return <SoundMedia {...props} src={{ src, type, codec }} />;
-  };
-
   const composition = new Composition({ src });
   if (type && codec) composition.compose({ type, codec });
   else if (type) composition.compose({ type });
 
+  const soundData = composition.result;
+
+  const ImportedSound = ({asSource, ...props}) => {
+    if (asSource) return Audio.sourceFromObj(soundData);
+    if (!type) return <SoundMedia {...props} src={src} />;
+    return <Audio {...props}>{Audio.sourceFromObj(soundData)}</Audio>;
+  };
+
   return Object.assign(
-    Preloadable.mark(ImportedSound),
+    Audio.markSourceable(Preloadable.mark(ImportedSound)),
     {
-      propTypes: { preloadSync: PropTypes.instanceOf(PreloadSync) },
+      propTypes: {
+        preloadSync: PropTypes.instanceOf(PreloadSync),
+        asSource: PropTypes.bool
+      },
       displayName: `importedSound("${src}")`
     },
-    composition.result
+    soundData
   );
 }
-
-const getSrc = (obj) => {
-  if (!obj) return void 0;
-  if (obj::is.string()) return obj;
-  if (obj::is.array()) return obj::arrEx.collectFirst(getSrc);
-  if (obj.src::is.string()) return obj.src;
-  return void 0;
-};
-
-const getRenderProps = (obj) => {
-  if (!obj)
-    return null;
-
-  if (obj::is.string())
-    return { src: obj };
-
-  if (obj::is.array()) {
-    const sourceElements = obj::arrEx.collect(processSource);
-    if (sourceElements.length === 0) return null;
-    return { children: sourceElements };
-  }
-
-  const sourceElement = processSource(obj);
-  if (sourceElement)
-    return { children: [sourceElement] };
-
-  return null;
-};
-
-const processSource = (givenSrc) => {
-  if (!givenSrc) return void 0;
-
-  if (givenSrc::is.string())
-    return <source key={givenSrc} src={givenSrc} />;
-
-  const { src, type: baseType, codec } = givenSrc;
-  if (!src) return void 0;
-  const type = baseType ? (codec ? `${baseType}; codecs=${codec}` : baseType) : null;
-  return <source key={src} src={src} type={type} />;
-};
 
 export default SoundMedia;
 export { importWrapper };
