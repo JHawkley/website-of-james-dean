@@ -96,8 +96,7 @@ class Audio extends Preloadable {
       else audioRef.current = audio;
     }
     // Do our logic.
-    if (!audio) return;
-    this.audioIsReady = audio.readyState === HTMLMediaElement.HAVE_ENOUGH_DATA;
+    this.audioIsReady = audio ? audio.readyState === HTMLMediaElement.HAVE_ENOUGH_DATA : false;
     if (this.audioIsReady) this.handlePreloaded();
   }
 

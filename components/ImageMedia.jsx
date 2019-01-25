@@ -32,8 +32,8 @@ class ImageMedia extends Preloadable {
       if (imgRef::is.func()) imgRef(img);
       else imgRef.current = img;
     }
-    if (!img) return;
-    this.imgIsComplete = img.complete;
+    // Do our logic.
+    this.imgIsComplete = Boolean(img?.complete);
     if (this.imgIsComplete) this.handlePreloaded();
   }
 
