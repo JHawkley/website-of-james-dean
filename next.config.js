@@ -5,6 +5,7 @@ const glob = require('glob');
 const toLower = require('lodash/toLower');
 const jsonImporter = require('node-sass-json-importer');
 const imageMediaLoader = require('./webpack/image-media-loader');
+const soundMediaLoader = require('./webpack/sound-media-loader');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const DefinePlugin = require('webpack/lib/DefinePlugin');
 
@@ -50,6 +51,10 @@ module.exports = {
       {
         test: new RegExp(`\\.(${imageMediaLoader.supportedTypes.join('|')})$`, 'i'),
         loader: 'image-media-loader'
+      },
+      {
+        test: new RegExp(`\\.(${soundMediaLoader.supportedTypes.join('|')})$`, 'i'),
+        loader: 'sound-media-loader'
       },
       {
         enforce: 'post',
