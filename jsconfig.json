@@ -9,7 +9,8 @@
           "components/*": ["./components/*"],
           "pages/*": ["./pages/*"],
           "tools/*": ["./tools/*"],
-          "styles/*": ["./styles/*"]
+          "styles/*": ["./styles/*"],
+          "static/*": ["./static/*"]
       }
   },
   "exclude": [

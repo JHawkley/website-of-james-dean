@@ -5,39 +5,35 @@ import { extensions as maybe, nothing, some } from "tools/maybe";
 import bulletActionList from "./nateLogic/bulletActionList";
 import nateActionList from "./nateLogic/nateActionList";
 import { behaviorModes, facings, aimings, movings, jumps } from "./nateLogic/core";
+import Audio from "components/Audio";
+
+import OggBowWow from "static/sounds/nate-game/bow-wow.ogg?codec=vorbis";
+import Mp3BowWow from "static/sounds/nate-game/bow-wow.mp3";
+import OggAroo from "static/sounds/nate-game/aroo.ogg?codec=vorbis";
+import Mp3Aroo from "static/sounds/nate-game/aroo.mp3";
+import OggLand from "static/sounds/nate-game/land.ogg?codec=vorbis";
+import Mp3Land from "static/sounds/nate-game/land.mp3";
+import OggPew from "static/sounds/nate-game/pew.ogg?codec=vorbis";
+import Mp3Pew from "static/sounds/nate-game/pew.mp3";
+import OggPop1 from "static/sounds/nate-game/pop1.ogg?codec=vorbis";
+import Mp3Pop1 from "static/sounds/nate-game/pop1.mp3";
+import OggPop2 from "static/sounds/nate-game/pop2.ogg?codec=vorbis";
+import Mp3Pop2 from "static/sounds/nate-game/pop2.mp3";
 
 const Fragment = React.Fragment;
 
 /* eslint-disable react/prop-types */
 const Sounds = ({nate, bullets}) => (
   <Fragment>
-    <audio ref={nate.sounds.bark}>
-      <source src="/static/sounds/nate-game/bow-wow.ogg" type="audio/ogg; codecs=vorbis" />
-      <source src="/static/sounds/nate-game/bow-wow.mp3" type="audio/mpeg" />
-    </audio>
-    <audio ref={nate.sounds.aroo}>
-      <source src="/static/sounds/nate-game/aroo.ogg" type="audio/ogg; codecs=vorbis" />
-      <source src="/static/sounds/nate-game/aroo.mp3" type="audio/mpeg" />
-    </audio>
-    <audio ref={nate.sounds.land}>
-      <source src="/static/sounds/nate-game/land.ogg" type="audio/ogg; codecs=vorbis" />
-      <source src="/static/sounds/nate-game/land.mp3" type="audio/mpeg" />
-    </audio>
+    <Audio audioRef={nate.sounds.bark}><OggBowWow /><Mp3BowWow /></Audio>
+    <Audio audioRef={nate.sounds.aroo}><OggAroo /><Mp3Aroo /></Audio>
+    <Audio audioRef={nate.sounds.land}><OggLand /><Mp3Land /></Audio>
     {bullets.map((bullet, i) => {
       return (
         <Fragment key={i}>
-          <audio ref={bullet.sounds.spawned}>
-            <source src="/static/sounds/nate-game/pew.ogg" type="audio/ogg; codecs=vorbis" />
-            <source src="/static/sounds/nate-game/pew.mp3" type="audio/mpeg" />
-          </audio>
-          <audio ref={bullet.sounds.hit}>
-            <source src="/static/sounds/nate-game/pop1.ogg" type="audio/ogg; codecs=vorbis" />
-            <source src="/static/sounds/nate-game/pop1.mp3" type="audio/mpeg" />
-          </audio>
-          <audio ref={bullet.sounds.timedOut}>
-            <source src="/static/sounds/nate-game/pop2.ogg" type="audio/ogg; codecs=vorbis" />
-            <source src="/static/sounds/nate-game/pop2.mp3" type="audio/mpeg" />
-          </audio>
+          <Audio audioRef={bullet.sounds.spawned}><OggPew /><Mp3Pew /></Audio>
+          <Audio audioRef={bullet.sounds.hit}><OggPop1 /><Mp3Pop1 /></Audio>
+          <Audio audioRef={bullet.sounds.timedOut}><OggPop2 /><Mp3Pop2 /></Audio>
         </Fragment>
       );
     })}
