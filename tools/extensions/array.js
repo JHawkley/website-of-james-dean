@@ -87,6 +87,57 @@ export function randomElement() {
 }
 
 /**
+ * Gets the first element of this array or `undefined` if there is none.
+ *
+ * @export
+ * @template T
+ * @this {T[]} This array.
+ * @returns {T | undefined} The first element of the array.
+ */
+export function head() {
+  return this.length > 0 ? this[0] : void 0;
+}
+
+/**
+ * Gets all the elements of this array except the first, or an empty-array if `length <= 1`.
+ *
+ * @export
+ * @template T
+ * @this {T[]} This array.
+ * @returns {T[]} An array containing all the elements of this array except the first.
+ */
+export function tail() {
+  if (this.length <= 1) return [];
+  return this.slice(1);
+}
+
+/**
+ * Gets all the elements of this array except the last, or an empty-array if `length <= 1`.
+ *
+ * @export
+ * @template T
+ * @this {T[]} This array.
+ * @returns {T[]} An array containing all the elements of this array except the last.
+ */
+export function init() {
+  if (this.length <= 1) return [];
+  return this.slice(0, -1);
+}
+
+/**
+ * Gets the last element of this array or `undefined` if there is none.
+ *
+ * @export
+ * @template T
+ * @this {T[]} This array.
+ * @returns {T | undefined} The last element of the array.
+ */
+export function last() {
+  const length = this.length;
+  return length > 0 ? this[length - 1] : void 0;
+}
+
+/**
  * Performs a combination filter + map on each element of the array.  The `partialFn` should return `undefined`
  * for values that should be filtered out.  Any other value will be added to the result array.
  *
@@ -142,6 +193,68 @@ export function collectFirst(partialFn) {
  */
 export function reject(predicateFn) {
   return this.filter((v, i, arr) => !predicateFn(v, i, arr));
+}
+
+/**
+ * Joins this string together by joining all but the last element with `initSeparator`, then joins the
+ * last element with `lastSeparator`.  Always returns and empty-string if the array is empty.
+ * 
+ * @example
+ * const problems = ["the following argument cannot be"];
+ * if (!nullAllowed) problems.push("`null`");
+ * if (!falseAllowed) problems.push("`false`");
+ * if (!emptyStringAllowed) problems.push("empty-string");
+ * problems.push("someArgument");
+ * 
+ * const problemList = problems::joinWith(", ", ": ");
+ * // Logs: "the following argument cannot be `null`, `false`, empty-string: someArgument"
+ * console.log(`Should we look for him at ${orList}?`);
+ *
+ * @export
+ * @template T
+ * @this {T[]} This array.
+ * @returns {string}
+ */
+export function joinWith(initSeparator, lastSeparator) {
+  switch (this.length) {
+    case 0: return "";
+    case 1: return this[0].toString();
+    default: return [this::init().join(initSeparator), lastSeparator, this::last()].join("");
+  }
+}
+
+/**
+ * Joins this string together into a grammatically-correct list using "or".
+ * 
+ * @example
+ * const orList = ["school", "the diner", "his home"]::joinWithOr();
+ * // Logs: "Should we look for him at school, the diner, or his home?"
+ * console.log(`Should we look for him at ${orList}?`);
+ *
+ * @export
+ * @template T
+ * @this {T[]} This array.
+ * @returns {string}
+ */
+export function joinWithOr() {
+  return this.length === 2 ? this.join(" or ") : this::joinWith(", ", ", or ");
+}
+
+/**
+ * Joins this string together into a grammatically-correct list using "and".
+ * 
+ * @example
+ * const andList = ["the school", "the diner", "his home"]::joinWithAnd();
+ * // Logs: "We've looked for him at the school, the diner, and his home."
+ * console.log(`We've looked for him at ${andList}.`);
+ *
+ * @export
+ * @template T
+ * @this {T[]} This array.
+ * @returns {string}
+ */
+export function joinWithAnd() {
+  return this.length === 2 ? this.join(" and ") : this::joinWith(", ", ", and ");
 }
 
 /**
@@ -206,25 +319,6 @@ export function segregate(segregationFn) {
   return result;
 }
 
-const arrayFlattenBy = Array.prototype.flat ?? dew(() => {
-  return function flattenBy(levels) {
-    if (levels <= 0) return this;
-    return flattenBy_recursive(this, [], levels);
-  }
-
-  function flattenBy_recursive(arr, result, levels) {
-    if (levels < 0) result.push(arr);
-    else {
-      for (let i = 0, len = arr.length; i < len; i++) {
-        const value = arr[i];
-        if (Array.isArray(value)) flattenBy_recursive(value, result, levels - 1);
-        else result.push(value);
-      }
-    }
-    return result;
-  }
-});
-
 /**
  * Flattens this array by one level.
  *
@@ -248,6 +342,25 @@ export function flatten() {
 export function flattenBy(levels = 1) {
   return this::arrayFlattenBy(levels);
 }
+
+const arrayFlattenBy = Array.prototype.flat ?? dew(() => {
+  return function flattenBy(levels) {
+    if (levels <= 0) return this;
+    return flattenBy_recursive(this, [], levels);
+  }
+
+  function flattenBy_recursive(arr, result, levels) {
+    if (levels < 0) result.push(arr);
+    else {
+      for (let i = 0, len = arr.length; i < len; i++) {
+        const value = arr[i];
+        if (Array.isArray(value)) flattenBy_recursive(value, result, levels - 1);
+        else result.push(value);
+      }
+    }
+    return result;
+  }
+});
 
 /**
  * @template T,U
