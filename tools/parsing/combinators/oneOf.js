@@ -13,7 +13,7 @@ export const oneOf = (...parsers) => (state) => {
   const { position } = state;
   for (const parser of parsers) {
     const result = parser(state);
-    if (isResult(position)) return result;
+    if (isResult(result)) return result;
     state.position = position;
   }
   return void 0;
