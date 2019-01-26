@@ -21,12 +21,12 @@ import { run } from "tools/parsing";
 export function numeric(valueStr, expectedUnit) {
   if (expectedUnit == null) {
     const result = run(numUnitParser, valueStr);
-    if (!Array.isArray(result)) throw numericError(valueStr);
+    if (!result::is.array()) throw numericError(valueStr);
     return result;
   }
   else {
     const result = run(p`${numParser}${expectedUnit}`, valueStr);
-    if (!Array.isArray(result)) throw numericError(valueStr, expectedUnit);
+    if (!result::is.array()) throw numericError(valueStr, expectedUnit);
     return result;
   }
 }
@@ -40,10 +40,10 @@ export function numeric(valueStr, expectedUnit) {
  */
 export function timespan(valueStr) {
   const result = run(timeParser, valueStr);
-  if (!Array.isArray(result)) throw timeError(valueStr);
+  if (!result::is.array()) throw timeError(valueStr);
 
   const [time, unit] = result;
-  if (Number.isNaN(time)) throw timeError(valueStr);
+  if (time::is.NaN()) throw timeError(valueStr);
 
   switch (unit) {
     case "ms": return time;
@@ -61,7 +61,7 @@ export function timespan(valueStr) {
  */
 export function color(valueStr) {
   const result = run(colorParser, valueStr);
-  if (!Array.isArray(result) || result.length !== 4)
+  if (!result::is.array() || result.length !== 4)
     throw colorError(valueStr);
   return new Color(result);
 }
@@ -76,7 +76,7 @@ export function color(valueStr) {
  */
 export function dequote(cssStr) {
   const result = run(stringParser, cssStr);
-  if (!Array.isArray(result)) return cssStr;
+  if (!result::is.array()) return cssStr;
   return result[0];
 }
 
@@ -183,7 +183,7 @@ class Color {
   }
 
   constructor(rgbaArr) {
-    if (!Array.isArray(rgbaArr) || (rgbaArr.length !== 3 && rgbaArr.length !== 4))
+    if (!rgbaArr::is.array() || (rgbaArr.length !== 3 && rgbaArr.length !== 4))
       throw new Error(`could not construct color from \`${rgbaArr}\``);
     const [r, g, b, a = 1.0] = rgbaArr;
     this._rgb = [r, g, b];
@@ -270,13 +270,13 @@ const {
 
 const strToInt = (radix) => map::specify((value) => {
   const result = parseInt(value, radix);
-  if (Number.isNaN(result)) return void 0;
+  if (result::is.NaN()) return void 0;
   return result;
 });
 
 const strToFloat = map::specify((value) => {
   const result = parseFloat(value);
-  if (Number.isNaN(result)) return void 0;
+  if (result::is.NaN()) return void 0;
   return result;
 });
 
