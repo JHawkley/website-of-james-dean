@@ -19,7 +19,7 @@ import { run } from "tools/parsing";
  * @returns {[number, string]} A tuple of the parsed number and its unit.
  */
 export function numeric(valueStr, expectedUnit) {
-  if (expectedUnit::is.undefined()) {
+  if (expectedUnit == null) {
     const result = run(numUnitParser, valueStr);
     if (!Array.isArray(result)) throw numericError(valueStr);
     return result;
@@ -261,6 +261,7 @@ class Color {
 
 const {
   atomic: { regex },
+  parsers: { rest },
   combinators: { seq, oneOf },
   modifiers: { skip, filterEmpty, join, map, asString },
   template: { parser: p, interpolate },
@@ -280,10 +281,10 @@ const strToFloat = map::specify((value) => {
 });
 
 const clamp01 = (n) => n::numEx.clamp(0.0, 1.0);
-const intParser = regex(/[-+]?\d+/)::chain(strToInt(10));
+const intParser = regex(/[-+]?\d+/)::chain(asString, strToInt(10));
 const floatParser = p`${/[-+]?\d+/}${"."}${/\d+/}`::chain(join.all, strToFloat);
 const numParser = oneOf(floatParser, intParser);
-const numUnitParser = p`${numParser}${interpolate}`;
+const numUnitParser = seq(numParser, asString(rest));
 const byteParser = dew(() => {
   const hexValue = regex(/[0-9a-f]/i);
   return seq(hexValue, hexValue)::chain(join.all, strToInt(16));
