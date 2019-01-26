@@ -134,7 +134,8 @@ export const is = {
   boolean() { "use strict"; return typeof this === "boolean"; },
   undefined() { "use strict"; return typeof this === "undefined"; },
   null() { "use strict"; return this === null; },
-  object() { "use strict"; return typeof this === "object" && this !== null; },
+  NaN() { "use strict"; return Number.isNaN(this); },
+  object() { "use strict"; return this !== null && typeof this === "object"; },
   error() { "use strict"; return this instanceof Error },
   instanceOf(klass) { "use strict"; return this instanceof klass; }
 };
