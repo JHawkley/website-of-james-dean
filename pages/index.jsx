@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Fragment } from "react";
 import PropTypes from "prop-types";
 import ReactDOMServer from "react-dom/server";
 import Head from "next/head";
@@ -24,8 +24,6 @@ import LoadingSpinner from "components/LoadingSpinner";
 import styleVars from "styles/vars.json";
 
 const isProduction = process.env.NODE_ENV === 'production';
-
-const { Fragment } = React;
 
 const articleTransition = timespan(styleVars.duration.article);
 const throbberFadeTime = timespan(styleVars.duration.modal);

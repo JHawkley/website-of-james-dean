@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Fragment } from "react";
 import { hashScroll } from "patch/client-router";
 
 import App, { createUrl } from "next/app";
@@ -9,8 +9,6 @@ import Modal from "react-modal";
 import { config as faConfig, dom as faDom } from "@fortawesome/fontawesome-svg-core";
 import { dew, is } from "tools/common";
 import { extensions as maybe } from "tools/maybe";
-
-const { Fragment } = React;
 
 faConfig.autoAddCss = false;
 

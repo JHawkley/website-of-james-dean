@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Fragment } from "react";
 import PropTypes from "prop-types";
 import ModalPopup from "./ModalPopup";
 import { dew } from "tools/common";
@@ -6,8 +6,6 @@ import { base64 } from "tools/strings";
 import { extensions as numEx } from "tools/numbers";
 import { extensions as arrEx } from "tools/array";
 import { extensions as maybe, nothing } from "tools/maybe";
-
-const Fragment = React.Fragment;
 
 function mapOfCharToIndex() {
   const output = {};
