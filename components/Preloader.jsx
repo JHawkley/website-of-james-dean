@@ -105,7 +105,7 @@ class Preloader extends React.PureComponent {
 
     if (props.preloadSync && props.preloadSync !== state.preloadSync)
       newState.compose({ preloadSync: props.preloadSync, ownedPreloadSync: false });
-    else if (!state.preloadState)
+    else if (!state.preloadSync)
       newState.compose({ preloadSync: new PreloadSync(), ownedPreloadSync: true });
 
     if (!state.mustRender && !props.wait)
