@@ -42,19 +42,17 @@ const prepareParser = (parser) => {
   throw new Error(`no parser could be located for \`${parser}\` in the template-literal`);
 };
 
-const processParser = (cur, last) => {
-  if (cur.preserveResult) return map(cur, preserveResult);
+const processParser = (cur, next) => {
+  if (cur.preserveResult)
+    return map(cur, preserveResult);
 
-  if (last) switch (true) {
-    case cur === interpolate: return interpose.string(any, last);
-    case cur instanceof AppliedInterpolation: return interpose(cur.parser, last);
-  }
+  if (cur === interpolate)
+    return next ? interpose.string(any, next) : asString(rest);
+  
+  if (cur instanceof AppliedInterpolation)
+    return next ? interpose(cur.parser, next) : interpose(cur.parser, endOfInput);
 
-  switch (true) {
-    case cur === interpolate: return asString(rest);
-    case cur instanceof AppliedInterpolation: return interpose(cur.parser, endOfInput);
-    default: return cur;
-  }
+  return cur;
 }
 
 /**
@@ -82,8 +80,11 @@ export const parser = (strings, ...parsers) => {
     parsers.map(prepareParser)
   )::arrEx.reject(isUndefined);
 
-  let last = null;
+  // Start from the end, and work back.
+  // `next` means "the parser after the current parser", naturally.
+  let next = null;
   for (let i = combined.length - 1; i >= 0; i--)
-    last = combined[i] = processParser(combined[i], last);
+    next = combined[i] = processParser(combined[i], next);
+  
   return map(seq(...combined), finalizeResult);
 };
