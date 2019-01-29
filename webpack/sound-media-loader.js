@@ -19,7 +19,7 @@ function soundToModule(src, type, codec) {
     module.exports.__esModule = true;
     module.exports.default = importWrapper(${args.join(", ")});
     module.exports.src = "${src}";
-    module.exports.toString = () => "${src}";
+    module.exports.toString = function toString() { return "${src}"; };
   `);
 }
 
