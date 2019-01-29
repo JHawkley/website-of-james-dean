@@ -1,4 +1,3 @@
-import * as arrEx from "tools/extensions/array";
 import { map } from "./map";
 
 /**
@@ -10,5 +9,5 @@ import { map } from "./map";
  * @returns {Parser<Array>} A parser that produces an array.
  */
 export const flattenBy = (parser, levels) => map(parser, (parserResult) => {
-  return parserResult::arrEx.flattenBy(levels);
+  return parserResult.flatten(levels);
 });
