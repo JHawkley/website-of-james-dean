@@ -5,7 +5,7 @@ import { rest } from "../parsers/rest";
 import { endOfInput } from "../parsers/endOfInput";
 import { str } from "../atomic/str";
 import { regex } from "../atomic/regex";
-import { seq } from "../combinators/seq";
+import { arr } from "../combinators/arr";
 import { interpose } from "../combinators/interpose";
 import { oneOf } from "../combinators/oneOf";
 import { map } from "../modifiers/map";
@@ -86,5 +86,5 @@ export const parser = (strings, ...parsers) => {
   for (let i = combined.length - 1; i >= 0; i--)
     next = combined[i] = processParser(combined[i], next);
   
-  return map(seq(...combined), finalizeResult);
+  return map(arr(combined), finalizeResult);
 };
