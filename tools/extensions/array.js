@@ -343,7 +343,7 @@ export function flattenBy(levels = 1) {
   return this::arrayFlattenBy(levels);
 }
 
-const arrayFlattenBy = Array.prototype.flat ?? dew(() => {
+const arrayFlattenBy = Array.prototype.flatten ?? dew(() => {
   return function flattenBy(levels) {
     if (levels <= 0) return this;
     return flattenBy_recursive(this, [], levels);
