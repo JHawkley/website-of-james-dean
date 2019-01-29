@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import Header from "components/Header";
 import Main from "components/Main";
 import Footer from "components/Footer";
-import { PreloadSync } from "components/Preloader";
+import PreloadSync from "components/associates/PreloadSync";
 
 class Wrapper extends React.PureComponent {
 

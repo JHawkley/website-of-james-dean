@@ -2,7 +2,8 @@ import PropTypes from "prop-types";
 import { is, Composition } from "tools/common";
 import { preloadImage } from "tools/async";
 import { extensions as propTypeEx, hasOwn as propTypeHasOwn } from "tools/propTypes";
-import { Preloadable, PreloadSync } from "components/Preloader";
+import Preloadable from "components/Preloadable";
+import PreloadSync from "components/associates/PreloadSync";
 
 class ImageMedia extends Preloadable {
 

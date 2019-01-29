@@ -15,7 +15,7 @@ import * as parsing from "tools/parsing/index";
 import dynamic from "next/dynamic";
 import DynamicLoader from "components/DynamicLoader";
 
-import { PreloadSync } from "components/Preloader";
+import PreloadSync from "components/associates/PreloadSync";
 import NoJavaScript from "components/NoJavaScript";
 import Wrapper from "components/Wrapper";
 import Lightbox from "components/Lightbox";

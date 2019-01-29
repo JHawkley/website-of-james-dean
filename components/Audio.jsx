@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { is, dew } from "tools/common";
 import { extensions as arrEx } from "tools/array";
 import { extensions as propTypeEx, hasOwn as propTypeHasOwn } from "tools/propTypes";
-import { Preloadable } from "components/Preloader";
+import Preloadable from "components/Preloadable";
 import SoundMedia from "components/SoundMedia";
 
 const $$sourceable = Symbol("audio:sourceable");
