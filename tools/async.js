@@ -571,6 +571,22 @@ export function delayToNextFrame(abortSignal) {
 }
 
 /**
+ * Begins an asynchronous process, calling `fn` once a frame until `abortSignal` completes.  The
+ * function will receive the current timestamp, according to rules of `requestAnimationFrame`.
+ *
+ * @export
+ * @param {Promise} abortSignal The promise to use as a signal to abort when it completes.
+ * @param {function(number)} fn The function that will run each frame.
+ * @returns {Promise<void>} A promise that will resolve when the process is aborted.
+ */
+export async function eachFrame(abortSignal, fn) {
+  let timestamp;
+  if (!abortSignal) throw new TypeError("argument `abortSignal` is required");
+  if (!fn::is.func()) throw new TypeError("argument `fn` must be a function");
+  while((timestamp = await frameSync(abortSignal)) !== abortable.signal) fn(timestamp);
+}
+
+/**
  * Creates a promise that will resolve once a timer has elapsed.
  *
  * @export
