@@ -3,7 +3,6 @@ import { is, Composition } from "tools/common";
 import { preloadImage } from "tools/async";
 import { extensions as propTypeEx, hasOwn as propTypeHasOwn } from "tools/propTypes";
 import Preloadable from "components/Preloadable";
-import PreloadSync from "components/associates/PreloadSync";
 
 class ImageMedia extends Preloadable {
 
@@ -137,7 +136,7 @@ function importWrapper(src, width, height, type) {
   return Object.assign(
     Preloadable.mark(ImportedImage),
     {
-      propTypes: { preloadSync: PropTypes.instanceOf(PreloadSync) },
+      propTypes: { ...Preloadable.propTypes },
       displayName: `importedImage("${src}")`,
       preload: () => preloadImage(src, width, height)
     },

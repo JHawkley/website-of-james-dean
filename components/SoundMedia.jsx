@@ -2,7 +2,6 @@ import PropTypes from "prop-types";
 import { is, Composition } from "tools/common";
 import { extensions as propTypeEx, hasOwn as propTypeHasOwn } from "tools/propTypes";
 import Preloadable from "components/Preloadable";
-import PreloadSync from "components/associates/PreloadSync";
 import Audio from "components/Audio";
 
 class SoundMedia extends Preloadable {
@@ -96,7 +95,7 @@ function importWrapper(src, type, codec) {
     Audio.markSourceable(Preloadable.mark(ImportedSound)),
     {
       propTypes: {
-        preloadSync: PropTypes.instanceOf(PreloadSync),
+        ...Preloadable.propTypes,
         asSource: PropTypes.bool
       },
       displayName: `importedSound("${src}")`
