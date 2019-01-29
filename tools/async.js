@@ -484,7 +484,7 @@ const awaitWhile_noDefault = () =>
  * @returns {Promise<T|Symbol>} An abortable promise.
  */
 export function abortable(mainPromise, signalPromise) {
-  const abortingPromise = signalPromise::finishWith(() => abortable.signal);
+  const abortingPromise = signalPromise::finishWith(abortable.signal);
   if (mainPromise == null) return abortingPromise;
   return Promise.race([mainPromise, abortingPromise]);
 }
