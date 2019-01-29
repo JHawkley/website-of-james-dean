@@ -1,4 +1,4 @@
-import { dew } from "tools/common";
+import { is } from "tools/common";
 import { abortable } from "tools/async";
 
 const alwaysTrue = () => true;
@@ -55,17 +55,19 @@ export function isAborted() {
 }
 
 /**
- * Creates a promise that will try to resolve to the result of `onComplete` after this promise completes.
+ * Creates a promise that will try to resolve with `onComplete` after this promise completes.  If `onComplete`
+ * is a function, it will be called and its return value provided instead.
+ * 
  * It is basically the same as calling `promise.then(onComplete, onComplete)`.  No value is provided to
- * `onComplete` as it is not possible to determine the outcome of this promise.
+ * `onComplete` when it is called as it is not possible to determine the outcome of this promise.
  *
  * @export
  * @template T
  * @this {Promise} This promise.
- * @param {function(): T} onComplete A function to be run after this promise completes.
+ * @param {T | function(): T} onComplete A function-to-call or value-to-produce when the promise completes.
  * @returns {Promise<T>} A promise that will resolve to the value produced by `onComplete`.
  */
 export function finishWith(onComplete) {
-  const fn = () => onComplete();
+  const fn = () => onComplete::is.func() ? onComplete() : onComplete;
   return this.then(fn, fn);
 }
