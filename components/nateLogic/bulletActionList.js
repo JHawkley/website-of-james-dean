@@ -1,8 +1,7 @@
 import { extensions as objEx, dew } from "tools/common";
 import { extensions as numEx } from "tools/numbers";
 import { extensions as vecEx } from "tools/vectorMath";
-import { playSound } from "./nateCommon";
-import { decrementTime } from "./core";
+import { decrementTime, tracks } from "./core";
 import * as bc from "./bulletConfig";
 
 const { max, min, abs } = Math;
@@ -24,39 +23,39 @@ function doChase(leader, chaser, followDistance) {
   chaser::vecEx.set(direction);
 }
 
-function initialize(bullet, {nate}, {lanes}) {
+function initialize(bullet, world, {lanes}) {
   if (!bullet.spawned) return;
   if (bullet.initialized) return;
-  const { trajectory, sounds, nodePositions: [node1, node2, node3] } = bullet;
+  const { trajectory, sounds, nodes: [node1, node2, node3] } = bullet;
 
   trajectory::vecEx.unit();
-  node2::vecEx.set(node1);
-  node3::vecEx.set(node1);
+  node2.pos::vecEx.set(node1.pos);
+  node3.pos::vecEx.set(node1.pos);
   bullet.driftRemaining = driftRemainingValue;
   bullet.timeout = timeout;
   bullet.burst = 0.0;
   bullet.initialized = true;
 
-  playSound(nate, sounds.spawned);
+  sounds[tracks.spawned].play();
 
   lanes.add(didInitialize);
 }
 
-function collideWithCursor(bullet, {cursor, nate}) {
+function collideWithCursor(bullet, {cursor}) {
   if (!bullet.spawned) return;
   if (bullet.burst > 0.0) return;
 
-  const { sounds, nodePositions: [bulletPos] } = bullet;
+  const { sounds, nodes: [{ pos: bulletPos }] } = bullet;
   const distance = cursor.relPos::objEx.copyOwn()::vecEx.sub(bulletPos)::vecEx.length();
 
   if (distance > 4.0) return;
 
   bullet.timeout = 0.0;
   bullet.burst = burstLifetime;
-  playSound(nate, sounds.hit);
+  sounds[tracks.hit].play();
 }
 
-function expire(bullet, {nate}, {delta, lanes}) {
+function expire(bullet, world, {delta, lanes}) {
   if (!bullet.spawned) return;
   if (lanes.has(didInitialize)) return;
   if (bullet.burst > 0.0) return;
@@ -65,7 +64,7 @@ function expire(bullet, {nate}, {delta, lanes}) {
   if (bullet.timeout > 0.0) return;
 
   bullet.burst = burstLifetime;
-  playSound(nate, bullet.sounds.timedOut);
+  bullet.sounds[tracks.timedOut].play();
 }
 
 function handleBurst(bullet, _, {delta, lanes}) {
@@ -87,7 +86,7 @@ function homeOnCursor(bullet, {cursor}, {delta, lanes}) {
   if (bullet.driftRemaining <= 0.0) return;
 
   const { relPos: cursorPos } = cursor;
-  const { trajectory, nodePositions: [bulletPos] } = bullet;
+  const { trajectory, nodes: [{ pos: bulletPos }] } = bullet;
   const vector = cursorPos::objEx.copyOwn()::vecEx.sub(bulletPos);
   const distance = vector::vecEx.length();
   
@@ -120,10 +119,10 @@ function flyAhead(bullet, _, {delta, lanes}) {
   if (lanes.has(didInitialize)) return;
   if (lanes.has(handledLogic)) return;
 
-  const { trajectory, nodePositions: [node1Pos, node2Pos, node3Pos] } = bullet;
-  node1Pos::vecEx.add(trajectory::objEx.copyOwn()::vecEx.mul(bulletVel * delta));
-  doChase(node1Pos, node2Pos, chaseDistance.node2);
-  doChase(node2Pos, node3Pos, chaseDistance.node3);
+  const { trajectory, nodes: [node1, node2, node3] } = bullet;
+  node1.pos::vecEx.add(trajectory::objEx.copyOwn()::vecEx.mul(bulletVel * delta));
+  doChase(node1.pos, node2.pos, chaseDistance.node2);
+  doChase(node2.pos, node3.pos, chaseDistance.node3);
   lanes.add(handledLogic);
 }
 

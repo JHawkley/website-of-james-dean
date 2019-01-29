@@ -1,8 +1,8 @@
 import { extensions as objEx, dew } from "tools/common";
 import { extensions as numEx } from "tools/numbers";
 import { extensions as vecEx } from "tools/vectorMath";
-import { behaviorModes, facings, aimings, decrementTime, subList } from "./core";
-import { isTargetReachable, playSound } from './nateCommon';
+import { behaviorModes, facings, aimings, decrementTime, subList, tracks } from "./core";
+import { isTargetReachable } from './nateCommon';
 import * as actions from "./nateActions_Debug";
 import * as nc from "./nateConfig";
 
@@ -61,7 +61,7 @@ function lookForCursor(nate, {bounds, cursor}, {lanes}) {
   if (!inSight) return;
 
   brain.behavior = behaviorModes.aggressive;
-  playSound(nate, sounds.bark);
+  sounds[tracks.bark].play();
 }
 
 const passiveBehavior = dew(() => {

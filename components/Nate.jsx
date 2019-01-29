@@ -1,11 +1,21 @@
 import React, { Fragment } from "react";
-import { extensions as objEx, dew, is } from "tools/common";
-import { makeArray, forZipped } from "tools/array";
-import { extensions as maybe, nothing, some } from "tools/maybe";
+import { css } from "styled-jsx/css";
+import { dew, is } from "tools/common";
+import { CallSync, eachFrame } from "tools/async";
+import { makeArray } from "tools/array";
+import { extensions as maybe } from "tools/maybe";
+import { numeric } from "tools/css";
 import bulletActionList from "./nateLogic/bulletActionList";
 import nateActionList from "./nateLogic/nateActionList";
-import { behaviorModes, facings, aimings, movings, jumps } from "./nateLogic/core";
+import { behaviorModes, facings, aimings, movings, jumps, tracks } from "./nateLogic/core";
+import Preloader from "components/Preloader";
 import Audio from "components/Audio";
+
+import styleVars from "styles/vars.json";
+
+import SpriteNate from "static/images/nate-game/nate_sprite.png";
+import SpriteBullet from "static/images/nate-game/bullet_sprite.png";
+import SpriteBulletBurst from "static/images/nate-game/bullet_burst_sprite.png";
 
 import OggBowWow from "static/sounds/nate-game/bow-wow.ogg?codec=vorbis";
 import Mp3BowWow from "static/sounds/nate-game/bow-wow.mp3";
@@ -20,65 +30,20 @@ import Mp3Pop1 from "static/sounds/nate-game/pop1.mp3";
 import OggPop2 from "static/sounds/nate-game/pop2.ogg?codec=vorbis";
 import Mp3Pop2 from "static/sounds/nate-game/pop2.mp3";
 
-const Fragment = React.Fragment;
-
-/* eslint-disable react/prop-types */
-const Sounds = ({nate, bullets}) => (
-  <Fragment>
-    <Audio audioRef={nate.sounds.bark}><OggBowWow /><Mp3BowWow /></Audio>
-    <Audio audioRef={nate.sounds.aroo}><OggAroo /><Mp3Aroo /></Audio>
-    <Audio audioRef={nate.sounds.land}><OggLand /><Mp3Land /></Audio>
-    {bullets.map((bullet, i) => {
-      return (
-        <Fragment key={i}>
-          <Audio audioRef={bullet.sounds.spawned}><OggPew /><Mp3Pew /></Audio>
-          <Audio audioRef={bullet.sounds.hit}><OggPop1 /><Mp3Pop1 /></Audio>
-          <Audio audioRef={bullet.sounds.timedOut}><OggPop2 /><Mp3Pop2 /></Audio>
-        </Fragment>
-      );
-    })}
-  </Fragment>
-);
-/* eslint-enable react/prop-types */
-
 class Nate extends React.Component {
 
-  /**
-   * Reference for the React element that will contain our game's elements.
-   *
-   * @memberof Nate
-   */
-  containerRef = React.createRef();
+  didUnmount = false;
 
-  /**
-   * The div element for the Nate sprite.
-   * 
-   * @type {?HTMLDivElement}
-   * @memberof Nate
-   */
-  nateDiv = nothing;
+  cancelAsync = new CallSync();
 
-  /**
-   * The div elements for the bullets, first by bullet, then by node.
-   *
-   * @type {?HTMLDivElement[][]}
-   * @memberof Nate
-   */
-  bulletNodes = nothing;
+  soundsEnabled = false;
 
-  /**
-   * The current handle for the queued animation frame.
-   *
-   * @type {?number}
-   * @memberof Nate
-   */
-  rafHandle = nothing;
+  state = {
+    imagesReady: false,
+    soundsReady: false,
+    error: null
+  };
 
-  /**
-   * The game's world-state.
-   *
-   * @memberof Nate
-   */
   world = {
     nate: {
       physics: {
@@ -111,13 +76,13 @@ class Nate extends React.Component {
         land: 0.0
       },
       sounds: {
-        bark: React.createRef(),
-        aroo: React.createRef(),
-        jump: React.createRef(),
-        land: React.createRef()
+        [tracks.bark]: this.soundPlayer(),
+        [tracks.aroo]: this.soundPlayer(),
+        [tracks.land]: this.soundPlayer()
       },
       spawned: false,
-      actions: {}
+      actions: {},
+      ref: React.createRef()
     },
     bounds: { left: 0.0, right: 0.0, ground: 0.0 },
     cursor: {
@@ -132,68 +97,54 @@ class Nate extends React.Component {
       burst: 0.0,
       trajectory: { x: 0.0, y: 0.0 },
       driftRemaining: 0.0,
-      nodePositions: [
-        { x: 0.0, y: 0.0 },
-        { x: 0.0, y: 0.0 },
-        { x: 0.0, y: 0.0 },
+      nodes: [
+        { ref: React.createRef(), pos: { x: 0.0, y: 0.0 } },
+        { ref: React.createRef(), pos: { x: 0.0, y: 0.0 } },
+        { ref: React.createRef(), pos: { x: 0.0, y: 0.0 } },
       ],
       sounds: {
-        spawned: React.createRef(),
-        hit: React.createRef(),
-        timedOut: React.createRef()
+        [tracks.spawned]: this.soundPlayer(),
+        [tracks.hit]: this.soundPlayer(),
+        [tracks.timedOut]: this.soundPlayer()
       }
     }))
   };
 
-  componentDidMount() {
-    this.timeLast = performance.now();
-    this.nateDiv = some(document.createElement("div"));
-    this.bulletNodes = some(this.world.bullets.map(() => {
-        return makeArray(3, () => document.createElement("div"));
-      })
-    );
-
-    this.rafHandle = requestAnimationFrame(this.animationFrameHandler);
-    document.addEventListener("mousemove", this.mouseMoveHandler);
-    document.addEventListener("scroll", this.scrollHandler);
-
-    this.attachGameElements();
+  onImagesReady = () => {
+    if (this.didUnmount) return;
+    this.setState({ imagesReady: true });
   }
 
-  componentDidUpdate() {
-    this.attachGameElements();
+  onImagesFailed = (error) => {
+    if (this.didUnmount) return;
+    this.setState({ imagesReady: false, error });
   }
 
-  componentWillUnmount() {
-    this.rafHandle::maybe.forEach(cancelAnimationFrame);
-    document.removeEventListener("mousemove", this.mouseMoveHandler);
-    document.removeEventListener("scroll", this.scrollHandler);
-    this.nateDiv = nothing;
-    this.bulletNodes = nothing;
+  onSoundsReady = () => {
+    if (this.didUnmount) return;
+    this.soundsEnabled = true;
+    this.setState({ soundsReady: true });
   }
 
-  attachGameElements() {
-    const container = this.containerRef.current;
-    if (container::maybe.isEmpty()) return;
-
-    // Attach the game elements.
-    this.nateDiv::maybe.forEach(div => container.appendChild(div));
-    this.bulletNodes?.forEach(nodes => nodes.forEach(div => container.appendChild(div)));
-
-    // Set sound volume.
-    const soundSetter = (sound) => {
-      if (sound.current::maybe.isEmpty()) return;
-      sound.current.volume = 0.33;
-    }
-
-    this.world.nate.sounds::objEx.forOwnProps(soundSetter);
-    this.world.bullets.forEach(bullet => bullet.sounds::objEx.forOwnProps(soundSetter));
+  onSoundsFailed = () => {
+    if (this.didUnmount) return;
+    this.soundsEnabled = false;
+    this.setState({ soundsReady: true });
   }
 
-  /**
-   * @param {MouseEvent} e
-   * @memberof Nate
-   */
+  attachGame = (container) => {
+    this.cancelAsync.resolve();
+    if (!container) return;
+
+    let timeLast = performance.now();
+    eachFrame(this.cancelAsync.sync, (timeNow) => {
+      const delta = Math.min(timeNow - timeLast, 50.0);
+      //const delta = (1000 / 60) / 10;
+      timeLast = timeNow;
+      this.doGameUpdate(delta, container);
+    });
+  }
+
   mouseMoveHandler = (e) => {
     const cursor = this.world.cursor;
     cursor.absPos.x = e.clientX;
@@ -210,26 +161,8 @@ class Nate extends React.Component {
     this.world.cursor.msSinceUpdate = 0;
   }
 
-  /**
-   * @param {Number} timeNow
-   * @memberof Nate
-   */
-  animationFrameHandler = (timeNow) => {
-    this.doGameUpdate(timeNow);
-    this.timeLast = timeNow;
-    this.rafHandle = requestAnimationFrame(this.animationFrameHandler);
-  }
-
-  /**
-   * @param {Double} timeNow
-   * @memberof Nate
-   */
-  doGameUpdate(timeNow) {
-    const delta = Math.min(timeNow - this.timeLast, 50.0);
-    //const delta = (1000 / 60) / 10;
-    const container = this.containerRef.current;
+  doGameUpdate(delta, container) {
     if (delta <= 0.0) return;
-    if (container::maybe.isEmpty()) return;
 
     // Update bounds.
     {
@@ -252,47 +185,144 @@ class Nate extends React.Component {
     }
     
     // Update Nate.
-    this.nateDiv::maybe.forEach(nateDiv => {
+    {
       const nate = this.world.nate;
       const listState = { delta, actions: nate.actions, lanes: new Set() };
       this.world.nate.actions = {};
       nateActionList.forEach(action => action(nate, this.world, listState));
 
-      const { physics: { pos: { x, y } }, anim: { main, shoot } } = nate;
-      nateDiv.className = ["nate-sprite", ...main, ...shoot].join(" ");
-      nateDiv.setAttribute("style", `left: ${x | 0}px; bottom: ${y | 0}px`);
-    });
+      const {
+        physics: { pos: { x, y } },
+        anim: { main, shoot },
+        ref: { current: el }
+      } = nate;
+
+      if (el) {
+        const { className } = nateCss.nateSprite;
+        el.className = [className, "nate-sprite", main, shoot].flatten().join(" ");
+        el.style.left = (x | 0) + "px";
+        el.style.bottom = (y | 0) + "px";
+      }
+    }
 
     // Update bullets.
-    forZipped(this.world.bullets, this.bulletNodes ?? [], (bullet, bulletNodeDivs) => {
+    this.world.bullets.forEach((bullet) => {
       const listState = { delta, lanes: new Set() };
       bulletActionList.forEach(action => action(bullet, this.world, listState));
 
-      if (!bullet.spawned) {
-        bulletNodeDivs.forEach(div => div.className = "despawned");
-        return;
-      }
+      const isBursting = bullet.burst > 0.0;
 
-      const bursting = bullet.burst > 0.0;
-      const baseClassName = bursting ? "bullet-burst-sprite" : "bullet-sprite";
+      bullet.nodes.forEach((node, i) => {
+        const { ref: { current: el }, pos: { x, y } } = node;
+        if (!el) return;
 
-      forZipped(bullet.nodePositions, bulletNodeDivs, ({x, y}, div, i) => {
-        if (bursting && i > 0)
-          div.className = "despawned";
-        else {
-          div.className = `${baseClassName} node-${i + 1}`;
-          div.setAttribute("style", `left: ${x | 0}px; bottom: ${y | 0}px`);
-        }
+        const isDespawned = !bullet.spawned || (isBursting && i > 0);
+        el::toggleClass("despawned", isDespawned);
+        if (isDespawned) return;
+
+        el::toggleClass("bullet-sprite", !isBursting);
+        el::toggleClass("bullet-burst-sprite", isBursting);
+        el.style.left = (x | 0) + "px";
+        el.style.bottom = (y | 0) + "px";
       });
     });
   }
 
-  render() {
+  soundPlayer() {
+    let sound = null;
+
+    const play = async () => {
+      if (!sound) return;
+      if (!this.soundsEnabled) return;
+      if (this.world.nate.brain.behavior !== behaviorModes.aggressive) return;
+
+      try {
+        sound.pause();
+        sound.currentTime = 0;
+        await sound.play();
+      }
+      // Will throw if the user has not clicked on the browser.  Just black-hole it.
+      catch { void 0; }
+    };
+
+    const ref = (audioElement) => {
+      if (audioElement) audioElement.volume = 0.33;
+      sound = audioElement;
+    };
+
+    return { play, ref };
+  }
+
+  componentDidMount() {
+    document.addEventListener("mousemove", this.mouseMoveHandler);
+    document.addEventListener("scroll", this.scrollHandler);
+  }
+
+  componentWillUnmount() {
+    this.didUnmount = true;
+    this.cancelAsync.resolve();
+    document.removeEventListener("mousemove", this.mouseMoveHandler);
+    document.removeEventListener("scroll", this.scrollHandler);
+  }
+
+  renderContainer() {
+    const { container, nateSprite } = nateCss;
     return (
-      <Fragment>
-        <div className="nate-container" ref={this.containerRef} />
-        <Sounds nate={this.world.nate} bullets={this.world.bullets} />
-      </Fragment>
+      <div className={`${container.className} nate-container`} ref={this.attachGame}>
+        <div ref={this.world.nate.ref} className={`${nateSprite.className} nate-sprite despawned`} />
+        {this.renderBullets()}
+      </div>
+    );
+  }
+
+  renderBullets() {
+    const { className } = nateCss.bulletSprite;
+    return this.world.bullets.flatMap((bullet, x) => bullet.nodes.map((node, y) => {
+      return <div key={`${x}.${y}`} ref={node.ref} className={`${className} node-${y + 1} despawned`} />;
+    }));
+  }
+
+  renderImages() {
+    return (
+      <Preloader onLoad={this.onImagesReady} onError={this.onImagesFailed} display={false} once>
+        <SpriteNate /><SpriteBullet /><SpriteBulletBurst />
+      </Preloader>
+    );
+  }
+
+  renderSounds() {
+    const { nate, bullets } = this.world;
+    return (
+      <Preloader onLoad={this.onSoundsReady} onError={this.onSoundsFailed} display={false} once>
+        <Audio audioRef={nate.sounds[tracks.bark].ref}><OggBowWow /><Mp3BowWow /></Audio>
+        <Audio audioRef={nate.sounds[tracks.aroo].ref}><OggAroo /><Mp3Aroo /></Audio>
+        <Audio audioRef={nate.sounds[tracks.land].ref}><OggLand /><Mp3Land /></Audio>
+        {bullets.map((bullet, i) => (
+          <Fragment key={i}>
+            <Audio audioRef={bullet.sounds[tracks.spawned].ref}><OggPew /><Mp3Pew /></Audio>
+            <Audio audioRef={bullet.sounds[tracks.hit].ref}><OggPop1 /><Mp3Pop1 /></Audio>
+            <Audio audioRef={bullet.sounds[tracks.timedOut].ref}><OggPop2 /><Mp3Pop2 /></Audio>
+          </Fragment>
+        ))}
+      </Preloader>
+    );
+  }
+
+  render() {
+    const { state: { imagesReady, soundsReady, error } } = this;
+    const { container, nateSprite, bulletSprite } = nateCss;
+
+    if (error) return null;
+
+    return (
+      <div>
+        {imagesReady && soundsReady && this.renderContainer()}
+        {this.renderImages()}
+        {this.renderSounds()}
+        {nateSprite.styles}
+        {bulletSprite.styles}
+        {container.styles}
+      </div>
     );
   }
 
@@ -338,5 +368,176 @@ Nate.supported = dew(() => {
     return supported;
   };
 });
+
+const nateCss = dew(() => {
+  const nateSize = [52, 52];
+  const nateOffset = [-26, 5];
+  const bulletSize = [9, 9];
+  const bulletBurstSize = [17, 17];
+  const [margin, marginUnit] = numeric(styleVars.size["element-margin"]);
+
+  const spriteRendering = `
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -o-crisp-edges;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    -ms-interpolation-mode: nearest-neighbor;
+  `;
+
+  const frame = ([width, height], frameX, frameY) =>
+    `background-position: ${frameX * -width}px ${frameY * -height}px;`;
+
+  const row = ([, height], row) =>
+    `background-position-y: ${height * -row}px;`;
+
+  const col = ([width,], col) =>
+    `background-position-x: ${width * -col}px;`;
+
+  const size = ([width, height]) =>
+    `width: ${width}px; height: ${height}px;`;
+
+  const translateOffset = ([offX, offY]) =>
+    `translate(${offX}px, ${offY}px)`;
+
+  const translateCenter = ([width, height]) =>
+    translateOffset([-Math.ceil(width * 0.5), Math.ceil(height * 0.5)]);
+
+  const container = css.resolve`
+    .nate-container {
+      overflow: visible !important;
+      margin: 4rem ${-1 * margin}${marginUnit} 2rem;
+      position: relative;
+    }
+
+    .nate-container:after {
+      content: '';
+      display: block;
+      width: 100%;
+      height: 24px;
+      z-index: 0;
+
+      position: relative;
+      border: 1px solid #004A7F;
+      background-color: #0094FF;
+    }
+  `;
+
+  const nateSprite = css.resolve`
+    @keyframes run-cycle {
+      0% { ${col(nateSize, 0)} }
+      100% { ${col(nateSize, 6)} }
+    }
+
+    @keyframes jump-cycle {
+      0% { ${col(nateSize, 0)} }
+      100% { ${col(nateSize, 1)} }
+    }
+
+    @keyframes fall-cycle {
+      0% { ${col(nateSize, 3)} }
+      100% { ${col(nateSize, 4)} }
+    }
+
+    .nate-sprite {
+      ${spriteRendering}
+      ${size(nateSize)}
+      position: absolute;
+      z-index: 3;
+      background: url('${SpriteNate.src}');
+      transform: ${translateOffset(nateOffset)};
+    }
+
+    .idle { ${frame(nateSize, 0, 0)} }
+    .idle.look-up { ${frame(nateSize, 1, 0)} }
+
+    .idle.shoot-up { ${frame(nateSize, 4, 0)} }
+    .idle.shoot-up.recoil { ${frame(nateSize, 5, 0)} }
+
+    .idle.shoot-side { ${frame(nateSize, 2, 0)} }
+    .idle.shoot-side.recoil { ${frame(nateSize, 3, 0)} }
+
+    .idle.land { ${frame(nateSize, 5, 4)} }
+    .idle.land.shoot-side { ${frame(nateSize, 5, 5)} }
+    .idle.land.shoot-up { ${frame(nateSize, 5, 6)} }
+    .idle.land.shoot-down { ${frame(nateSize, 5, 7)} }
+
+    .run {
+      animation: run-cycle 0.75s steps(6) infinite;
+      ${row(nateSize, 1)}
+    }
+
+    .run.shoot-side { ${row(nateSize, 2)} }
+    .run.shoot-up { ${row(nateSize, 3)} }
+
+    .jump {
+      animation: jump-cycle 0.125s steps(1) 1 forwards;
+      ${row(nateSize, 4)}
+    }
+
+    .jump.apex {
+      animation: none;
+      ${col(nateSize, 2)}
+    }
+
+    .jump.fall { animation: fall-cycle 0.125s steps(1) 1 forwards; }
+
+    .jump.shoot-side { ${row(nateSize, 5)} }
+    .jump.shoot-up { ${row(nateSize, 6)} }
+    .jump.shoot-down { ${row(nateSize, 7)} }
+
+    .mirror { transform: ${translateOffset(nateOffset)} scale(-1.0, 1.0); }
+
+    .despawned { display: none; }
+  `;
+
+  const bulletSprite = css.resolve`
+    @keyframes bullet-flight {
+      0% { ${col(bulletSize, 0)} }
+      100% { ${col(bulletSize, 2)} }
+    }
+
+    @keyframes bullet-burst {
+      0% { ${row(bulletBurstSize, 0)} }
+      100% { ${row(bulletBurstSize, 1)} }
+    }
+
+    .bullet-sprite {
+      ${spriteRendering}
+      ${size(bulletSize)}
+      position: absolute;
+      background: url('${SpriteBullet.src}');
+      transform: ${translateCenter(bulletSize)};
+      animation: bullet-flight 0.2s steps(2) infinite;
+    }
+
+    .node-1 { z-index: 7; }
+    .node-2 { z-index: 6; ${row(bulletSize, 1)} }
+    .node-3 { z-index: 5; ${row(bulletSize, 2)} }
+
+    .bullet-burst-sprite {
+      ${spriteRendering}
+      ${size(bulletBurstSize)}
+      position: absolute;
+      z-index: 4;
+      background: url('${SpriteBulletBurst.src}');
+      transform: ${translateCenter(bulletBurstSize)};
+      animation: bullet-burst 0.075s steps(1) 1 forwards;
+    }
+
+    .despawned { display: none; }
+  `;
+
+  return { container, nateSprite, bulletSprite };
+});
+
+// Helper function for IE11, which lacks support for the second argument
+// to `Element.classList.toggle`.
+function toggleClass(className, needs) {
+  const has = this.classList.contains(className);
+  if (needs && !has)
+    this.classList.add(className);
+  else if (!needs && has)
+    this.classList.remove(className);
+}
 
 export default Nate;

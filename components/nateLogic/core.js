@@ -45,6 +45,15 @@ export const jumps = Object.freeze({
   none: Symbol("none")
 });
 
+export const tracks = Object.freeze({
+  bark: "bark",
+  aroo: "aroo",
+  land: "land",
+  spawned: "spawned",
+  hit: "hit",
+  timedOut: "timedOut"
+});
+
 export const trajectories = Object.freeze({
   [directions.up]: Object.freeze({ x: 0.0, y: 1.0 }),
   [directions.right]: Object.freeze({ x: 1.0, y: 0.0 }),

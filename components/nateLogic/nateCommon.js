@@ -1,6 +1,6 @@
 import { extensions as maybe } from "tools/maybe";
 import { extensions as numEx } from "tools/numbers";
-import { behaviorModes, aimings, facings, jumps } from "./core";
+import { aimings, facings, jumps } from "./core";
 import { decrementTime, randomTime } from "./core";
 import * as nc from "./nateConfig";
 
@@ -140,19 +140,4 @@ export function makeRandomJump(minTime, addedTime, symbolName = "nateCommon/rand
       brain.jumping = randomNum() > 0.5 ? jumps.full : jumps.weak;
   }
 
-}
-
-/**
- * Plays the given sound, if sound is enabled and Nate is in his aggressive behavior.
- *
- * @export
- * @param {*} nate Nate's current state.
- * @param {*} sound The React reference for the `audio` element to play.
- */
-export function playSound(nate, sound) {
-  if (!nc.sound.enabled) return;
-  if (nate.brain.behavior !== behaviorModes.aggressive) return;
-  try { sound.current?.play(); }
-  // Will throw if the user has not clicked on the browser.  Just black-hole it.
-  catch (ex) { ex instanceof DOMException && throw ex; }
 }

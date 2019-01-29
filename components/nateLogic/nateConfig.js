@@ -16,10 +16,6 @@ const maxVel = 130 / 1000;
 const friction = stokesDrag.solveFriction(250);
 const runAccel = stokesDrag.solveAccel(friction, maxVel);
 
-export const sound = {
-  enabled: true
-};
-
 export const physics = {
   /** The maximum velocity that Nate can typically run at. */
   maxVel,

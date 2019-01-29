@@ -3,9 +3,9 @@ import { extensions as numEx, randomBetween } from "tools/numbers";
 import { extensions as arrEx } from "tools/array";
 import { extensions as vecEx } from "tools/vectorMath";
 import { extensions as maybe, nothing } from "tools/maybe";
-import { behaviorModes, aimings, facings, movings, jumps } from './core';
+import { behaviorModes, aimings, facings, movings, jumps, tracks } from './core';
 import { randomTime, decrementTime } from './core';
-import { isTargetReachable, playSound } from './nateCommon';
+import { isTargetReachable } from './nateCommon';
 import chaseBehavior from "./nateBehavior_Chase";
 import * as nc from "./nateConfig";
 
@@ -343,7 +343,7 @@ export function becomePassive(nate, _, {lanes}) {
   if (lanes.has(isFrustrated)) return;
 
   const { brain, sounds } = nate;
-  playSound(nate, sounds.aroo);
+  sounds[tracks.aroo].play();
   brain.behavior = behaviorModes.passive;
   brain.pacificationTimer = randomTime(2000.0, 1000.0);
 }
