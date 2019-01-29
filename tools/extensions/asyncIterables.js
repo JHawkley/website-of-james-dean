@@ -1,4 +1,4 @@
-import { dew } from "tools/common";
+import { dew, is } from "tools/common";
 import { abortable } from "tools/async";
 
 /**
@@ -13,17 +13,13 @@ import { abortable } from "tools/async";
  * @returns {Promise<void>} A promise that will resolve when iteration is complete.
  */
 export function forEach(iteratorFn, abortSignal) {
-  let go = true;
-  const promise = dew(async () => {
-    for await (const value of this) {
-      if (!go) break;
-      iteratorFn(value);
-    }
-  });
+  const getIterator = this[Symbol.asyncIterator] ?? this[Symbol.iterator];
+  if (!getIterator::is.func()) throw new TypeError("bound object is not iterable");
 
-  if (!abortSignal) return promise;
-
-  return abortable(promise, abortSignal.finally(() => go = false));
+  if (abortSignal)
+    return iterateWithAbort(getIterator(), abortSignal, iteratorFn);
+  else
+    return iterateWithoutAbort(getIterator(), iteratorFn);
 }
 
 /**
@@ -65,5 +61,24 @@ export function fromLatest() {
       if (state.done) return;
       yield* self;
     }
+  }
+}
+
+async function iterateWithAbort(iterator, abortSignal, iteratorFn) {
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const result = await abortable(iterator.next(), abortSignal);
+    if (result === abortable.signal) return;
+    if (result.done) return;
+    iteratorFn(result.value);
+  }
+}
+
+async function iterateWithoutAbort(iterator, iteratorFn) {
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const result = await iterator.next();
+    if (result.done) return;
+    iteratorFn(result.value);
   }
 }
