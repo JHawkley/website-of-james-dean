@@ -5,9 +5,9 @@ import { CallSync, eachFrame } from "tools/async";
 import { makeArray } from "tools/array";
 import { extensions as maybe } from "tools/maybe";
 import { numeric } from "tools/css";
-import bulletActionList from "./nateLogic/bulletActionList";
-import nateActionList from "./nateLogic/nateActionList";
-import { behaviorModes, facings, aimings, movings, jumps, tracks } from "./nateLogic/core";
+import bulletActionList from "./Nate/bulletActionList";
+import nateActionList from "./Nate/nateActionList";
+import { behaviorModes, facings, aimings, movings, jumps, tracks } from "./Nate/core";
 import Preloader from "components/Preloader";
 import Audio from "components/Audio";
 
