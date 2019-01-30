@@ -122,9 +122,9 @@ const promised = (promise, name = "[unknown]") => {
 
     static displayName = `Preloadable.promised(${name})`;
 
-    constructor(props) {
-      super(props);
-      this.state.rendered = null;
+    state = {
+      ...this.state,
+      rendered: null
     }
 
     componentDidMount() {
