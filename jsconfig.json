@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+      "jsx": "react",
+      "target": "ES6",
+      "allowSyntheticDefaultImports": true,
+      "baseUrl": "./",
+      "paths": {
+          "~/*": ["./*"],
+          "common/*": ["./common/*"],
+          "components/*": ["./components/*"],
+          "pages/*": ["./pages/*"],
+          "tools/*": ["./tools/*"],
+          "styles/*": ["./styles/*"],
+          "static/*": ["./static/*"]
+      }
+  },
+  "exclude": [
+      "node_modules"
+  ]
+}

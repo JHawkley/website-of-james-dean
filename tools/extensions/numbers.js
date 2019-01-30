@@ -1,4 +1,4 @@
-const { PI, abs, min, max, round } = Math;
+const { PI, abs, min, max, round: _round } = Math;
 const PI2 = PI * 2;
 const e = 0.00000001;
 
@@ -11,14 +11,24 @@ function normalizeAngle_Rad(input) {
 }
 
 /**
- * Rounds the number to the number of `decimals` specified.
+ * Rounds this number to the nearest integer.
+ *
+ * @export
+ * @returns {number} An integer.
+ */
+export function round() {
+  return _round(this);
+}
+
+/**
+ * Rounds this number to the number of `decimals` specified.
  *
  * @export
  * @param {number} decimals The number of decimals to round to.
- * @returns {number} The number, rounded to the number of significant digits.
+ * @returns {number} This number, rounded to the number of significant digits.
  */
 export function roundTo(decimals) {
-  if (!decimals) return round(this);
+  if (!decimals) return _round(this);
   return +(this.toFixed(decimals));
 }
 
@@ -61,6 +71,38 @@ export function lerp(start, end) {
  */
 export function map(inStart, inEnd, outStart, outEnd) {
   return outStart + (outEnd - outStart) * ((this - inStart) / (inEnd - inStart));
+}
+
+/**
+ * Maps `this` number from the range of `inStart` to `inEnd` to the range of `outStart` to `outEnd`.
+ * If the result falls outside of the range `outStart..outEnd`, it will be clamped to that range.
+ *
+ * @export
+ * @this {number} This number.
+ * @param {number} inStart The start of the input range.
+ * @param {number} inEnd The end of the input range.
+ * @param {number} outStart The start of the output range.
+ * @param {number} outEnd The end of the output range.
+ * @returns {number} The number, remapped and clamped.
+ */
+export function mapClamp(inStart, inEnd, outStart, outEnd) {
+  return this::map(inStart, inEnd, outStart, outEnd)::clamp(outStart, outEnd);
+}
+
+/**
+ * Maps `this` number from the range of `inStart` to `inEnd` to the range of `outStart` to `outEnd`.
+ * If the result falls outside of the range `outStart..outEnd`, it will be reflowed to that range.
+ *
+ * @export
+ * @this {number} This number.
+ * @param {number} inStart The start of the input range.
+ * @param {number} inEnd The end of the input range.
+ * @param {number} outStart The start of the output range.
+ * @param {number} outEnd The end of the output range.
+ * @returns {number} The number, remapped and reflowed.
+ */
+export function mapReflow(inStart, inEnd, outStart, outEnd) {
+  return this::map(inStart, inEnd, outStart, outEnd)::reflowRange(outStart, outEnd);
 }
 
 /**

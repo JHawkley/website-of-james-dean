@@ -1,6 +1,5 @@
 import PropTypes from "prop-types";
 import { Goto } from "components/Article";
-import { ImageSync } from "components/AsyncImage";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCode } from "@fortawesome/free-solid-svg-icons/faCode";
 
@@ -34,7 +33,7 @@ const Header = ({timeout}) => (
 
 Header.propTypes = {
   timeout: PropTypes.bool,
-  imageSync: PropTypes.instanceOf(ImageSync)
+  appContext: PropTypes.object.isRequired
 };
 
 export default Header;

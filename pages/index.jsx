@@ -1,32 +1,32 @@
+import React, { Fragment } from "react";
 import PropTypes from "prop-types";
 import ReactDOMServer from "react-dom/server";
 import Head from "next/head";
-import { canScrollRestore as transitionsSupported } from "pages/_app"
+import { canScrollRestore as transitionsSupported } from "pages/_app";
 
 import { dew, is, singleton } from "tools/common";
-import { timespan } from "tools/css";
+import { timespan, dequote } from "tools/css";
 import { Future, CallSync, Stream, wait as asyncWaitFn } from "tools/async";
-import { extensions as asyncEx, delayToNextFrame, awaitAll, awaitWhile, abortable } from "tools/async";
+import { extensions as asyncEx, delayToNextFrame, awaitWhile, abortable, preloadImage } from "tools/async";
+import { extensions as asyncIterEx } from "tools/asyncIterables";
 import { extensions as maybe, nothing } from "tools/maybe";
 import { extensions as mapEx } from "tools/maps";
 import * as parsing from "tools/parsing/index";
 import dynamic from "next/dynamic";
 import DynamicLoader from "components/DynamicLoader";
 
-import { ImageSync } from "components/AsyncImage";
+import PreloadSync from "components/Preloader/PreloadSync";
 import NoJavaScript from "components/NoJavaScript";
-import Header from "components/Header";
-import Main from "components/Main";
-import Footer from "components/Footer";
+import Wrapper from "components/Wrapper";
+import Lightbox from "components/Lightbox";
+import LoadingSpinner from "components/LoadingSpinner";
 
 import styleVars from "styles/vars.json";
-import bgImage from "static/images/placeholder_bg.jpg";
 
 const isProduction = process.env.NODE_ENV === 'production';
 
-const { Fragment } = React;
-
 const articleTransition = timespan(styleVars.duration.article);
+const throbberFadeTime = timespan(styleVars.duration.modal);
 
 const $$dynError = Symbol("dynamic-import:error");
 const $$dynPastDelay = Symbol("dynamic-import:past-delay");
@@ -38,6 +38,8 @@ const $$transFromIndex = Symbol("transition:from-index");
 const $$transFromArticle = Symbol("transition:from-article");
 const $$transFinalizeIndex = Symbol("transition:finalize-index");
 const $$transDone = Symbol("transition:done");
+
+const fixedLoaderStyle = { zIndex: 3 };
 
 class IndexPage extends React.PureComponent {
 
@@ -57,7 +59,39 @@ class IndexPage extends React.PureComponent {
     return { expectedArticle };
   }
 
-  imageSync = new ImageSync();
+  scrollPrevention = new Set();
+
+  appContext = dew(() => {
+    const openLightbox = (data, index = 0) => {
+      const { lightboxData: curData } = this.state;
+      if (curData && curData !== data)
+        throw new Error("only one gallery may be shown by the lightbox at a time");
+      this.scrollPrevention.add(data);
+      this.setState({ lightboxData: data, lightboxIndex: index, preventScroll: this.scrollPrevention.size > 0 });
+    };
+    const closeLightbox = () => {
+      const { lightboxData: curData } = this.state;
+      this.scrollPrevention.delete(curData);
+      this.setState({ lightboxData: nothing, lightboxIndex: 0, preventScroll: this.scrollPrevention.size > 0 });
+    };
+    const enableScroll = (source) => {
+      if (!source) throw new Error("a source object must be provided to enable scrolling");
+      this.scrollPrevention.delete(source);
+      this.setState({ preventScroll: this.scrollPrevention.size > 0 });
+    };
+    const disableScroll = (source) => {
+      if (!source) throw new Error("a source object must be provided to disable scrolling");
+      this.scrollPrevention.add(source);
+      this.setState({ preventScroll: this.scrollPrevention.size > 0 });
+    };
+
+    return Object.freeze({
+      preloadSync: new PreloadSync(),
+      makeGallery: (data) => Lightbox.makeGallery(data, openLightbox, closeLightbox),
+      openLightbox, closeLightbox,
+      enableScroll, disableScroll
+    });
+  });
 
   whenMountedFuture = new Future();
 
@@ -82,7 +116,10 @@ class IndexPage extends React.PureComponent {
       timeout: false,
       articleTimeout: false,
       loading: true,
-      ...this.initialStateFor(props)
+      ...this.initialStateFor(props),
+      lightboxData: nothing,
+      lightboxIndex: 0,
+      preventScroll: false
     };
   }
 
@@ -96,19 +133,20 @@ class IndexPage extends React.PureComponent {
   }
 
   async doLoading() {
-    // Synchronize on when the CSS background image and the phase 0 images have loaded.
-    const bgPromise = isProduction ? bgImage.preload() : bgImage.preload().catch(() => {
-      console.warn(`Warning: failed to load the background image: ${bgImage.src}`);
+    // Synchronize on when the CSS background image has loaded.
+    const bgPromise = dew(() => {
+      const bgImageSrc = dequote(styleVars.misc["bg-image"]);
+      const bgPromise = preloadImage(bgImageSrc);
+      return isProduction ? bgPromise : bgPromise.catch(() => {
+        console.warn(`warning: failed to load the background image: ${bgImageSrc}`);
+      });
     });
-
-    // Bundle our image-related promises.
-    const imagesPromise = awaitAll([bgPromise, this.imageSync.loadToPhase(0)]);
 
     // Put a max limit before we load anyways.
     const timerPromise = this.wait(2000);
     
     // Now race to see which resolves first!
-    await Promise.race([imagesPromise, timerPromise]);
+    await Promise.race([bgPromise, timerPromise]);
   }
 
   transitionToArticle() {
@@ -117,10 +155,10 @@ class IndexPage extends React.PureComponent {
 
   bodyClass() {
     const { loading, isArticleVisible } = this.state;
-    const klass = ["body", "js-only"];
-    if (loading) klass.push("is-loading");
-    if (isArticleVisible) klass.push("is-article-visible");
-    return klass.join(" ");
+    const className = ["body", "js-only"];
+    if (loading) className.push("is-loading");
+    if (isArticleVisible) className.push("is-article-visible");
+    return className.join(" ");
   }
 
   componentDidMount() {
@@ -128,14 +166,16 @@ class IndexPage extends React.PureComponent {
     this.whenMountedFuture.resolve();
 
     this.doLoading().then(
-      () => !this.didUnmount && this.setState({ loading: false }, this.imageSync.loadAllPhases),
+      () => !this.didUnmount && this.setState({ loading: false }),
       (asyncError) => !this.didUnmount && this.setState({ loading: false, asyncError })
     );
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (this.props.expectedArticle !== prevProps.expectedArticle)
+    if (this.props.expectedArticle !== prevProps.expectedArticle) {
+      this.appContext.closeLightbox();
       this.transitionToArticle();
+    }
     
     if (this.state.asyncError && this.state.asyncError !== prevState.asyncError)
       throw this.state.asyncError;
@@ -146,17 +186,27 @@ class IndexPage extends React.PureComponent {
     this.whenUnmountedFuture.resolve();
   }
 
+  extraContent() {
+    return null;
+  }
+
   render() {
     const {
-      imageSync,
+      appContext,
       props: { elementRef },
-      state: { timeout, articleTimeout, actualArticle, knownArticles }
+      state: {
+        lightboxData: lbData, lightboxIndex: lbIndex,
+        preventScroll,
+        loading, timeout, articleTimeout,
+        actualArticle, knownArticles
+      }
     } = this;
   
     return (
       <Fragment>
         <Head>
           <title>A Programmer's Place</title>
+          <style dangerouslySetInnerHTML={{ __html: "body { overflow-y: scroll; }"}} />
         </Head>
 
         {/* A special no-script version of the website. */}
@@ -164,7 +214,7 @@ class IndexPage extends React.PureComponent {
           <style dangerouslySetInnerHTML={{ __html: ".js-only { display: none !important; }"}} />
           
           <div className="body is-article-visible">
-            <div className="prevent-scroll">
+            <div className="hide-overflow">
               <div id="wrapper">
                 <NoJavaScript />
               </div>
@@ -175,19 +225,18 @@ class IndexPage extends React.PureComponent {
 
         {/* The normal version of the website. */}
         <div className={this.bodyClass()} ref={elementRef}>
-          <div className="prevent-scroll">
-            <div id="wrapper">
-              <Header timeout={timeout} transition={transitionsSupported} imageSync={imageSync} />
-              <Main
-                article={actualArticle}
-                articlePages={knownArticles}
-                articleTimeout={articleTimeout}
-                timeout={timeout}
-                transition={transitionsSupported}
-                imageSync={imageSync}
-              />
-              <Footer timeout={timeout} transition={transitionsSupported} imageSync={imageSync} />
-            </div>
+          <div className="hide-overflow">
+            <Wrapper
+              preventScroll={preventScroll}
+              article={actualArticle}
+              articlePages={knownArticles}
+              articleTimeout={articleTimeout}
+              timeout={timeout}
+              appContext={appContext}
+            />
+            <Lightbox images={lbData} initialIndex={lbIndex} onCloseRequest={appContext.closeLightbox} />
+            <LoadingSpinner size="3x" fadeTime={throbberFadeTime} show={loading} style={fixedLoaderStyle} fixed />
+            { this.extraContent() }
             <div id="bg" />
           </div>
         </div>
@@ -443,14 +492,39 @@ class SoftIndexPage extends IndexPage {
     return `${super.bodyClass()} with-transitions`;
   }
 
+  extraContent() {
+    const { loading, actualArticle } = this.state;
+
+    return (
+      <LoadingSpinner
+        delay={200}
+        fadeTime={throbberFadeTime}
+        size="3x"
+        show={loading ? false : actualArticle::maybe.isEmpty()}
+        style={fixedLoaderStyle}
+        background
+        fixed
+      />
+    );
+  }
+
 }
 
 class HardIndexPage extends IndexPage {
 
+  static propTypes = {
+    ...IndexPage.propTypes,
+    routeChanging: PropTypes.bool.isRequired
+  };
+
   static async getRenderProps(props) {
     const { expectedArticle } = props;
     const preloadedArticle = expectedArticle ? (await resolve(expectedArticle).promise) : LandingPageComponent;
-    return { ...props, preloadedArticle };
+    return { ...props, preloadedArticle, routeChanging: false };
+  }
+
+  static getRouteChangeProps(props) {
+    return { ...props, routeChanging: true };
   }
 
   initialStateFor(props) {
@@ -484,6 +558,21 @@ class HardIndexPage extends IndexPage {
       throw new Error("`transitionToArticle` was called before the component has finished mounting");
     if (this.didUnmount) return;
     this.setState(this.initialStateFor(this.props), this.props.notifyPageReady);
+  }
+
+  extraContent() {
+    const { props: { routeChanging }, state: { loading } } = this;
+    
+    return (
+      <LoadingSpinner
+        delay={200}
+        fadeTime={throbberFadeTime}
+        hPos="right" vPos="bottom" size="2x"
+        show={loading ? false : routeChanging}
+        style={fixedLoaderStyle}
+        fixed
+      />
+    );
   }
 
 }
@@ -531,7 +620,7 @@ function resolve(article) {
     throw new Error("cannot resolve the landing-page component");
 
   const progress = new Stream();
-  const progressUpdates = progress::asyncEx.fromLatest();
+  const progressUpdates = progress::asyncIterEx.fromLatest();
   const Component = dynamic(() => articlesCtx(article), {
     loading: DynamicLoader.bindCallbacks({
       onError(error, retryLoader) {

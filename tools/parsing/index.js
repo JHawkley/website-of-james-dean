@@ -8,10 +8,14 @@ export * as template from "./template";
 export * from "./core";
 
 /**
+ * @module tools/parsing
+ */
+
+/**
  * A basic parser function.
  * 
- * @typedef {function(ParserState): T} Parser
  * @template T
+ * @callback Parser
  * @param {ParserState} state The state for the current parse run.
  * @returns {T|undefined} The result of the parse; `undefined` if the parse failed.
  */
@@ -19,8 +23,8 @@ export * from "./core";
 /**
  * A parser that will backtrack on failures.
  * 
- * @typedef {Parser<T>} BacktrackingParser
  * @template T
+ * @typedef {Parser<T>} BacktrackingParser
  * @property {true} _willBacktrackOnFailure Identifies the parser as one that will backtrack.
 */
 
@@ -37,7 +41,7 @@ export * from "./core";
  * A function that takes a parser and produces a new parser.
  * 
  * @template T, U
- * @typedef {function(Parser<T>): Parser<U>} ParserModifier
+ * @callback ParserModifier
  * @param {Parser<T>} parser The input parser.
  * @returns {Parser<U>} The output parser.
  */

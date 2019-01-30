@@ -1,4 +1,4 @@
-import Modal from 'react-modal';
+import Modal from "react-modal";
 import { timespan } from "tools/css";
 import styleVars from "styles/vars.json";
 
@@ -16,16 +16,15 @@ const contentClasses = {
   beforeClose: "before-close"
 };
 
-const ModalPopup = (props) => {
-  return (
-    <Modal
-      {...props}
-      portalClassName="modal-popup"
-      overlayClassName={overlayClasses}
-      className={contentClasses}
-      closeTimeoutMS={modalTransition}
-    />
-  );
-};
+const ModalPopup = (props) => (
+  <Modal
+    parentSelector={() => document.getElementById("__next")}
+    {...props}
+    portalClassName="modal-popup"
+    overlayClassName={overlayClasses}
+    className={contentClasses}
+    closeTimeoutMS={modalTransition}
+  />
+);
 
 export default ModalPopup;

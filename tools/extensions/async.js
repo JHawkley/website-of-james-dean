@@ -1,4 +1,4 @@
-import { dew } from "tools/common";
+import { is } from "tools/common";
 import { abortable } from "tools/async";
 
 const alwaysTrue = () => true;
@@ -55,59 +55,19 @@ export function isAborted() {
 }
 
 /**
- * Creates a promise that will try to resolve to the result of `onComplete` after this promise completes.
+ * Creates a promise that will try to resolve with `onComplete` after this promise completes.  If `onComplete`
+ * is a function, it will be called and its return value provided instead.
+ * 
  * It is basically the same as calling `promise.then(onComplete, onComplete)`.  No value is provided to
- * `onComplete` as it is not possible to determine the outcome of this promise.
+ * `onComplete` when it is called as it is not possible to determine the outcome of this promise.
  *
  * @export
  * @template T
  * @this {Promise} This promise.
- * @param {function(): T} onComplete A function to be run after this promise completes.
+ * @param {T | function(): T} onComplete A function-to-call or value-to-produce when the promise completes.
  * @returns {Promise<T>} A promise that will resolve to the value produced by `onComplete`.
  */
 export function finishWith(onComplete) {
-  const fn = () => onComplete();
+  const fn = () => onComplete::is.func() ? onComplete() : onComplete;
   return this.then(fn, fn);
-}
-
-/**
- * Creates an async-iterable that stores the last value yielded by this async-iterable and yields it as its
- * first value, followed by any values yet to be yielded by this async-iterable.
- *
- * @export
- * @template T
- * @this {AsyncIterable<T>} An object that can be async-iterated.
- * @returns {AsyncIterable<T>} An async-iterable that will store and repeat the last value yielded by this.
- */
-export function fromLatest() {
-  const self = this;
-  const state = { value: void 0, error: void 0, done: false, started: false };
-
-  dew(async () => {
-    try {
-      for await (const value of self) {
-        state.started = true;
-        state.value = value;
-      }
-    }
-    catch (error) {
-      state.started = true;
-      state.error = error ?? new Error("async-iterable threw an undefined error");
-    }
-    state.done = true;
-  });
-
-  return {
-    get isCompleted() { return state.done; },
-    get didError() { return state.error != null; },
-    async *[Symbol.asyncIterator]() {
-      if (state.started) {
-        if (typeof state.error !== undefined)
-          throw state.error;
-        yield state.value;
-      }
-      if (state.done) return;
-      yield* self;
-    }
-  }
 }

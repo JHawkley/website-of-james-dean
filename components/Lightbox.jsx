@@ -1,17 +1,19 @@
+import React from "react";
 import PropTypes from "prop-types";
 import { is } from "tools/common";
 import { extensions as numEx } from "tools/numbers";
 import { extensions as fnEx } from "tools/functions";
 import { extensions as maybe, nothing } from "tools/maybe";
-import ReactLightbox from "react-image-lightbox";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faImages } from "@fortawesome/free-solid-svg-icons/faImages";
+import ReactLightbox from "react-image-lightbox";
 
-const galleries = new Map();
-const openFns = new Set();
-const closeFns = new Set();
+const reactModalProps = {
+  parentSelector: () => document.getElementById("__next"),
+  appElement: void 0
+};
 
-class Lightbox extends React.Component {
+class Lightbox extends React.PureComponent {
 
   /**
    * Creates a new gallery, producing a `Gallery` component that will make links that will open the gallery.
@@ -22,9 +24,7 @@ class Lightbox extends React.Component {
    * @returns {(props: *) => *} A functional component.
    * @memberof Lightbox
    */
-  static makeGallery(galleryName, galleryData) {
-    galleries.set(galleryName, galleryData);
-
+  static makeGallery(galleryData, openLightbox, closeLightbox) {
     const Gallery = ({children, index = 0}) => {
       return (
         <a href="javascript:;" onClick={Gallery.openCallback(index)}>
@@ -38,96 +38,70 @@ class Lightbox extends React.Component {
       );
     };
 
-    Gallery.forceOpen = (index) => {
-      for (const fn of openFns) fn(galleryName, index);
-    };
+    Gallery.openCallback = ((index) => () => openLightbox(galleryData, index))::fnEx.memoize();
 
-    Gallery.openCallback = ((index) => () => Gallery.forceOpen(index))::fnEx.memoize();
+    Gallery.close = closeLightbox;
 
     Gallery.propTypes = {
       index: PropTypes.number,
       children: PropTypes.oneOfType([
         PropTypes.arrayOf(PropTypes.node),
         PropTypes.node
-      ]),
+      ])
     };
 
     return Gallery;
   }
 
-  static forceClose() {
-    for (const fn of closeFns) fn();
+  static propTypes = {
+    images: PropTypes.array,
+    initialIndex: PropTypes.number.isRequired,
+    onCloseRequest: PropTypes.func.isRequired
+  };
+
+  static getDerivedStateFromProps(props, state) {
+    const shouldBeOpen = props.images::maybe.isDefined();
+    if (state.isOpen === shouldBeOpen) return null;
+    return {
+      isOpen: shouldBeOpen,
+      index: props.initialIndex
+    };
   }
 
   constructor(props) {
     super(props);
 
     this.state = {
-      isOpen: false,
-      galleryName: "",
-      galleryIndex: 0
+      isOpen: props.images::maybe.isDefined(),
+      index: props.initialIndex
     };
   }
 
-  componentDidMount() {
-    openFns.add(this.doOpenLightbox);
-    closeFns.add(this.doCloseLightbox);
-  }
-
-  componentWillUnmount() {
-    openFns.delete(this.doOpenLightbox);
-    closeFns.delete(this.doCloseLightbox);
-  }
-
-  onCloseRequest = () => {
-    this.setState({ isOpen: false });
-  }
-
   onMovePrevRequest = () => {
-    const { galleryIndex, galleryName } = this.state;
-    const images = galleries.get(galleryName);
+    const { props: { images }, state: { index } } = this;
     if (images::maybe.isEmpty()) return;
-
-    this.setState({
-      galleryIndex: (galleryIndex - 1)::numEx.reflowBy(images)
-    });
+    this.setState({ index: (index - 1)::numEx.reflowBy(images) });
   }
 
   onMoveNextRequest = () => {
-    const { galleryIndex, galleryName } = this.state;
-    const images = galleries.get(galleryName);
+    const { props: { images }, state: { index } } = this;
     if (images::maybe.isEmpty()) return;
-
-    this.setState({
-      galleryIndex: (galleryIndex + 1)::numEx.reflowBy(images)
-    });
-  }
-
-  doOpenLightbox = (galleryName, galleryIndex) => {
-    const images = galleries.get(galleryName);
-    const isOpen = images::maybe.isDefined();
-    galleryIndex = isOpen ? galleryIndex::numEx.reflowBy(images) : 0;
-    this.setState({ isOpen, galleryName, galleryIndex });
-  }
-
-  doCloseLightbox = () => {
-    this.onCloseRequest();
+    this.setState({ index: (index + 1)::numEx.reflowBy(images) });
   }
 
   render() {
-    const { isOpen, galleryIndex, galleryName } = this.state;
-    if (!isOpen) return nothing;
-    const images = galleries.get(galleryName);
+    const { props: { images, onCloseRequest }, state: { index: galleryIndex } } = this;
     if (images::maybe.isEmpty()) return nothing;
     const image = (index) => images[index]::is.object() ? images[index].i : images[index];
     const desc = (index) => images[index]::is.object() ? (<p>{images[index].d}</p>) : nothing;
     return (
       <ReactLightbox
+        reactModalProps={reactModalProps}
         mainSrc={image(galleryIndex)}
-        nextSrc={image((galleryIndex + 1) % images.length)}
-        prevSrc={image((galleryIndex + images.length - 1) % images.length)}
+        nextSrc={image((galleryIndex + 1)::numEx.reflowBy(images))}
+        prevSrc={image((galleryIndex - 1)::numEx.reflowBy(images))}
         imageCaption={desc(galleryIndex)}
-        onCloseRequest={this.onCloseRequest}
+        onCloseRequest={onCloseRequest}
         onMovePrevRequest={this.onMovePrevRequest}
         onMoveNextRequest={this.onMoveNextRequest}
         animationOnKeyInput={true}

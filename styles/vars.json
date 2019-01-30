@@ -1,6 +1,7 @@
 {
   "misc": {
-    "z-index-base": 10000
+    "z-index-base": 10000,
+    "bg-image": "'/static/images/placeholder_bg.jpg'"
   },
   "duration": {
     "transition": "0.2s",

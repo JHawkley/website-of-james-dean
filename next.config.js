@@ -2,23 +2,22 @@
 
 const path = require('path');
 const glob = require('glob');
-const jsonImporter = require('node-sass-json-importer');
 const toLower = require('lodash/toLower');
+const jsonImporter = require('node-sass-json-importer');
+const imageMediaLoader = require('./webpack/image-media-loader');
+const soundMediaLoader = require('./webpack/sound-media-loader');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const DefinePlugin = require('webpack/lib/DefinePlugin');
+
+const jsconfig = require('./jsconfig.json');
 
 const isProduction = process.env.NODE_ENV === 'production';
 
 module.exports = {
-  webpack: (config, { dir, isServer, defaultLoaders }) => {
+  webpack: (config, { dir, isServer }) => {
 
     // Resolver settings.
-    config.resolve.alias['~'] = dir;
-    config.resolve.alias['components'] = '~/components';
-    config.resolve.alias['pages'] = '~/pages';
-    config.resolve.alias['tools'] = '~/tools';
-    config.resolve.alias['styles'] = '~/styles';
-
+    mapAliases(jsconfig.compilerOptions.paths, config, dir);
     config.resolveLoader.modules.unshift('webpack');
 
     // Module rules.
@@ -50,11 +49,12 @@ module.exports = {
         ]
       },
       {
-        test: /\.(gif|jpeg|jpg|png|svg)$/,
-        use: [
-          defaultLoaders.babel,
-          'async-image-loader'
-        ]
+        test: new RegExp(`\\.(${imageMediaLoader.supportedTypes.join('|')})$`, 'i'),
+        loader: 'image-media-loader'
+      },
+      {
+        test: new RegExp(`\\.(${soundMediaLoader.supportedTypes.join('|')})$`, 'i'),
+        loader: 'sound-media-loader'
       },
       {
         enforce: 'post',
@@ -62,10 +62,6 @@ module.exports = {
         loader: 'name-of-loader'
       }
     );
-
-    // Main.js patches.
-    if (!isServer)
-      patchMain(['./patch/client-polyfills.js', './patch/client-router.js'], config);
 
     // Webpack plugins.
     const plugins = config.plugins || [];
@@ -106,18 +102,15 @@ module.exports = {
   pageExtensions: ['jsx', 'js']
 }
 
-function patchMain(patches, config) {
-  if (patches.length === 0) return;
-
-  const originalEntry = config.entry;
-  config.entry = async () => {
-    const entries = await originalEntry();
-    if (!entries['main.js']) return entries;
-
-    for (const patch of patches)
-      if (!entries['main.js'].includes(patch))
-        entries['main.js'].unshift(patch);
-
-    return entries;
-  };
+function mapAliases(jsPaths, webkitConfig, dir) {
+  const wkResolve = webkitConfig.resolve;
+  for (const jsAlias of Object.keys(jsPaths)) {
+    const jsTargets = jsPaths[jsAlias];
+    if (jsTargets.length !== 1)
+      throw new Error(`expected key \`${jsAlias}\` in \`paths\` entry of \`jsconfig.json\` to have 1 entry`);
+    const [jsTarget] = jsTargets;
+    const wkAlias = jsAlias.endsWith('/*') ? jsAlias.slice(0, -2) : jsAlias;
+    const wkTarget = jsTarget.endsWith('/*') ? jsTarget.slice(0, -2) : jsTarget;
+    wkResolve.alias[wkAlias] = path.join(dir, wkTarget);
+  }
 }

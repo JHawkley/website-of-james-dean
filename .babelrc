@@ -22,7 +22,15 @@
     ]
   ],
   "presets": [
-    "next/babel"
+    [
+      "next/babel",
+      {
+        "preset-env": {
+          "targets": "> 1.00%, not dead",
+          "useBuiltIns": "usage"
+        }
+      }
+    ]
   ],
   "ignore": []
 }

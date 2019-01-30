@@ -6,12 +6,11 @@ import ImgHeader from "static/images/miscprogramming/header.png";
 import $work from "components/articles/Work?name";
 
 const MiscProgramming = (props) => {
-  const { imageSync, active } = props;
-  const phase = active ? 0 : 1;
+  const { preloadSync } = props.appContext;
   return (
     <Article {...props} parent={$work}>
       <h2 className="major">Misc Programming</h2>
-      <span className="image main"><ImgHeader fluid phase={phase} imageSync={imageSync} alt="Misc Programming" /></span>
+      <span className="image main"><ImgHeader fluid preloadSync={preloadSync} alt="Misc Programming" /></span>
       <p>For the following projects, I have less to show, but they're still worth mentioning.</p>
 
       <h3 id="platter">Platter</h3>

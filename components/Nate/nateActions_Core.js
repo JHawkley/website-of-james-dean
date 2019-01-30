@@ -2,8 +2,7 @@ import { extensions as objEx, dew } from "tools/common";
 import { extensions as vecEx } from "tools/vectorMath";
 import { extensions as maybe } from "tools/maybe";
 import { decrementTime, stokesDrag } from "./core";
-import { facings, aimings, movings, jumps, trajectories } from "./core";
-import { playSound } from "./nateCommon";
+import { facings, aimings, movings, jumps, trajectories, tracks } from "./core";
 import * as nc from "./nateConfig";
 
 const { handledMovement } = nc.lanes;
@@ -100,7 +99,7 @@ export function collideFloor(nate, { bounds: { ground } }) {
     if (!physics.onGround) {
       physics.onGround = true;
       anim.land = 100.0;
-      playSound(nate, sounds.land);
+      sounds[tracks.land].play();
     }
   }
 }
@@ -125,7 +124,7 @@ export function doShoot(nate, {bullets}) {
 
       bullet.spawned = true;
       bullet.initialized = false;
-      bullet.nodePositions[0]::vecEx.setXY(px + ox, py + oy);
+      bullet.nodes[0].pos::vecEx.setXY(px + ox, py + oy);
       bullet.trajectory = trajectories[dir]::objEx.copyOwn();
     });
   }

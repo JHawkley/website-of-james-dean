@@ -5,8 +5,9 @@ import { rest } from "../parsers/rest";
 import { endOfInput } from "../parsers/endOfInput";
 import { str } from "../atomic/str";
 import { regex } from "../atomic/regex";
-import { seq } from "../combinators/seq";
+import { arr } from "../combinators/arr";
 import { interpose } from "../combinators/interpose";
+import { oneOf } from "../combinators/oneOf";
 import { map } from "../modifiers/map";
 import { asString } from "../modifiers/asString";
 import { isUndefined } from "../helpers/isUndefined";
@@ -21,32 +22,37 @@ const emptyToVoid = (v) => v === "" ? void 0 : str.skip(v);
 const mark = (p) => (p.preserveResult = true, p);
 const wrap = (parser) => Object.assign((state) => parser(state), parser);
 
+const isAnInterpolation = (parser) => parser === interpolate || parser instanceof AppliedInterpolation;
+
 const prepareParser = (parser) => {
   if (parser == null) throw new Error("a placeholder in the template-literal contained `null` or `undefined`");
   // Ignore the interpolation placeholders.  We'll deal with them later.
-  if (parser === interpolate) return parser;
-  if (parser instanceof AppliedInterpolation) return parser;
+  if (isAnInterpolation(parser)) return parser;
   // Wrap functional parsers so we can attach our marker to it safely.
   if (typeof parser === "function") return mark(wrap(parser));
   // Otherwise, build the standard parsers.
   if (typeof parser === "string") return mark(str(parser));
   if (parser instanceof RegExp) return mark(regex(parser));
+  // Treat an array as a `oneOf` combinator.
+  if (Array.isArray(parser)) {
+    if (parser.some(isAnInterpolation))
+      throw new Error(`arrays used in the template-literal cannot contain an interpolation`);
+    return oneOf(...parser.map(prepareParser));
+  }
   throw new Error(`no parser could be located for \`${parser}\` in the template-literal`);
 };
 
-const processParser = (cur, last) => {
-  if (cur.preserveResult) return map(cur, preserveResult);
+const processParser = (cur, next) => {
+  if (cur.preserveResult)
+    return map(cur, preserveResult);
 
-  if (last) switch (true) {
-    case cur === interpolate: return interpose.string(any, last);
-    case cur instanceof AppliedInterpolation: return interpose(cur.parser, last);
-  }
+  if (cur === interpolate)
+    return next ? interpose.string(any, next) : asString(rest);
+  
+  if (cur instanceof AppliedInterpolation)
+    return next ? interpose(cur.parser, next) : interpose(cur.parser, endOfInput);
 
-  switch (true) {
-    case cur === interpolate: return asString(rest);
-    case cur instanceof AppliedInterpolation: return interpose(cur.parser, endOfInput);
-    default: return cur;
-  }
+  return cur;
 }
 
 /**
@@ -74,8 +80,11 @@ export const parser = (strings, ...parsers) => {
     parsers.map(prepareParser)
   )::arrEx.reject(isUndefined);
 
-  let last = null;
+  // Start from the end, and work back.
+  // `next` means "the parser after the current parser", naturally.
+  let next = null;
   for (let i = combined.length - 1; i >= 0; i--)
-    last = combined[i] = processParser(combined[i], last);
-  return map(seq(...combined), finalizeResult);
+    next = combined[i] = processParser(combined[i], next);
+  
+  return map(arr(combined), finalizeResult);
 };

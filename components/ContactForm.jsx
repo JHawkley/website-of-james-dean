@@ -1,3 +1,4 @@
+import React, { Fragment } from "react";
 import PropTypes from "prop-types";
 import ModalPopup from "./ModalPopup";
 import { dew } from "tools/common";
@@ -5,8 +6,6 @@ import { base64 } from "tools/strings";
 import { extensions as numEx } from "tools/numbers";
 import { extensions as arrEx } from "tools/array";
 import { extensions as maybe, nothing } from "tools/maybe";
-
-const Fragment = React.Fragment;
 
 function mapOfCharToIndex() {
   const output = {};
@@ -77,7 +76,9 @@ function extractValue(ref) {
 class ContactForm extends React.Component {
 
   static propTypes = {
-    displayed: PropTypes.bool.isRequired
+    displayed: PropTypes.bool.isRequired,
+    onModalOpen: PropTypes.func,
+    onModalClose: PropTypes.func
   };
 
   formRef = React.createRef();
@@ -117,7 +118,7 @@ class ContactForm extends React.Component {
       errors.push("The 'message' field contained no meaningful text.");
     
     if (errors.length > 0)
-      this.setState({ isModalOpen: true, validationErrors: errors });
+      this.setState({ validationErrors: errors }, this.openModal);
     else {
       formEl.action = outs("NEQ2XkoymrJD+/q0L3rY6rbA0dT5lkbtghFe13NpRHSGd2plbsTfE0caNQA=");
       formEl.submit();
@@ -125,9 +126,9 @@ class ContactForm extends React.Component {
     }
   }
 
-  closeModal = () => {
-    this.setState({ isModalOpen: false });
-  }
+  openModal = () => this.setState({ isModalOpen: true }, this.props.onModalOpen);
+
+  closeModal = () => this.setState({ isModalOpen: false }, this.props.onModalClose);
 
   componentDidUpdate(prevProps) {
     // If the form isn't displayed, close the modal.

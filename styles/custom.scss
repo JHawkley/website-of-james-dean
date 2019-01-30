@@ -1,4 +1,4 @@
-.body .prevent-scroll {
+.body .hide-overflow {
   position: relative;
   overflow: hidden;
 }
@@ -46,7 +46,7 @@ a.work-item {
 #header {
   border-radius: 4px;
   padding: 1.5rem;
-  background-color: rgba(27, 31, 34, 0.85);
+  background-color: transparentize(_palette(bg), 0.15);
 }
 
 #main {
@@ -165,23 +165,7 @@ a.work-item {
   margin: 0 0 _size(element-margin) 0;
 }
 
-.fluid-container {
-  /* Styling for `padding-bottom` and `width` must be set on the element. */
-  display: block !important;
-  position: relative !important;
-  max-width: 100% !important;
-
-  .fluid {
-    position: absolute !important;
-    top: 0px !important;
-    left: 0px !important;
-    width: 100% !important;
-    height: 100% !important;
-    max-width: inherit !important;
-  }
-}
-
-/* Fixes image over lay with `.fluid-container`.  */
+/* Fixes image overlay with `.fluid-container`.  */
 .image:before {
   z-index: 1;
 }

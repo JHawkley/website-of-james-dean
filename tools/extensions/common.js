@@ -1,8 +1,28 @@
 function newObjectBasedOn(original) {
-  const proto = Object.getPrototypeOf(original);
-  if (proto == null) return Object.create(null);
-  if (proto === Object.prototype) return {};
-  throw new Error(`cannot base a new object on \`${original}\`; it is not a simple object`);
+  switch (Object.getPrototypeOf(original)) {
+    case Object.prototype: return {};
+    case null: return Object.create(null);
+    default: throw new Error(`cannot base a new object on \`${original}\`; it is not a simple object`);
+  }
+}
+
+/**
+ * Determines if this is an empty simple object.  A "simple object" is one that has a prototype that
+ * is `Object.prototype` or `null`.
+ *
+ * @export
+ * @template T
+ * @this {Object.<string, T>} This object.
+ * @returns {boolean}
+ */
+export function isEmpty() {
+  switch (Object.getPrototypeOf(this)) {
+    case Object.prototype:
+    case null:
+      return Object.keys(this).length === 0;
+    default:
+      return false;
+  }
 }
 
 /**
@@ -109,11 +129,13 @@ export const is = {
   string() { "use strict"; return typeof this === "string"; },
   array() { "use strict"; return Array.isArray(this); },
   number() { "use strict"; return typeof this === "number"; },
-  function() { "use strict"; return typeof this === "function"; },
+  func() { "use strict"; return typeof this === "function"; },
   symbol() { "use strict"; return typeof this === "symbol"; },
   boolean() { "use strict"; return typeof this === "boolean"; },
   undefined() { "use strict"; return typeof this === "undefined"; },
   null() { "use strict"; return this === null; },
-  object() { "use strict"; return typeof this === "object" && this !== null; },
+  NaN() { "use strict"; return Number.isNaN(this); },
+  object() { "use strict"; return this !== null && typeof this === "object"; },
+  error() { "use strict"; return this instanceof Error },
   instanceOf(klass) { "use strict"; return this instanceof klass; }
 };
