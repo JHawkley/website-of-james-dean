@@ -6,6 +6,11 @@ export * as extensions from "tools/extensions/common";
 export { is };
 
 /**
+ * The global object.
+ */
+export const global = Function('return this')();
+
+/**
  * Compares the own-properties of two objects.
  *
  * @export
