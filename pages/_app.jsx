@@ -1,3 +1,10 @@
+// Polyfills.
+import 'core-js/es6/symbol';
+import 'core-js/es7/symbol';
+import 'core-js/es6/array';
+import 'core-js/es7/array';
+import 'core-js/web/immediate';
+
 import React, { Fragment } from "react";
 import { hashScroll } from "patch/client-router";
 

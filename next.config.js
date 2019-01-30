@@ -63,10 +63,6 @@ module.exports = {
       }
     );
 
-    // Main.js patches.
-    if (!isServer)
-      patchMain(['./patch/client-polyfills.js', './patch/client-router.js'], config);
-
     // Webpack plugins.
     const plugins = config.plugins || [];
 
@@ -104,21 +100,6 @@ module.exports = {
     );
   },
   pageExtensions: ['jsx', 'js']
-}
-
-function patchMain(patches, webkitConfig) {
-  if (patches.length === 0) return;
-
-  const originalEntry = webkitConfig.entry;
-  webkitConfig.entry = async () => {
-    const entries = await originalEntry();
-    if (!entries['main.js']) return entries;
-
-    const unincluded = patches.filter(patch => !entries['main.js'].includes(patch));
-    if (unincluded.length > 0) entries['main.js'].unshift(...unincluded);
-
-    return entries;
-  };
 }
 
 function mapAliases(jsPaths, webkitConfig, dir) {
