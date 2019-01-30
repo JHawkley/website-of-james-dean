@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import PreloadSync from "components/associates/PreloadSync";
+import PreloadSync from "components/Preloader/PreloadSync";
 import Preloadable from "components/Preloadable";
 import { dew, is, Composition } from "tools/common";
 import { Future, CallSync } from "tools/async";
