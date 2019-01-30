@@ -1,7 +1,10 @@
-import React from "react";
+import React, { Fragment } from "react";
+import { dew } from "tools/common";
 import Article, { Goto } from "components/Article";
 import Jump from "components/Jump";
 import NateWidget from "components/Nate";
+import NotSupportedError from "components/Nate/NotSupportedError";
+import GameUpdateError from "components/Nate/GameUpdateError";
 
 import ImgHeader from "static/images/nate-game/header.png";
 import ImgTwo from "static/images/nate-game/2.jpg";
@@ -14,6 +17,8 @@ import { src as $gallery$4 } from "static/images/nate-game/4.jpg";
 import $work from "components/articles/Work?name";
 import $miscprogramming from "components/articles/MiscProgramming?name";
 
+const isDev = process.env.NODE_ENV !== 'production';
+
 class Nate extends React.PureComponent {
 
   Gallery = this.props.appContext.makeGallery([
@@ -23,8 +28,55 @@ class Nate extends React.PureComponent {
     { i: $gallery$4, d: "These early concept sketches of enemies show that Chie had some fun looking playmates for her \"pet\" in mind.  This artwork was done by my partner on this project, Tderek99." }
   ]);
 
+  state = { nateWidgetError: null };
+
+  handleNateError = (nateWidgetError) => {
+    this.setState({ nateWidgetError });
+    if (isDev) {
+      let error = nateWidgetError;
+      while (error != null) {
+        console.error(error);
+        error = error.innerError;
+      }
+    }
+  }
+
+  renderError(error) {
+    const message = dew(() => {
+      switch (true) {
+        case error instanceof NotSupportedError: return (
+          <p>Unfortunately, your browser does not support the features of the interactive component.  Please revisit this page with a different browser if you would like to play with Nate.</p>
+        );
+        case error instanceof GameUpdateError: return (
+          <Fragment>
+            <p>An unexpected error occurred while updating the Nate widget's state and can no longer run.  Please refresh the page if you would like to give it another go.</p>
+            <p>Error details: &#96;{error.innerError.message}&#96;</p>
+          </Fragment>
+        );
+        default: return (
+          <Fragment>
+            <p>The Nate widget encountered an unexpected error can can no longer run.  Please refresh the page if you would like to give it another go.</p>
+            <p>Error details: &#96;{error.message}&#96;</p>
+          </Fragment>
+        );
+      }
+    });
+
+    return (
+      <blockquote>
+        {message}
+        <style jsx>
+          {`
+            blockquote { border-left-color: red; font-style: normal; }
+            blockquote > :global(p:last-child) { margin-bottom: 0px; }
+          `}
+        </style>
+      </blockquote>
+    );
+  }
+
   render() {
-    const { Gallery, props: { appContext: { preloadSync }, active } } = this;
+    const { Gallery, props: { appContext: { preloadSync }, active }, state: { nateWidgetError } } = this;
     return (
       <Article {...this.props} parent={$work}>
         <h2 className="major">Nate Game</h2>
@@ -64,8 +116,8 @@ class Nate extends React.PureComponent {
         <p>When he is in his passive state, he will just pace around, showing off his move-set through random actions.  But when he sees the cursor, he'll bark at it and switch to his aggressive state.</p>
         <p>He'll chase the cursor around and try to shoot at it.  If it gets too close, he'll flee, but try and take potshots at it.  If the cursor sits still too long or gets to a place he can't reach, he'll stare at it and display frustration in not being able to play anymore.</p>
         <p>If he is left bored for too long, he'll make a sad, confused whine and return to his passive behaviors.  Be nice and give him some fun!  It gets boring on that blue platform...</p>
-        {active && NateWidget.supported && <NateWidget />}
-        {!NateWidget.supported && <p>(Unfortunately, your browser does not support the features of the interactive component.  Please revisit this page with a different browser if you would like to play with Nate.)</p>}
+        {active && <NateWidget onError={this.handleNateError} />}
+        {nateWidgetError && this.renderError(nateWidgetError)}
         <p>All of this was made using a combination of HTML, JavaScript (with ESNext features via <Jump href="https://babeljs.io/">Babel</Jump>), and CSS (via <Jump href="https://github.com/zeit/styled-jsx">styled-jsx</Jump>).  The sounds were created using <Jump href="http://github.grumdrig.com/jsfxr/">jsfxr</Jump> and hopefully the sounds he makes when he changes between his behavior states are recognized as sounds a dog might make.</p>
         <p>While the Canvas API would probably have been the more performant option, an HTML-element based solution is fine for such a simple interactive piece.  His animations are all driven and controlled by CSS, and an action-list coded in a data-driven style drives his rather complicated behavior, made up of around 50 individual actions spread across 4 major behaviors.</p>
         <p>This was actually the most complex AI that I have made to date, in terms of behavioral complexity.</p>
@@ -74,5 +126,7 @@ class Nate extends React.PureComponent {
   }
 
 }
+
+<blockquote style={{ borderLeftColor: "red" }}>This is just a test.</blockquote>;
 
 export default Nate;

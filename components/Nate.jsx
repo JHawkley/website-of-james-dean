@@ -1,15 +1,19 @@
 import React, { Fragment } from "react";
+import PropTypes from "prop-types";
 import { css } from "styled-jsx/css";
-import { dew, is } from "tools/common";
+import { dew, is, global } from "tools/common";
 import { CallSync, eachFrame } from "tools/async";
 import { makeArray } from "tools/array";
-import { extensions as maybe } from "tools/maybe";
 import { numeric } from "tools/css";
 import bulletActionList from "./Nate/bulletActionList";
 import nateActionList from "./Nate/nateActionList";
 import { behaviorModes, facings, aimings, movings, jumps, tracks } from "./Nate/core";
+import Preloadable from "components/Preloadable";
 import Preloader from "components/Preloader";
 import Audio from "components/Audio";
+import LoadingSpinner from "components/LoadingSpinner";
+import NotSupportedError from "components/Nate/NotSupportedError";
+import GameUpdateError from "components/Nate/GameUpdateError";
 
 import styleVars from "styles/vars.json";
 
@@ -30,18 +34,38 @@ import Mp3Pop1 from "static/sounds/nate-game/pop1.mp3";
 import OggPop2 from "static/sounds/nate-game/pop2.ogg?codec=vorbis";
 import Mp3Pop2 from "static/sounds/nate-game/pop2.mp3";
 
-class Nate extends React.Component {
+// The amount of time in milliseconds to fade in/out when transitioning to/from loaded states.
+const fadeTime = 300;
 
-  didUnmount = false;
+class Nate extends Preloadable {
+
+  static propTypes = {
+    ...Preloadable.propTypes,
+    onLoad: PropTypes.func,
+    onError: PropTypes.func
+  };
+
+  static getDerivedStateFromProps(props, state) {
+    if (state.error) return null;
+    return { preloaded: state.imagesReady && state.soundsReady };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
 
   cancelAsync = new CallSync();
 
   soundsEnabled = false;
 
   state = {
+    ...this.state,
     imagesReady: false,
     soundsReady: false,
-    error: null
+    error: dew(() => {
+      if (supported()) return null;
+      return new NotSupportedError("the `Nate` component is not supported by the current browser");
+    })
   };
 
   world = {
@@ -84,7 +108,12 @@ class Nate extends React.Component {
       actions: {},
       ref: React.createRef()
     },
-    bounds: { left: 0.0, right: 0.0, ground: 0.0 },
+    bounds: {
+      left: 0.0,
+      right: 0.0,
+      ground: 0.0,
+      ref: React.createRef()
+    },
     cursor: {
       absPos: { x: 0, y: 0 },
       relPos: { x: 0, y: 0 },
@@ -98,9 +127,9 @@ class Nate extends React.Component {
       trajectory: { x: 0.0, y: 0.0 },
       driftRemaining: 0.0,
       nodes: [
-        { ref: React.createRef(), pos: { x: 0.0, y: 0.0 } },
-        { ref: React.createRef(), pos: { x: 0.0, y: 0.0 } },
-        { ref: React.createRef(), pos: { x: 0.0, y: 0.0 } },
+        { pos: { x: 0.0, y: 0.0 }, ref: React.createRef() },
+        { pos: { x: 0.0, y: 0.0 }, ref: React.createRef() },
+        { pos: { x: 0.0, y: 0.0 }, ref: React.createRef() },
       ],
       sounds: {
         [tracks.spawned]: this.soundPlayer(),
@@ -111,38 +140,54 @@ class Nate extends React.Component {
   };
 
   onImagesReady = () => {
-    if (this.didUnmount) return;
+    if (this.isUnmounted) return;
     this.setState({ imagesReady: true });
   }
 
   onImagesFailed = (error) => {
-    if (this.didUnmount) return;
+    if (this.isUnmounted) return;
     this.setState({ imagesReady: false, error });
   }
 
   onSoundsReady = () => {
-    if (this.didUnmount) return;
+    if (this.isUnmounted) return;
     this.soundsEnabled = true;
     this.setState({ soundsReady: true });
   }
 
   onSoundsFailed = () => {
-    if (this.didUnmount) return;
+    if (this.isUnmounted) return;
     this.soundsEnabled = false;
     this.setState({ soundsReady: true });
   }
 
   attachGame = (container) => {
     this.cancelAsync.resolve();
-    if (!container) return;
 
-    let timeLast = performance.now();
-    eachFrame(this.cancelAsync.sync, (timeNow) => {
-      const delta = Math.min(timeNow - timeLast, 50.0);
-      //const delta = (1000 / 60) / 10;
-      timeLast = timeNow;
-      this.doGameUpdate(delta, container);
-    });
+    if (container) {
+      document.addEventListener("mousemove", this.mouseMoveHandler);
+      document.addEventListener("scroll", this.scrollHandler);
+
+      let timeLast = performance.now();
+      eachFrame(this.cancelAsync.sync, (timeNow) => {
+        try {
+          const delta = Math.min(timeNow - timeLast, 50.0);
+          //const delta = (1000 / 60) / 10;
+          timeLast = timeNow;
+          this.doGameUpdate(delta, container);
+        }
+        catch (capturedError) {
+          this.cancelAsync.resolve();
+          if (this.isUnmounted) return;
+          const error = new GameUpdateError("an error occurred while updating the game state", capturedError);
+          this.setState({ error });
+        }
+      });
+    }
+    else {
+      document.removeEventListener("mousemove", this.mouseMoveHandler);
+      document.removeEventListener("scroll", this.scrollHandler);
+    }
   }
 
   mouseMoveHandler = (e) => {
@@ -167,9 +212,13 @@ class Nate extends React.Component {
     // Update bounds.
     {
       const bounds = this.world.bounds;
-      const rect = container.getBoundingClientRect();
-      bounds.right = rect.width;
-      bounds.ground = rect.height;
+      const el = bounds.ref.current;
+      if (el) {
+        const elTop = el.offsetTop;
+        const containerHeight = container.offsetHeight;
+        bounds.right = el.offsetWidth;
+        bounds.ground = containerHeight - elTop;
+      }
     }
 
     // Update cursor.
@@ -254,22 +303,53 @@ class Nate extends React.Component {
   }
 
   componentDidMount() {
-    document.addEventListener("mousemove", this.mouseMoveHandler);
-    document.addEventListener("scroll", this.scrollHandler);
+    super.componentDidMount();
+    const { props: { onLoad, onError }, state: { preloaded, error } } = this;
+
+    if (error) {
+      this.cancelAsync.resolve();
+      onError?.(error);
+    }
+    else if (preloaded) {
+      onLoad?.();
+    }
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    super.componentDidUpdate(prevProps, prevState);
+    const { props: { onLoad, onError }, state: { preloaded, error } } = this;
+
+    if ((error !== prevState.error || onError !== prevProps.onError) && error) {
+      this.cancelAsync.resolve();
+      onError?.(error);
+    }
+    else if ((preloaded !== prevState.preloaded || onLoad !== prevProps.onLoad) && preloaded) {
+      onLoad?.();
+    }
   }
 
   componentWillUnmount() {
-    this.didUnmount = true;
+    super.componentWillUnmount();
     this.cancelAsync.resolve();
-    document.removeEventListener("mousemove", this.mouseMoveHandler);
-    document.removeEventListener("scroll", this.scrollHandler);
   }
 
-  renderContainer() {
-    const { container, nateSprite } = nateCss;
+  renderContainer(ready) {
+    const {
+      container: { className: containerClass },
+      nateSprite: { className: nateClass }
+    } = nateCss;
+    const { nate: { ref: nateRef }, bounds: { ref: groundRef } } = this.world;
+
+    const attachGame = ready ? this.attachGame : null;
+    const className = [containerClass, "nate-container"];
+    if (!ready) className.push("loading");
+    
     return (
-      <div className={`${container.className} nate-container`} ref={this.attachGame}>
-        <div ref={this.world.nate.ref} className={`${nateSprite.className} nate-sprite despawned`} />
+      <div ref={attachGame} className={className.join(" ")}>
+        <div className={`${containerClass} buffer top`} />
+        <div ref={groundRef} className={`${containerClass} ground-plane`} />
+        <div className={`${containerClass} buffer bottom`} />
+        <div ref={nateRef} className={`${nateClass} nate-sprite despawned`} />
         {this.renderBullets()}
       </div>
     );
@@ -309,14 +389,17 @@ class Nate extends React.Component {
   }
 
   render() {
-    const { state: { imagesReady, soundsReady, error } } = this;
+    const { imagesReady, soundsReady, error } = this.state;
     const { container, nateSprite, bulletSprite } = nateCss;
 
     if (error) return null;
 
+    const ready = imagesReady && soundsReady;
+
     return (
-      <div>
-        {imagesReady && soundsReady && this.renderContainer()}
+      <div className={`${container.className} root`}>
+        <LoadingSpinner size="2x" fadeTime={fadeTime} show={!ready} background />
+        {this.renderContainer(ready)}
         {this.renderImages()}
         {this.renderSounds()}
         {nateSprite.styles}
@@ -328,43 +411,43 @@ class Nate extends React.Component {
 
 }
 
-Nate.supported = dew(() => {
-  const g = this;
+const supported = dew(() => {
   let supported = undefined;
 
   const detectAnimation = () => {
-    const elem = g.document.createElement('div');
+    const elem = global.document.createElement('div');
     const prefixes = "animationName WebkitAnimationName MozAnimationName OAnimationName msAnimationName KhtmlAnimationName".split(" ");
     
     for(let i = 0; i < prefixes.length; i++)
-      if(elem.style[prefixes[i]]::maybe.isDefined())
+      if(elem.style[prefixes[i]] != null)
         return true;
     
     return false;
   }
 
   const detectTransform = () => {
-    const elem = g.document.createElement('div');
+    const elem = global.document.createElement('div');
     const prefixes = "transform WebkitTransform MozTransform OTransform msTransform".split(" ");
 
     for(let i = 0; i < prefixes.length; i++)
-      if(elem.style[prefixes[i]]::maybe.isDefined())
+      if(elem.style[prefixes[i]] != null)
         return true;
 
     return false;
   }
 
   const detectRequestAnimationFrame = () => {
-    if (!g["requestAnimationFrame"]::is.func()) return false;
-    if (!g["cancelAnimationFrame"]::is.func()) return false;
+    if (!global["requestAnimationFrame"]::is.func()) return false;
+    if (!global["cancelAnimationFrame"]::is.func()) return false;
     return true;
   }
 
-  const detectSet = () => g["Set"]::is.func();
+  const detectSet = () => global["Set"]::is.func();
 
   return () => {
-    if (supported::maybe.isDefined()) return supported;
-    supported = detectRequestAnimationFrame() && detectAnimation() && detectTransform() && detectSet();
+    if (!process.browser) return true;
+    if (supported == null)
+      supported = detectRequestAnimationFrame() && detectAnimation() && detectTransform() && detectSet();
     return supported;
   };
 });
@@ -403,20 +486,36 @@ const nateCss = dew(() => {
     translateOffset([-Math.ceil(width * 0.5), Math.ceil(height * 0.5)]);
 
   const container = css.resolve`
-    .nate-container {
-      overflow: visible !important;
-      margin: 4rem ${-1 * margin}${marginUnit} 2rem;
+    .root {
       position: relative;
+      margin: ${-margin}${marginUnit} ${-margin}${marginUnit} 0${marginUnit};
     }
 
-    .nate-container:after {
-      content: '';
-      display: block;
+    .nate-container {
+      overflow: visible !important;
+      position: relative;
+      z-index: 0;
+      opacity: 1;
+      transition: opacity ${fadeTime}ms ease-in-out;
+    }
+
+    .nate-container.loading {
+      opacity: 0;
+    }
+
+    .buffer {
+      visibility: hidden;
+      width: 100%;
+    }
+
+    .buffer.top { height: ${3 * margin}${marginUnit}; }
+    .buffer.bottom { height: ${margin}${marginUnit}; }
+
+    .ground-plane {
       width: 100%;
       height: 24px;
-      z-index: 0;
 
-      position: relative;
+      z-index: 0;
       border: 1px solid #004A7F;
       background-color: #0094FF;
     }
