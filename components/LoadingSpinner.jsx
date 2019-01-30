@@ -3,9 +3,9 @@ import PropTypes from "prop-types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons/faSpinner";
 import { dew, is } from "tools/common";
-import { extensions as maybe } from "tools/maybe";
 import { color } from "tools/css";
 import { extensions as asyncEx, CallSync, wait } from "tools/async";
+import { extensions as propTypesEx } from "tools/propTypes";
 import styleVars from "styles/vars.json";
 
 const bgColor = color(styleVars.palette.bg).transparentize(0.15).asRgba();
@@ -16,6 +16,8 @@ const $right = "right";
 const $top = "top";
 const $middle = "middle";
 const $bottom = "bottom";
+
+const mustBePositive = (v) => v >= 0 ? true : "must be a positive number";
 
 class LoadingSpinner extends React.PureComponent {
 
@@ -29,8 +31,8 @@ class LoadingSpinner extends React.PureComponent {
     style: PropTypes.object,
     size: PropTypes.oneOf(["xs", "sm", "lg", "1x", "2x", "3x", "4x", "5x", "6x", "7x", "8x", "9x", "10x"]),
     background: PropTypes.bool,
-    delay: PropTypes.number,
-    fadeTime: PropTypes.number,
+    delay: PropTypes.number::propTypesEx.predicate(mustBePositive),
+    fadeTime: PropTypes.number::propTypesEx.predicate(mustBePositive),
     show: PropTypes.bool
   };
 
@@ -43,6 +45,7 @@ class LoadingSpinner extends React.PureComponent {
     size: "1x",
     background: false,
     delay: 0,
+    fadeTime: 0,
     show: true
   };
 
@@ -78,9 +81,11 @@ class LoadingSpinner extends React.PureComponent {
 
   async clearVanish() {
     if (!this.state.vanishing) return;
-    const waited = await wait(this.props.fadeTime, this.cancelAsync.sync);
-    if (waited::asyncEx.isAborted()) return;
-    if (!this.state.vanishing) return;
+    if (this.props.fadeTime > 0) {
+      const waited = await wait(this.props.fadeTime, this.cancelAsync.sync);
+      if (waited::asyncEx.isAborted()) return;
+      if (!this.state.vanishing) return;
+    }
     this.setState({ vanishing: false });
   }
 
@@ -170,7 +175,7 @@ class LoadingSpinner extends React.PureComponent {
           {`
             .root {
               position: ${fixed ? "fixed" : "absolute"};
-              ${fadeTime::maybe.map(n => `transition: opacity ${n}ms ease-in-out;`) ?? ""}
+              ${fadeTime > 0 ? `transition: opacity ${fadeTime}ms ease-in-out;` : ""}
               transform: ${transform};
               ${horizAttr}: ${horizVal};
               ${vertAttr}: ${vertVal};
