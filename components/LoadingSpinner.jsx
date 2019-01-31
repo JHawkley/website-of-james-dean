@@ -33,7 +33,9 @@ class LoadingSpinner extends React.PureComponent {
     background: PropTypes.bool,
     delay: PropTypes.number::propTypesEx.predicate(mustBePositive),
     fadeTime: PropTypes.number::propTypesEx.predicate(mustBePositive),
-    show: PropTypes.bool
+    show: PropTypes.bool,
+    onShown: PropTypes.func,
+    onHidden: PropTypes.func
   };
 
   static defaultProps = {
@@ -55,59 +57,72 @@ class LoadingSpinner extends React.PureComponent {
 
   cancelAsync = new CallSync();
 
-  constructor(props) {
-    super(props);
+  state = {
+    shown: this.props.delay === 0 && this.props.show,
+    vanishing: false
+  };
 
-    this.state = {
-      shown: props.delay === 0 ? props.show : false,
-      vanishing: false
-    };
-  }
-
-  async delayShow() {
+  async beginShow() {
     if (this.state.shown) return;
+
+    // Cancel any other async operations.
+    this.cancelAsync.resolve();
     
     if (this.state.vanishing) {
-      this.cancelAsync.resolve();
+      // Abort the vanishing.
       this.setState({ shown: true, vanishing: false });
     }
     else {
-      const waited = await wait(this.props.delay, this.cancelAsync.sync);
-      if (waited::asyncEx.isAborted()) return;
-      if (this.state.shown) return;
-      this.setState({ shown: true });
+      // Wait for the delay, then show.
+      const { delay } = this.props;
+      if (delay > 0) {
+        const waited = await wait(delay, this.cancelAsync.sync);
+        if (waited::asyncEx.isAborted()) return;
+        if (this.state.shown) return;
+      }
+      this.setState({ shown: true }, this.props.onShown);
     }
   }
 
   async clearVanish() {
     if (!this.state.vanishing) return;
-    if (this.props.fadeTime > 0) {
-      const waited = await wait(this.props.fadeTime, this.cancelAsync.sync);
+
+    // Cancel any other async operations.
+    this.cancelAsync.resolve();
+
+    const { fadeTime } = this.props;
+    if (fadeTime > 0) {
+      const waited = await wait(fadeTime, this.cancelAsync.sync);
       if (waited::asyncEx.isAborted()) return;
       if (!this.state.vanishing) return;
     }
-    this.setState({ vanishing: false });
+    this.setState({ vanishing: false }, this.props.onHidden);
   }
 
   componentDidMount() {
-    this.delayShow();
+    if (this.props.show) this.beginShow();
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { props: { show, delay }, state: { shown, vanishing } } = this;
+    const { props: { show, delay, fadeTime }, state: { shown, vanishing } } = this;
+
     let doShow = show !== prevProps.show && show && !shown;
+    let doVanish = vanishing !== prevState.vanishing && vanishing;
 
-    if (delay !== prevProps.delay) {
-      this.cancelAsync.resolve();
-      doShow = doShow || (show && !shown);
-    }
+    // Refresh the delay.
+    if (delay !== prevProps.delay)
+      doShow = show && !shown;
 
-    if (vanishing !== prevState.vanishing && vanishing) this.clearVanish();
-    if (doShow) this.delayShow();
+    // Refresh the fade-out.
+    if (fadeTime !== prevProps.fadeTime)
+      doVanish = vanishing;
+
+    if (doShow) this.beginShow();
+    else if (doVanish) this.clearVanish();
   }
 
   componentWillUnmount() {
-    // Cancel asynchronous activities.
+    // Cancel asynchronous operations.
     this.cancelAsync.resolve();
   }
 
