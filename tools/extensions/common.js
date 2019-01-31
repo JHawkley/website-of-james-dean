@@ -123,6 +123,19 @@ export function times(count) {
 }
 
 /**
+ * Transforms this value into something else.
+ *
+ * @export
+ * @template T,U
+ * @this {T} The object to be transformed.
+ * @param {function(T): U} transformationFn The transformation function.
+ * @returns {U} The result of the transformation.
+ */
+export function map(transformationFn) {
+  return transformationFn(this);
+}
+
+/**
  * Contains several extension methods for matching based on type.
 */
 export const is = {
