@@ -497,7 +497,7 @@ class SoftIndexPage extends IndexPage {
 
     return (
       <LoadingSpinner
-        delay={200}
+        delay={articleTransition * 0.5}
         fadeTime={throbberFadeTime}
         size="3x"
         show={loading ? false : actualArticle::maybe.isEmpty()}
@@ -565,7 +565,7 @@ class HardIndexPage extends IndexPage {
     
     return (
       <LoadingSpinner
-        delay={200}
+        delay={articleTransition}
         fadeTime={throbberFadeTime}
         hPos="right" vPos="bottom" size="2x"
         show={loading ? false : routeChanging}
