@@ -3,6 +3,7 @@ import { orUndefined, finishWith } from "tools/extensions/async";
 
 // Re-export extension methods.
 export * as extensions from "tools/extensions/async";
+export * as iterExtensions from "tools/extensions/asyncIterables";
 
 /**
  * A class that represents a promise that is resolved or rejected elsewhere.
