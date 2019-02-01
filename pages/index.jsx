@@ -2,7 +2,7 @@ import React, { Fragment } from "react";
 import PropTypes from "prop-types";
 import ReactDOMServer from "react-dom/server";
 import Head from "next/head";
-import { canScrollRestore as transitionsSupported } from "pages/_app";
+import { canScrollRestore as transitionsSupported } from "tools/scrollRestoration";
 
 import { dew, is, singleton } from "tools/common";
 import { timespan, dequote } from "tools/css";

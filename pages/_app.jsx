@@ -16,6 +16,7 @@ import Modal from "react-modal";
 import { config as faConfig, dom as faDom } from "@fortawesome/fontawesome-svg-core";
 import { dew, is } from "tools/common";
 import { extensions as maybe } from "tools/maybe";
+import { canScrollRestore } from "tools/scrollRestoration";
 
 faConfig.autoAddCss = false;
 
@@ -27,12 +28,6 @@ const updateHistoryState = (fn) => {
 };
 
 const getHistoryState = (key) => window.history.state?.options?.[key];
-
-export const canScrollRestore = dew(() => {
-  if (typeof window === "undefined") return false;
-  if (typeof window.sessionStorage === "undefined") return false;
-  return window.history.scrollRestoration::is.string();
-});
 
 export default class ScrollRestoringApp extends App {
 
