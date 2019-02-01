@@ -136,6 +136,19 @@ export function map(transformationFn) {
 }
 
 /**
+ * Verifies that the own-properties of `obj` have a match in this object.  A match is determined by strict-equality.
+ * This is handy for verifying state during async operations.
+ *
+ * @export
+ * @this {Object} The object to match `obj` to.
+ * @param {Object} obj The object whose own-properties to match.
+ * @returns {boolean}
+ */
+export function verifyProps(obj) {
+  return Object.keys(obj).every(k => this[k] === obj[k]);
+}
+
+/**
  * Contains several extension methods for matching based on type.
 */
 export const is = {
