@@ -1,6 +1,8 @@
 import { is } from "tools/common";
 import { abortable } from "tools/async";
 
+const abortSignal = abortable.signal;
+
 const alwaysTrue = () => true;
 const alwaysFalse = () => false;
 const alwaysUndefined = () => void 0;
@@ -22,7 +24,7 @@ export function didComplete() {
  * @export
  * @template T
  * @this {Promise<T>} This promise.
- * @returns {Promise<T|undefined} A promise that cannot reject, but may produce `undefined`.
+ * @returns {Promise<T|undefined>} A promise that cannot reject, but may produce `undefined`.
  */
 export function orUndefined() {
   return this.catch(alwaysUndefined);
@@ -51,7 +53,7 @@ export function abortOn(signalPromise) {
  * @returns {boolean}
  */
 export function isAborted() {
-  return this === abortable.signal;
+  return this === abortSignal;
 }
 
 /**
