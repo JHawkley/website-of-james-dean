@@ -3,12 +3,13 @@ import { abortable } from "tools/async";
 
 /**
  * Iterates over this async-iterable, applying `iteratorFn` for each element yielded.  Iteration can be canceled
- * early by providing a promise to serve as an `abortSignal`.
+ * early by providing a promise to serve as an `abortSignal`.  The iterator function can, itself, be an
+ * async-function; the function will be awaited before the next iteration will proceed.
  *
  * @export
  * @template T
  * @this {AsyncIterable<T>}
- * @param {function(T): void} iteratorFn The iterator function.
+ * @param {function(T): void | Promise<void>} iteratorFn The iterator function.
  * @param {Promise} [abortSignal] The promise to use as a signal to abort when it completes.
  * @returns {Promise<void>} A promise that will resolve when iteration is complete.
  */
@@ -70,7 +71,7 @@ async function iterateWithAbort(iterator, abortSignal, iteratorFn) {
     const result = await abortable(iterator.next(), abortSignal);
     if (result === abortable.signal) return;
     if (result.done) return;
-    iteratorFn(result.value);
+    await iteratorFn(result.value);
   }
 }
 
@@ -79,6 +80,6 @@ async function iterateWithoutAbort(iterator, iteratorFn) {
   while (true) {
     const result = await iterator.next();
     if (result.done) return;
-    iteratorFn(result.value);
+    await iteratorFn(result.value);
   }
 }
