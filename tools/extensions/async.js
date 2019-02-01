@@ -6,6 +6,7 @@ const abortSignal = abortable.signal;
 const alwaysTrue = () => true;
 const alwaysFalse = () => false;
 const alwaysUndefined = () => void 0;
+const checkAborted = (v) => v === abortSignal;
 
 /**
  * Creates a promise that will resolve with a boolean value, indicating whether this promise resolved or rejected.
@@ -28,6 +29,22 @@ export function didComplete() {
  */
 export function orUndefined() {
   return this.catch(alwaysUndefined);
+}
+
+/**
+ * Creates a promise that will resolve with a boolean value, indicating if this promise or value is the abortion
+ * signal.  This is handy if you don't otherwise care about the value the promise resolved to but do care if
+ * the promise aborted.
+ *
+ * @export
+ * @template T
+ * @this {T|Promise<T>} This value or promise.
+ * @returns {Promise<boolean>}
+ */
+export function didAbort() {
+  if (this.then::is.func())
+    return this.then(checkAborted);
+  return Promise.resolve(this === abortSignal);
 }
 
 /**
