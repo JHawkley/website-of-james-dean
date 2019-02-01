@@ -53,7 +53,7 @@ export function fromLatest() {
   return {
     get isCompleted() { return state.done; },
     get didError() { return state.error != null; },
-    get getError() { return state.error; },
+    get error() { return state.error; },
     async *[Symbol.asyncIterator]() {
       if (state.started) {
         if (typeof state.error !== undefined)
