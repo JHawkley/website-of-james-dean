@@ -7,7 +7,7 @@ import flush from 'styled-jsx/server';
 export default class StyledDocument extends Document {
 
   static async getInitialProps(ctx) {
-    const props = await super.getInitialProps(ctx);
+    const props = await Document.getInitialProps(ctx);
     return { ...props, styles: flush() };
   }
 
