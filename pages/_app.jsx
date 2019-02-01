@@ -5,16 +5,13 @@ import 'core-js/es6/array';
 import 'core-js/es7/array';
 import 'core-js/web/immediate';
 
-import React, { Fragment } from "react";
 import { hashScroll } from "patch/client-router";
 
 import App, { createUrl } from "next/app";
-import Head from "next/head";
 import { getUrl, loadGetInitialProps, loadGetRenderProps } from "next/dist/lib/utils";
 
 import Modal from "react-modal";
-import { config as faConfig, dom as faDom } from "@fortawesome/fontawesome-svg-core";
-import { dew, is } from "tools/common";
+import { config as faConfig } from "@fortawesome/fontawesome-svg-core";
 import { extensions as maybe } from "tools/maybe";
 import { canScrollRestore } from "tools/scrollRestoration";
 
@@ -186,14 +183,11 @@ export default class ScrollRestoringApp extends App {
   render() {
     const { props: { router, Component }, state: { pageProps } } = this;
     return (
-      <Fragment>
-        <Head><style dangerouslySetInnerHTML={{ __html: faDom.css() }} /></Head>
-        <Component {...pageProps}
-          elementRef={Modal.setAppElement}
-          url={createUrl(router)}
-          notifyPageReady={this.restoreScrollPosition}
-        />
-      </Fragment>
+      <Component {...pageProps}
+        elementRef={Modal.setAppElement}
+        url={createUrl(router)}
+        notifyPageReady={this.restoreScrollPosition}
+      />
     );
   }
 
