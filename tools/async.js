@@ -1,4 +1,4 @@
-import { dew, identityFn, is } from "tools/common";
+import { identityFn, is } from "tools/common";
 import { orUndefined, finishWith } from "tools/extensions/async";
 
 // Re-export extension methods.
@@ -21,15 +21,24 @@ export class Future {
    * @memberof Future
    */
   constructor(promiseDecorator = identityFn) {
+    let didComplete = false;
+    let error = void 0;
+    // These are set when the promise instantiated.
     let resolveFn = null;
     let rejectFn = null;
-    let didComplete = false;
-    let didResolve = false;
 
-    function acquireCallbacks(resolve, reject) {
-      resolveFn = resolve;
-      rejectFn = reject;
-    }
+    /**
+     * The future's promise.
+     * 
+     * @property {Promise<U>} Future#promise
+     * @readonly
+    */
+    Object.defineProperty(this, "promise", {
+      value: promiseDecorator(new Promise((resolve, reject) => {
+        resolveFn = resolve;
+        rejectFn = reject;
+      }))
+    });
 
     /**
      * Whether the future has been resolved or rejected already.
@@ -49,17 +58,28 @@ export class Future {
      * @readonly
     */
     Object.defineProperty(this, "didResolve", {
-      get: () => didResolve
+      get: () => didComplete && !error
     });
 
     /**
-     * The future's promise.
+     * Whether the future has been rejected.  If the future has not yet completed or was resolved,
+     * it will be `false`.
      * 
-     * @property {Promise<U>} Future#promise
+     * @property {boolean} Future#didError
      * @readonly
     */
-    Object.defineProperty(this, "promise", {
-      value: promiseDecorator(new Promise(acquireCallbacks))
+    Object.defineProperty(this, "didError", {
+      get: () => Boolean(error)
+    });
+
+    /**
+     * Gets the error of this future.
+     * 
+     * @property {*} Future#error
+     * @readonly
+    */
+    Object.defineProperty(this, "error", {
+      get: () => error
     });
 
     /**
@@ -74,11 +94,7 @@ export class Future {
           throw new Error("this future has already completed");
 
         didComplete = true;
-        didResolve = true;
-        dew(async () => {
-          while (resolveFn == null) await frameSync();
-          resolveFn(value);
-        });
+        resolveFn(value);
       }
     });
 
@@ -94,10 +110,8 @@ export class Future {
           throw new Error("this future has already completed");
         
         didComplete = true;
-        dew(async () => {
-          while (rejectFn == null) await frameSync();
-          rejectFn(reason);
-        });
+        error = reason;
+        rejectFn(reason);
       }
     });
   }
@@ -208,6 +222,7 @@ export class Stream {
     return {
       isCompleted: { get: () => state.done },
       didError: { get: () => state.error != null },
+      error: { get: () => state.error },
       done: {
         value: () => {
           if (state.done) return this;
@@ -222,7 +237,7 @@ export class Stream {
           return this;
         }
       },
-      error: {
+      fail: {
         value: (reason) => {
           if (state.done) return this;
           state.error = reason;
@@ -253,7 +268,7 @@ export class Stream {
   constructor(promiseDecorator = identityFn) {
     Object.defineProperties(this, Stream.mixin({
       callSync: new CallSync(promiseDecorator),
-      error: null,
+      error: void 0,
       done: false
     }));
   }
@@ -354,7 +369,7 @@ export class BufferedStream {
     Object.defineProperties(this, BufferedStream.mixin({
       callSync: new CallSync(promiseDecorator),
       buffer: [],
-      error: null,
+      error: void 0,
       done: false
     }));
   }

@@ -34,7 +34,7 @@ class PreloadSync {
     if (this.stream.isCompleted) return;
 
     if (error) {
-      this.stream.error(error);
+      this.stream.fail(error);
       this.preloading.clear();
     }
     else if (!preloaded) {
