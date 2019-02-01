@@ -158,10 +158,11 @@ export const is = {
   func() { "use strict"; return typeof this === "function"; },
   symbol() { "use strict"; return typeof this === "symbol"; },
   boolean() { "use strict"; return typeof this === "boolean"; },
+  defined() { "use strict"; return this != null; },
   undefined() { "use strict"; return typeof this === "undefined"; },
   null() { "use strict"; return this === null; },
-  NaN() { "use strict"; return Number.isNaN(this); },
-  object() { "use strict"; return this !== null && typeof this === "object"; },
+  NaN() { "use strict"; return typeof this !== "number" || Number.isNaN(this); },
+  object() { "use strict"; return this != null && typeof this === "object"; },
   error() { "use strict"; return this instanceof Error },
   instanceOf(klass) { "use strict"; return this instanceof klass; }
 };
