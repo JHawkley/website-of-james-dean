@@ -4,10 +4,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons/faSpinner";
 import { dew, is } from "tools/common";
 import { color } from "tools/css";
-import { extensions as asyncEx, CallSync, wait } from "tools/async";
+import { CallSync, abortable, wait as asyncWait } from "tools/async";
 import { extensions as propTypesEx } from "tools/propTypes";
 import styleVars from "styles/vars.json";
 
+const aborted = abortable.signal;
 const bgColor = color(styleVars.palette.bg).transparentize(0.15).asRgba();
 
 const $left = "left";
@@ -76,8 +77,7 @@ class LoadingSpinner extends React.PureComponent {
       // Wait for the delay, then show.
       const { delay } = this.props;
       if (delay > 0) {
-        const waited = await wait(delay, this.cancelAsync.sync);
-        if (waited::asyncEx.isAborted()) return;
+        if (await this.wait(delay) === aborted) return;
         if (this.state.shown) return;
       }
       this.setState({ shown: true }, this.props.onShown);
@@ -92,11 +92,14 @@ class LoadingSpinner extends React.PureComponent {
 
     const { fadeTime } = this.props;
     if (fadeTime > 0) {
-      const waited = await wait(fadeTime, this.cancelAsync.sync);
-      if (waited::asyncEx.isAborted()) return;
+      if (await this.wait(fadeTime) === aborted) return;
       if (!this.state.vanishing) return;
     }
     this.setState({ vanishing: false }, this.props.onHidden);
+  }
+
+  wait(delay) {
+    return asyncWait(delay, this.cancelAsync.sync);
   }
 
   componentDidMount() {
