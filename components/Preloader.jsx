@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import PreloadSync from "components/Preloader/PreloadSync";
 import Preloadable from "components/Preloadable";
 import { dew, is, Composition } from "tools/common";
-import { Future, CallSync } from "tools/async";
+import { Future, CallSync, AbortedError } from "tools/async";
 import { extensions as asyncIterEx } from "tools/asyncIterables";
 import { extensions as classEx } from "tools/classes";
 
@@ -105,6 +105,7 @@ class Preloader extends React.PureComponent {
   attachToPreloadSync() {
     const { preloadSyncUpdated, cancelAsync, state: { preloadSync } } = this;
     preloadSync.updates::asyncIterEx.forEach(preloadSyncUpdated, cancelAsync.sync).catch((error) => {
+      if (error instanceof AbortedError) return;
       this.setState({ error });
     });
     preloadSync.rendered();

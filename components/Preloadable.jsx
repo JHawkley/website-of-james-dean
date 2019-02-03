@@ -27,14 +27,14 @@ class Preloadable extends React.PureComponent {
     error: null
   };
 
-  isUnmounted = false;
+  didUnmount = false;
 
   get isCompleted() {
-    return Boolean(this.isUnmounted || this.state.preloaded || this.state.error);
+    return Boolean(this.didUnmount || this.state.preloaded || this.state.error);
   }
 
   handleResetPreload = () => {
-    if (this.isUnmounted) return;
+    if (this.didUnmount) return;
     this.setState({ preloaded: false, error: null });
   }
 
@@ -68,7 +68,7 @@ class Preloadable extends React.PureComponent {
 
   componentWillUnmount() {
     this.props.preloadSync?.dismount(this);
-    this.isUnmounted = true;
+    this.didUnmount = true;
   }
 
   render() { return null; }

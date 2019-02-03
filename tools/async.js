@@ -1,5 +1,7 @@
+/** @module tools/propTypes */
+
 import { identityFn, is } from "tools/common";
-import { orUndefined, finishWith } from "tools/extensions/async";
+import { orUndefined, whenAborted } from "tools/extensions/async";
 
 // Re-export extension methods.
 export * as extensions from "tools/extensions/async";
@@ -95,6 +97,7 @@ export class Future {
 
         didComplete = true;
         resolveFn(value);
+        return this;
       }
     });
 
@@ -112,6 +115,7 @@ export class Future {
         didComplete = true;
         error = reason;
         rejectFn(reason);
+        return this;
       }
     });
   }
@@ -485,9 +489,9 @@ const awaitWhile_noDefault = () =>
 
 /**
  * Creates a promise that can be aborted.  The promise will resolve normally if `mainPromise` resolves
- * before the `signalPromise` completes.  However, if the `signalPromise` completes first, the result
- * will be `abortable.signal`, a symbol indicating an abort occurred.  Any rejection from `signalPromise`
- * will be ignored, and will still cause the abortion signal to fire.
+ * before the `signalPromise` completes.  However, if the `signalPromise` completes first, the resulting
+ * promise will reject with an `AbortedError`.  Any rejection from `signalPromise` will be ignored, and
+ * will still cause the abortion signal to fire.
  * 
  * Note: if `mainPromise` is a nullish value, a promise that can only end via abortion will be returned
  * instead.
@@ -495,16 +499,74 @@ const awaitWhile_noDefault = () =>
  * @export
  * @function
  * @template T
- * @param {Promise<T>} mainPromise The promise to make abortable or a nullish value.
- * @param {Promise} signalPromise The promise to use as a signal to abort when it completes.
- * @returns {Promise<T|Symbol>} An abortable promise.
+ * @param {Promise<T>|null|undefined} promise The promise to make abortable or a nullish value.
+ * @param {AbortionSignal} signal An object to use as an abortion signal.
+ * @returns {Promise<T>} An abortable promise.
  */
-export function abortable(mainPromise, signalPromise) {
-  const abortingPromise = signalPromise::finishWith(abortable.signal);
-  if (mainPromise == null) return abortingPromise;
-  return Promise.race([mainPromise, abortingPromise]);
+export function abortable(promise, signal) {
+  if (!signal::is.object())
+    throw new TypeError("invalid arguments for `signal`; must be a valid object");
+
+  const abortionPromise = createAbortionPromise(promise, signal);
+  if (promise == null) return abortionPromise;
+  return Promise.race([promise, abortionPromise]);
 }
-abortable.signal = Symbol("abortable:signal");
+
+const createAbortionPromise = (promise, signal) => {
+  const { givesReason, reason: defaultReason } = signal;
+  const aborter
+    = signal.then::is.func() ? signal
+    : signal.promise?.then::is.func() ? signal.promise
+    : throw new TypeError("no promise was provided to abort on");
+  
+  return new Promise((resolve, reject) => {
+    aborter.then(
+      (value) => {
+        const reason = givesReason && value::is.string() ? value : defaultReason;
+        reject(new AbortedError(promise, aborter, reason));
+      },
+      () => reject(new AbortedError(promise, aborter, defaultReason))
+    );
+  });
+};
+
+/**
+ * An error that represents an aborted promise.
+ *
+ * @export
+ * @class AbortedError
+ * @extends {Error}
+ */
+export class AbortedError extends Error {
+
+  /**
+   * Creates an instance of AbortedError.
+   * 
+   * @param {Promise} mainPromise The promise that was aborted.
+   * @param {Promise} signalPromise The promise that was used as the abortion signal.
+   * @param {string} [message] A message describing the reason why the abortion occurred.
+   * @memberof AbortedError
+   */
+  constructor(mainPromise, signalPromise, message) {
+    super(message::is.string() ? message : "the promise was aborted");
+    Error.captureStackTrace?.(this, AbortedError);
+
+    /**
+     * The promise that was aborted.  May be null if `abortable` was called without providing a `mainPromise`.
+     * 
+     * @property {Promise|null} AbortedError#promise
+     */
+    this.promise = mainPromise ?? null;
+
+    /**
+     * The promise that caused the abortion.
+     * 
+     * @property {Promise} AbortedError#signal
+     */
+    this.signal = signalPromise;
+  }
+
+}
 
 /**
  * Wraps an image in a promise.
@@ -527,10 +589,7 @@ export function preloadImage(src, width, height, abortSignal) {
 
   if (!abortSignal) return imagePromise;
 
-  return abortable(imagePromise, abortSignal).then((result) => {
-    if (result === abortable.signal) img.src = null;
-    return result;
-  });
+  return abortable(imagePromise, abortSignal)::whenAborted(() => img.src = null);
 }
 
 /**
@@ -550,7 +609,7 @@ export function whenFree() {
  *
  * @export
  * @param {Promise} [abortSignal] The promise to use as a signal to abort when it completes.
- * @returns {Promise<number|Symbol>} A promise, to resolve at the next animation frame.
+ * @returns {Promise<number>} A promise, to resolve at the next animation frame.
  */
 export function frameSync(abortSignal) {
   let handle;
@@ -560,46 +619,84 @@ export function frameSync(abortSignal) {
 
   if (!abortSignal) return framePromise;
 
-  return abortable(framePromise, abortSignal).then((result) => {
-    if (result === abortable.signal) cancelAnimationFrame(handle);
-    return result;
+  return abortable(framePromise, abortSignal).catch((error) => {
+    window.cancelAnimationFrame(handle);
+    throw error;
   });
 }
 
 /**
  * Creates a function that creates a promise that will resolve with the given `value` on the next frame.
- * Use this function in a `Promise..then` call to delay its resolution.
+ * Use this function in a `Promise..then` call to delay its resolution.  If `abortSignal` is provided,
+ * the function can return a promise that can reject with an `AbortedError`.
  *
  * @export
  * @template T
  * @param {Promise|function(): Promise} [abortSignal]
  *  The promise to use as a signal to abort when it completes or a function that returns such when called.
- * @returns {function(T): Promise<T|Symbol>}
+ * @returns {function(T): Promise<T>}
  *   A function that will produce a promise which will resolve on the next frame.
  */
 export function delayToNextFrame(abortSignal) {
   return (value) => {
     const abortSignalPromise = abortSignal::is.func() ? abortSignal() : abortSignal;
-    return frameSync(abortSignalPromise).then((result) => {
-      return result === abortable.signal ? result : value;
-    });
+    return frameSync(abortSignalPromise).then(() => value);
   };
 }
 
 /**
- * Begins an asynchronous process, calling `fn` once a frame until `abortSignal` completes.  The
- * function will receive the current timestamp, according to rules of `requestAnimationFrame`.
+ * Begins an asynchronous process, calling `fn` once a frame until it does not return `true`.
+ * The function will receive the current timestamp, according to rules of `requestAnimationFrame`.
  *
  * @export
- * @param {Promise} abortSignal The promise to use as a signal to abort when it completes.
- * @param {function(number)} fn The function that will run each frame.
- * @returns {Promise<void>} A promise that will resolve when the process is aborted.
+ * @param {function(number): boolean} fn The function that will run each frame.
+ * @returns {Promise<void>} A promise that will complete when the process is aborted.
  */
-export async function eachFrame(abortSignal, fn) {
-  let timestamp;
-  if (!abortSignal) throw new TypeError("argument `abortSignal` is required");
-  if (!fn::is.func()) throw new TypeError("argument `fn` must be a function");
-  while((timestamp = await frameSync(abortSignal)) !== abortable.signal) fn(timestamp);
+/**
+ * Begins an asynchronous process, calling `fn` once a frame until it does not return `true` or the
+ * `abortSignal` completes.  The function will receive the current timestamp, according to rules of
+ * `requestAnimationFrame`.
+ * 
+ * @export
+ * @param {function(number): boolean} fn The function that will run each frame.
+ * @param {Promise} abortSignal The promise to use as a signal to abort when it completes.
+ * @returns {Promise<void>} A promise that will complete when the process is aborted.
+ */
+export function eachFrame(...args) {
+  const [abortSignal, fn]
+    = args.length === 1 ? [void 0, args[0]]
+    : args.length === 2 ? args
+    : throw new TypeError("too many arguments");
+  
+  if (!fn::is.func()) throw new TypeError("last argument must be a function");
+  
+  let handle;
+  const whenStoppedFuture = new Future();
+
+  const runnerFn = (timestamp) => {
+    if (whenStoppedFuture.isCompleted) return;
+    try {
+      if (fn(timestamp) === true)
+        handle = window.requestAnimationFrame(runnerFn);
+      else
+        whenStoppedFuture.resolve();
+    }
+    catch (error) {
+      whenStoppedFuture.reject(error);
+    }
+  }
+
+  handle = window.requestAnimationFrame(runnerFn);
+
+  if (abortSignal) {
+    abortable(null, abortSignal).catch((error) => {
+      if (whenStoppedFuture.isCompleted) return;
+      window.cancelAnimationFrame(handle);
+      whenStoppedFuture.reject(error);
+    });
+  }
+
+  return whenStoppedFuture.promise;
 }
 
 /**
@@ -608,7 +705,7 @@ export async function eachFrame(abortSignal, fn) {
  * @export
  * @param {number} [delay=0] The number of milliseconds to wait.
  * @param {Promise} [abortSignal] The promise to use as a signal to abort when it completes.
- * @returns {Promise<void|Symbol>} A promise that will resolve when the timeout is complete.
+ * @returns {Promise<void>} A promise that will resolve when the timeout is complete.
  */
 export function wait(delay = 0, abortSignal) {
   let timeoutId;
@@ -618,16 +715,16 @@ export function wait(delay = 0, abortSignal) {
 
   if (!abortSignal) return waitPromise;
 
-  return abortable(waitPromise, abortSignal).then((result) => {
-    if (result === abortable.signal) clearTimeout(timeoutId);
-    return result;
+  return abortable(waitPromise, abortSignal).catch((error) => {
+    clearTimeout(timeoutId);
+    throw error;
   });
 }
 
 /**
  * Creates a function that creates a promise that will resolve with the given `value` after some `delay`.
  * Use this function in a `Promise..then` call to delay its resolution.  If `abortSignal` is provided,
- * the function can return `abortable.signal` instead of `value`, so be sure to check!
+ * the function can return a promise that can reject with an `AbortedError`.
  *
  * @export
  * @template T
@@ -640,9 +737,7 @@ export function wait(delay = 0, abortSignal) {
 export function delayFor(delay = 0, abortSignal) {
   return (value) => {
     const abortSignalPromise = abortSignal::is.func() ? abortSignal() : abortSignal;
-    return wait(delay, abortSignalPromise).then((result) => {
-      return result === abortable.signal ? result : value;
-    });
+    return wait(delay, abortSignalPromise).then(() => value);
   }
 }
 
@@ -659,3 +754,15 @@ export function debounce(action) {
   const reset = () => promise = null;
   return () => promise || (promise = whenFree().then(reset).then(action), promise);
 }
+
+/**
+ * @typedef {Object} AbortionSignal
+ * @property {Promise} [promise]
+ *   The promise to use as a signal to abort when it completes.
+ * @property {function(function, function): Promise} [then]
+ *   A promise-compatible `then` method.
+ * @property {boolean} [givesReason]
+ *   If `true` and `promise` resolves to a `string`, that string will be used as the abortion reason.
+ * @property {string} [reason]
+ *   A string to use as a reason if no other reason is provided.
+ */

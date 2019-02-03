@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { css } from "styled-jsx/css";
 import { dew, is, global } from "tools/common";
 import { CallSync, eachFrame } from "tools/async";
+import { abortionReason } from "tools/extensions/async";
 import { makeArray } from "tools/array";
 import { numeric } from "tools/css";
 import bulletActionList from "./Nate/bulletActionList";
@@ -37,6 +38,11 @@ import Mp3Pop2 from "static/sounds/nate-game/pop2.mp3";
 // The amount of time in milliseconds to fade in/out when transitioning to/from loaded states.
 const fadeTime = 300;
 
+const $componentUnmounted = "component unmounted";
+const $gameDetached = "detaching game from a container";
+const $mountedWithError = "mounted with an error";
+const $updatedWithError = "updated with an error";
+
 class Nate extends Preloadable {
 
   static propTypes = {
@@ -54,7 +60,7 @@ class Nate extends Preloadable {
     return { error };
   }
 
-  cancelAsync = new CallSync();
+  cancelAsync = new CallSync(p => p::abortionReason());
 
   soundsEnabled = false;
 
@@ -140,54 +146,58 @@ class Nate extends Preloadable {
   };
 
   onImagesReady = () => {
-    if (this.isUnmounted) return;
+    if (this.didUnmount) return;
     this.setState({ imagesReady: true });
   }
 
   onImagesFailed = (error) => {
-    if (this.isUnmounted) return;
+    if (this.didUnmount) return;
     this.setState({ imagesReady: false, error });
   }
 
   onSoundsReady = () => {
-    if (this.isUnmounted) return;
+    if (this.didUnmount) return;
     this.soundsEnabled = true;
     this.setState({ soundsReady: true });
   }
 
   onSoundsFailed = () => {
-    if (this.isUnmounted) return;
+    if (this.didUnmount) return;
     this.soundsEnabled = false;
     this.setState({ soundsReady: true });
   }
 
   attachGame = (container) => {
-    this.cancelAsync.resolve();
+    if (!container) {
+      this.cancelAsync.resolve($gameDetached);
+      return;
+    }
 
-    if (container) {
-      document.addEventListener("mousemove", this.mouseMoveHandler);
-      document.addEventListener("scroll", this.scrollHandler);
+    document.addEventListener("mousemove", this.mouseMoveHandler);
+    document.addEventListener("scroll", this.scrollHandler);
 
-      let timeLast = performance.now();
-      eachFrame(this.cancelAsync.sync, (timeNow) => {
-        try {
-          const delta = Math.min(timeNow - timeLast, 50.0);
-          //const delta = (1000 / 60) / 10;
-          timeLast = timeNow;
-          this.doGameUpdate(delta, container);
-        }
-        catch (capturedError) {
-          this.cancelAsync.resolve();
-          if (this.isUnmounted) return;
+    let timeLast = performance.now();
+    const stoppedPromise = eachFrame(this.cancelAsync.sync, (timeNow) => {
+      try {
+        const delta = Math.min(timeNow - timeLast, 50.0);
+        //const delta = (1000 / 60) / 10;
+        timeLast = timeNow;
+        this.doGameUpdate(delta, container);
+        return true;
+      }
+      catch (capturedError) {
+        if (!this.didUnmount) {
           const error = new GameUpdateError("an error occurred while updating the game state", capturedError);
           this.setState({ error });
         }
-      });
-    }
-    else {
+        return false;
+      }
+    });
+
+    stoppedPromise.finally(() => {
       document.removeEventListener("mousemove", this.mouseMoveHandler);
       document.removeEventListener("scroll", this.scrollHandler);
-    }
+    });
   }
 
   mouseMoveHandler = (e) => {
@@ -307,7 +317,7 @@ class Nate extends Preloadable {
     const { props: { onLoad, onError }, state: { preloaded, error } } = this;
 
     if (error) {
-      this.cancelAsync.resolve();
+      this.cancelAsync.resolve($mountedWithError);
       onError?.(error);
     }
     else if (preloaded) {
@@ -320,7 +330,7 @@ class Nate extends Preloadable {
     const { props: { onLoad, onError }, state: { preloaded, error } } = this;
 
     if ((error !== prevState.error || onError !== prevProps.onError) && error) {
-      this.cancelAsync.resolve();
+      this.cancelAsync.resolve($updatedWithError);
       onError?.(error);
     }
     else if ((preloaded !== prevState.preloaded || onLoad !== prevProps.onLoad) && preloaded) {
@@ -330,7 +340,7 @@ class Nate extends Preloadable {
 
   componentWillUnmount() {
     super.componentWillUnmount();
-    this.cancelAsync.resolve();
+    this.cancelAsync.resolve($componentUnmounted);
   }
 
   renderContainer(ready) {

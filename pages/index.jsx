@@ -6,7 +6,7 @@ import { canScrollRestore as transitionsSupported } from "tools/scrollRestoratio
 
 import { dew, is, singleton } from "tools/common";
 import { timespan, dequote } from "tools/css";
-import { Future, CallSync, Stream, wait as asyncWaitFn } from "tools/async";
+import { Future, CallSync, Stream, AbortedError, wait as asyncWaitFn } from "tools/async";
 import { extensions as asyncEx, delayToNextFrame, awaitWhile, abortable, preloadImage } from "tools/async";
 import { extensions as asyncIterEx } from "tools/asyncIterables";
 import { extensions as maybe, nothing } from "tools/maybe";
@@ -38,6 +38,9 @@ const $$transFromIndex = Symbol("transition:from-index");
 const $$transFromArticle = Symbol("transition:from-article");
 const $$transFinalizeIndex = Symbol("transition:finalize-index");
 const $$transDone = Symbol("transition:done");
+
+const $componentMounted = "component mounted";
+const $componentUnmounted = "component unmounted";
 
 const fixedLoaderStyle = { zIndex: 3 };
 
@@ -93,9 +96,9 @@ class IndexPage extends React.PureComponent {
     });
   });
 
-  whenMountedFuture = new Future();
+  whenMountedFuture = new Future(p => p::asyncEx.abortionReason($componentMounted));
 
-  whenUnmountedFuture = new Future();
+  whenUnmountedFuture = new Future(p => p::asyncEx.abortionReason($componentUnmounted));
 
   get didMount() {
     return this.whenMountedFuture.isCompleted;
@@ -285,9 +288,10 @@ class SoftIndexPage extends IndexPage {
 
   resolveArticle = dew(() => {
     let lastArticle = null;
-    const abortLoadSync = new CallSync();
-
-    this.whenUnmountedFuture.promise.then(() => abortLoadSync.resolve());
+    const abortLoadSync = new CallSync((p) => {
+      const decorated = abortable(p, this.whenUnmountedFuture.promise);
+      return decorated::asyncEx.abortionReason("new article was requested");
+    });
 
     const finishArticle = async (Component) => {
       // Make sure we have mounted first.
@@ -339,13 +343,14 @@ class SoftIndexPage extends IndexPage {
       // between when this new `lastArticle` is set and other calls to `resolveArticle`.
       abortLoadSync.resolve();
       return lastArticle.promise();
-    }
+    };
   });
 
   promiseState(newState) {
-    if (this.didUnmount)
-      return Promise.reject(new Error("component has dismounted during async operation"));
-    return new Promise(resolve => this.setState(newState, resolve)).then(this.frameSync);
+    return new Promise((resolve, reject) => {
+      if (this.didUnmount) return reject(new AbortedError($componentUnmounted));
+      this.setState(newState, resolve);
+    });
   }
 
   initialStateFor(props) {
@@ -400,15 +405,21 @@ class SoftIndexPage extends IndexPage {
     // Begin loading images from the super method.
     const superPromise = super.doLoading();
 
-    // Wait for the article component to be loaded.
     const initialArticle = this.props.expectedArticle;
-    const loadedComponent = await awaitWhile(this.resolveArticle);
+    let loadedComponent;
 
-    if (loadedComponent::asyncEx.isAborted())
-      throw new Error("initial article component was aborted");
-    
+    try {
+      // Wait for the article component to be loaded.
+      loadedComponent = await awaitWhile(this.resolveArticle);
+    }
+    catch(error) {
+      if (error instanceof AbortedError)
+        throw new Error("initial article component was aborted");
+      throw error;
+    }
+
     if (loadedComponent.article !== initialArticle)
-      await this.doHardTransition(loadedComponent.article);
+        await this.doHardTransition(loadedComponent.article);
 
     // Now wait for those images.
     await superPromise;
@@ -425,6 +436,7 @@ class SoftIndexPage extends IndexPage {
     this.transitioning = true;
 
     this.doSoftTransition().catch((error) => {
+      if (error instanceof AbortedError) return;
       this.setState({ asyncError: error });
     });
   }
@@ -435,8 +447,14 @@ class SoftIndexPage extends IndexPage {
         case $$transMiddle: {
           // Middle transition state; nothing is currently displayed.
           // Wait for our component to finish loading.
-          const loadedComponent = await this.resolveArticle();
-          if (loadedComponent::asyncEx.isAborted()) continue;
+          let loadedComponent;
+          try {
+            loadedComponent = await this.resolveArticle();
+          }
+          catch (error) {
+            if (error instanceof AbortedError) continue;
+            throw error;
+          }
           const isArticle = loadedComponent.article !== "";
           // Set the active article.
           await this.promiseState({ actualArticle: loadedComponent.article });

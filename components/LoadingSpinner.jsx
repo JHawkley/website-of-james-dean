@@ -4,11 +4,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons/faSpinner";
 import { dew, is } from "tools/common";
 import { color } from "tools/css";
-import { CallSync, abortable, wait as asyncWait } from "tools/async";
+import { CallSync, AbortedError, wait as asyncWait } from "tools/async";
+import { abortionReason } from "tools/extensions/async";
 import { extensions as propTypesEx } from "tools/propTypes";
 import styleVars from "styles/vars.json";
 
-const aborted = abortable.signal;
 const bgColor = color(styleVars.palette.bg).transparentize(0.15).asRgba();
 
 const $left = "left";
@@ -17,6 +17,10 @@ const $right = "right";
 const $top = "top";
 const $middle = "middle";
 const $bottom = "bottom";
+
+const $componentUnmounted = "component unmounted";
+const $nowShowing = "now showing";
+const $nowVanishing = "now vanishing";
 
 const mustBePositive = (v) => v >= 0 ? true : "must be a positive number";
 
@@ -56,50 +60,80 @@ class LoadingSpinner extends React.PureComponent {
     return !props.show && state.shown ? { shown: false, vanishing: true } : null;
   }
 
-  cancelAsync = new CallSync();
-
   state = {
     shown: this.props.delay === 0 && this.props.show,
-    vanishing: false
+    vanishing: false,
+    error: null
   };
 
-  async beginShow() {
-    if (this.state.shown) return;
+  didUnmount = false;
 
-    // Cancel any other async operations.
-    this.cancelAsync.resolve();
-    
-    if (this.state.vanishing) {
-      // Abort the vanishing.
-      this.setState({ shown: true, vanishing: false });
-    }
-    else {
-      // Wait for the delay, then show.
-      const { delay } = this.props;
-      if (delay > 0) {
-        if (await this.wait(delay) === aborted) return;
-        if (this.state.shown) return;
+  cancelAsync = new CallSync((p) => {
+    if (this.didUnmount)
+      throw new AbortedError($componentUnmounted)
+    return p::abortionReason();
+  });
+
+  async beginShow() {
+    try {
+      if (this.state.shown) return;
+
+      // Cancel any other async operations.
+      this.cancelAsync.resolve($nowShowing);
+      
+      if (this.state.vanishing) {
+        // Abort the vanishing.
+        await this.promiseState({ shown: true, vanishing: false });
       }
-      this.setState({ shown: true }, this.props.onShown);
+      else {
+        // Wait for the delay, then show.
+        const { delay } = this.props;
+        if (delay > 0) {
+          await this.wait(delay);
+          if (this.state.shown) return;
+        }
+        await this.promiseState({ shown: true });
+        this.props.onShown?.();
+      }
+    }
+    catch (error) {
+      if (error instanceof AbortedError) return;
+      this.setState({ error });
+      throw error;
     }
   }
 
   async clearVanish() {
-    if (!this.state.vanishing) return;
-
-    // Cancel any other async operations.
-    this.cancelAsync.resolve();
-
-    const { fadeTime } = this.props;
-    if (fadeTime > 0) {
-      if (await this.wait(fadeTime) === aborted) return;
+    try {
       if (!this.state.vanishing) return;
+
+      // Cancel any other async operations.
+      this.cancelAsync.resolve($nowVanishing);
+
+      const { fadeTime } = this.props;
+      if (fadeTime > 0) {
+        await this.wait(fadeTime);
+        if (!this.state.vanishing) return;
+      }
+      await this.promiseState({ vanishing: false });
+      this.props.onHidden?.();
     }
-    this.setState({ vanishing: false }, this.props.onHidden);
+    catch (error) {
+      if (error instanceof AbortedError) return;
+      this.setState({ error });
+      throw error;
+    }
   }
 
   wait(delay) {
     return asyncWait(delay, this.cancelAsync.sync);
+  }
+
+  promiseState(newState) {
+    return new Promise((resolve, reject) => {
+      if (this.didUnmount) return reject(new AbortedError($componentUnmounted));
+      this.setState(newState, resolve);
+    });
   }
 
   componentDidMount() {
@@ -107,7 +141,13 @@ class LoadingSpinner extends React.PureComponent {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { props: { show, delay, fadeTime }, state: { shown, vanishing } } = this;
+    const {
+      props: { show, delay, fadeTime },
+      state: { shown, vanishing, error }
+    } = this;
+
+    if (error !== prevState.error && error)
+      throw error;
 
     let doShow = show !== prevProps.show && show && !shown;
     let doVanish = vanishing !== prevState.vanishing && vanishing;
@@ -126,14 +166,17 @@ class LoadingSpinner extends React.PureComponent {
 
   componentWillUnmount() {
     // Cancel asynchronous operations.
-    this.cancelAsync.resolve();
+    this.didUnmount = true;
+    this.cancelAsync.resolve($componentUnmounted);
   }
 
   render() {
     const {
       props: { className: customClass, style: customStyle, size, fixed, background, fadeTime, show },
-      state: { shown, vanishing }
+      state: { shown, vanishing, error }
     } = this;
+
+    if (error) return null;
 
     const className = ["root"];
     if (customClass) className.push(customClass);

@@ -67,20 +67,22 @@ export function fromLatest() {
 }
 
 async function iterateWithAbort(iterator, abortSignal, iteratorFn) {
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    const result = await abortable(iterator.next(), abortSignal);
-    if (result === abortable.signal) return;
-    if (result.done) return;
+  let aborted = null;
+  let result = await iterator.next();
+  abortable(null, abortSignal).catch(error => aborted = error);
+
+  while (!aborted && !result.done) {
     await iteratorFn(result.value);
+    result = await iterator.next();
   }
+  if (aborted) throw aborted;
 }
 
 async function iterateWithoutAbort(iterator, iteratorFn) {
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    const result = await iterator.next();
-    if (result.done) return;
+  let result = await iterator.next();
+
+  while (!result.done) {
     await iteratorFn(result.value);
+    result = await iterator.next();
   }
 }
