@@ -6,9 +6,10 @@ import { canScrollRestore as transitionsSupported } from "tools/scrollRestoratio
 
 import { dew, is, singleton } from "tools/common";
 import { timespan, dequote } from "tools/css";
-import { Future, CallSync, Stream, AbortedError, wait as asyncWaitFn } from "tools/async";
-import { extensions as asyncEx, delayToNextFrame, awaitWhile, abortable, preloadImage } from "tools/async";
-import { extensions as asyncIterEx } from "tools/asyncIterables";
+import { Future, CallSync, Stream, AbortedError } from "tools/async";
+import { wait as asyncWait, frameSync as asyncFrameSync } from "tools/async";
+import { awaitWhile, abortable, preloadImage } from "tools/async";
+import { extensions as asyncEx, iterExtensions as asyncIterEx } from "tools/async";
 import { extensions as maybe, nothing } from "tools/maybe";
 import { extensions as mapEx } from "tools/maps";
 import * as parsing from "tools/parsing/index";
@@ -126,9 +127,9 @@ class IndexPage extends React.PureComponent {
     };
   }
 
-  wait = (delay) => asyncWaitFn(delay, this.whenUnmountedFuture.promise);
+  wait = (delay) => asyncWait(delay, this.whenUnmountedFuture.promise);
 
-  frameSync = delayToNextFrame(this.whenUnmountedFuture.promise);
+  frameSync = () => asyncFrameSync(this.whenUnmountedFuture.promise);
 
   // eslint-disable-next-line no-unused-vars
   initialStateFor(props) {
@@ -428,70 +429,78 @@ class SoftIndexPage extends IndexPage {
   transitionToArticle() {
     if (!this.didMount)
       throw new Error("`transitionToArticle` was called before the component has finished mounting");
+
     // Call out to `resolveArticle` to begin loading the new article.
     if (this.props.expectedArticle::maybe.isDefined())
       this.resolveArticle();
+
     // If already transitioning, the changes will be picked up by `doSoftTransition`.
     if (this.transitioning) return;
-    this.transitioning = true;
 
-    this.doSoftTransition().catch((error) => {
-      if (error instanceof AbortedError) return;
-      this.setState({ asyncError: error });
-    });
+    this.doSoftTransition();
   }
 
   async doSoftTransition() {
-    while (this.transitionState !== $$transDone && !this.didUnmount) {
-      switch (this.transitionState) {
-        case $$transMiddle: {
-          // Middle transition state; nothing is currently displayed.
-          // Wait for our component to finish loading.
-          let loadedComponent;
-          try {
-            loadedComponent = await this.resolveArticle();
+    this.transitioning = true;
+
+    try {
+      while (this.transitionState !== $$transDone && !this.didUnmount) {
+        switch (this.transitionState) {
+          case $$transMiddle: {
+            // Middle transition state; nothing is currently displayed.
+            // Wait for our component to finish loading.
+            let loadedComponent;
+            try {
+              loadedComponent = await this.resolveArticle();
+            }
+            catch (error) {
+              if (error instanceof AbortedError) continue;
+              throw error;
+            }
+            const isArticle = loadedComponent.article !== "";
+            // Set the active article.
+            await this.promiseState({ actualArticle: loadedComponent.article });
+            // If we're transitioning into an article, it should now be displayed.
+            if (isArticle) await this.doNotifyPageReady();
+            // Finalize transition.
+            await this.promiseState({ timeout: isArticle, articleTimeout: isArticle });
+            await this.wait(25);
+            break;
           }
-          catch (error) {
-            if (error instanceof AbortedError) continue;
-            throw error;
+          case $$transFromIndex: {
+            // Start transitioning from index.
+            await this.promiseState({ isArticleVisible: true });
+            await this.wait(articleTransition);
+            // Deactivate the previous article.
+            await this.promiseState({ timeout: true, actualArticle: nothing });
+            break;
           }
-          const isArticle = loadedComponent.article !== "";
-          // Set the active article.
-          await this.promiseState({ actualArticle: loadedComponent.article });
-          // If we're transitioning into an article, it should now be displayed.
-          if (isArticle) await this.doNotifyPageReady();
-          // Finalize transition.
-          await this.promiseState({ timeout: isArticle, articleTimeout: isArticle });
-          await this.wait(25);
-          break;
-        }
-        case $$transFromIndex: {
-          // Start transitioning from index.
-          await this.promiseState({ isArticleVisible: true });
-          await this.wait(articleTransition);
-          // Deactivate the previous article.
-          await this.promiseState({ timeout: true, actualArticle: nothing });
-          break;
-        }
-        case $$transFromArticle: {
-          // Start transitioning from article.
-          await this.promiseState({ articleTimeout: false });
-          await this.wait(articleTransition);
-          // Deactivate the previous article.
-          await this.promiseState({ actualArticle: nothing });
-          break;
-        }
-        case $$transFinalizeIndex: {
-          // Finish transition into index.
-          await this.promiseState({ isArticleVisible: false });
-          // The index should be now be displayed.
-          await this.doNotifyPageReady();
-          break;
+          case $$transFromArticle: {
+            // Start transitioning from article.
+            await this.promiseState({ articleTimeout: false });
+            await this.wait(articleTransition);
+            // Deactivate the previous article.
+            await this.promiseState({ actualArticle: nothing });
+            break;
+          }
+          case $$transFinalizeIndex: {
+            // Finish transition into index.
+            await this.promiseState({ isArticleVisible: false });
+            // The index should be now be displayed.
+            await this.doNotifyPageReady();
+            break;
+          }
         }
       }
     }
-
-    this.transitioning = false;
+    catch (error) {
+      if (error instanceof AbortedError) return;
+      if (this.didUnmount) return;
+      this.setState({ asyncError: error });
+    }
+    finally {
+      this.transitioning = false;
+    }
   }
 
   async doHardTransition(article) {
