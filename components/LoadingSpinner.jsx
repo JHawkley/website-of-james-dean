@@ -4,12 +4,13 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons/faSpinner";
 import { dew, is } from "tools/common";
 import { color } from "tools/css";
-import { CallSync, AbortedError, wait as asyncWait } from "tools/async";
-import { abortionReason } from "tools/extensions/async";
+import { AbortedError, Task, wait } from "tools/async";
 import { extensions as propTypesEx } from "tools/propTypes";
 import styleVars from "styles/vars.json";
 
 const bgColor = color(styleVars.palette.bg).transparentize(0.15).asRgba();
+
+const $componentUnmounted = "component unmounted";
 
 const $left = "left";
 const $center = "center";
@@ -17,10 +18,6 @@ const $right = "right";
 const $top = "top";
 const $middle = "middle";
 const $bottom = "bottom";
-
-const $componentUnmounted = "component unmounted";
-const $nowShowing = "now showing";
-const $nowVanishing = "now vanishing";
 
 const mustBePositive = (v) => v >= 0 ? true : "must be a positive number";
 
@@ -68,19 +65,8 @@ class LoadingSpinner extends React.PureComponent {
 
   didUnmount = false;
 
-  cancelAsync = new CallSync((p) => {
-    if (this.didUnmount)
-      throw new AbortedError($componentUnmounted)
-    return p::abortionReason();
-  });
-
-  async beginShow() {
-    try {
-      if (this.state.shown) return;
-
-      // Cancel any other async operations.
-      this.cancelAsync.resolve($nowShowing);
-      
+  showTask = dew(() => {
+    const showSpinner = async (stopSignal) => {
       if (this.state.vanishing) {
         // Abort the vanishing.
         await this.promiseState({ shown: true, vanishing: false });
@@ -88,45 +74,41 @@ class LoadingSpinner extends React.PureComponent {
       else {
         // Wait for the delay, then show.
         const { delay } = this.props;
-        if (delay > 0) {
-          await this.wait(delay);
-          if (this.state.shown) return;
-        }
+        if (delay > 0) await wait(delay, stopSignal);
         await this.promiseState({ shown: true });
         this.props.onShown?.();
       }
-    }
-    catch (error) {
-      if (error instanceof AbortedError) return;
-      this.setState({ error });
-      throw error;
-    }
-  }
+    };
 
-  async clearVanish() {
-    try {
-      if (!this.state.vanishing) return;
+    return new Task(showSpinner, () => this.vanishTask.whenStarted);
+  });
 
-      // Cancel any other async operations.
-      this.cancelAsync.resolve($nowVanishing);
-
+  vanishTask = dew(() => {
+    const clearVanish = async (stopSignal) => {
+      // Wait for the spinner to fade, then clear the flag.
       const { fadeTime } = this.props;
-      if (fadeTime > 0) {
-        await this.wait(fadeTime);
-        if (!this.state.vanishing) return;
-      }
+      if (fadeTime > 0) await wait(fadeTime, stopSignal);
       await this.promiseState({ vanishing: false });
       this.props.onHidden?.();
-    }
-    catch (error) {
-      if (error instanceof AbortedError) return;
-      this.setState({ error });
-      throw error;
-    }
+    };
+
+    return new Task(clearVanish, () => this.showTask.whenStarted);
+  });
+
+  captureAsyncError = (error) => {
+    if (this.didUnmount) return;
+    if (error instanceof AbortedError) return;
+    this.setState({ error });
   }
 
-  wait(delay) {
-    return asyncWait(delay, this.cancelAsync.sync);
+  beginShow() {
+    if (this.state.shown) return;
+    this.showTask.start().catch(this.captureAsyncError);
+  }
+
+  beginVanish() {
+    if (!this.state.vanishing) return;
+    this.vanishTask.start().catch(this.captureAsyncError);
   }
 
   promiseState(newState) {
@@ -161,13 +143,14 @@ class LoadingSpinner extends React.PureComponent {
       doVanish = vanishing;
 
     if (doShow) this.beginShow();
-    else if (doVanish) this.clearVanish();
+    else if (doVanish) this.beginVanish();
   }
 
   componentWillUnmount() {
     // Cancel asynchronous operations.
     this.didUnmount = true;
-    this.cancelAsync.resolve($componentUnmounted);
+    this.showTask.stop($componentUnmounted);
+    this.vanishTask.stop($componentUnmounted);
   }
 
   render() {
