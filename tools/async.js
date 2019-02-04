@@ -3,6 +3,7 @@
 import { is } from "tools/common";
 import { orUndefined, whenAborted } from "tools/extensions/async";
 import Future from "tools/async/Future";
+import AbortedError from "tools/async/AbortedError";
 
 // Re-export extension methods.
 export * as extensions from "tools/extensions/async";
@@ -14,6 +15,7 @@ export Future from "tools/async/Future";
 export CallSync from "tools/async/CallSync";
 export Stream from "tools/async/Stream";
 export BufferedStream from "tools/async/BufferedStream";
+export AbortedError from "tools/async/AbortedError";
 
 /**
  * Awaits for all promises to complete.  Unlike `Promise.all`, this will actually wait for all promises to resolve
@@ -120,44 +122,6 @@ const createAbortionPromise = (promise, signal) => {
     );
   });
 };
-
-/**
- * An error that represents an aborted promise.
- *
- * @export
- * @class AbortedError
- * @extends {Error}
- */
-export class AbortedError extends Error {
-
-  /**
-   * Creates an instance of AbortedError.
-   * 
-   * @param {Promise} mainPromise The promise that was aborted.
-   * @param {Promise} signalPromise The promise that was used as the abortion signal.
-   * @param {string} [message] A message describing the reason why the abortion occurred.
-   * @memberof AbortedError
-   */
-  constructor(mainPromise, signalPromise, message) {
-    super(message::is.string() ? message : "the promise was aborted");
-    Error.captureStackTrace?.(this, AbortedError);
-
-    /**
-     * The promise that was aborted.  May be null if `abortable` was called without providing a `mainPromise`.
-     * 
-     * @property {Promise|null} AbortedError#promise
-     */
-    this.promise = mainPromise ?? null;
-
-    /**
-     * The promise that caused the abortion.
-     * 
-     * @property {Promise} AbortedError#signal
-     */
-    this.signal = signalPromise;
-  }
-
-}
 
 /**
  * Wraps an image in a promise.
