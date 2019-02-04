@@ -622,29 +622,10 @@ export function frameSync(abortSignal) {
 
   if (!abortSignal) return framePromise;
 
-  return abortable(framePromise, abortSignal).catch((error) => {
-    window.cancelAnimationFrame(handle);
-    throw error;
-  });
-}
+  const abortableFramePromise = abortable(framePromise, abortSignal);
+  abortableFramePromise.catch(() => window.cancelAnimationFrame(handle));
 
-/**
- * Creates a function that creates a promise that will resolve with the given `value` on the next frame.
- * Use this function in a `Promise..then` call to delay its resolution.  If `abortSignal` is provided,
- * the function can return a promise that can reject with an `AbortedError`.
- *
- * @export
- * @template T
- * @param {Promise|function(): Promise} [abortSignal]
- *  The promise to use as a signal to abort when it completes or a function that returns such when called.
- * @returns {function(T): Promise<T>}
- *   A function that will produce a promise which will resolve on the next frame.
- */
-export function delayToNextFrame(abortSignal) {
-  return (value) => {
-    const abortSignalPromise = abortSignal::is.func() ? abortSignal() : abortSignal;
-    return frameSync(abortSignalPromise).then(() => value);
-  };
+  return abortableFramePromise;
 }
 
 /**
@@ -680,7 +661,7 @@ export function eachFrame(...args) {
     if (whenStoppedFuture.isCompleted) return;
     try {
       if (fn(timestamp) === true)
-        handle = window.requestAnimationFrame(runnerFn);
+        handle = requestAnimationFrame(runnerFn);
       else
         whenStoppedFuture.resolve();
     }
@@ -689,17 +670,15 @@ export function eachFrame(...args) {
     }
   }
 
-  handle = window.requestAnimationFrame(runnerFn);
+  // Start the runner.
+  handle = requestAnimationFrame(runnerFn);
 
-  if (abortSignal) {
-    abortable(null, abortSignal).catch((error) => {
-      if (whenStoppedFuture.isCompleted) return;
-      window.cancelAnimationFrame(handle);
-      whenStoppedFuture.reject(error);
-    });
-  }
+  if (!abortSignal) return whenStoppedFuture.promise;
 
-  return whenStoppedFuture.promise;
+  const abortableWhenStopped = abortable(whenStoppedFuture.promise, abortSignal);
+  abortableWhenStopped.catch(() => cancelAnimationFrame(handle));
+
+  return abortableWhenStopped;
 }
 
 /**
@@ -718,30 +697,10 @@ export function wait(delay = 0, abortSignal) {
 
   if (!abortSignal) return waitPromise;
 
-  return abortable(waitPromise, abortSignal).catch((error) => {
-    clearTimeout(timeoutId);
-    throw error;
-  });
-}
+  const abortableWaitPromise = abortable(waitPromise, abortSignal);
+  abortableWaitPromise.catch(() => clearTimeout(timeoutId));
 
-/**
- * Creates a function that creates a promise that will resolve with the given `value` after some `delay`.
- * Use this function in a `Promise..then` call to delay its resolution.  If `abortSignal` is provided,
- * the function can return a promise that can reject with an `AbortedError`.
- *
- * @export
- * @template T
- * @param {number} [delay=0] The number of milliseconds to wait.
- * @param {Promise|function(): Promise} [abortSignal]
- *  The promise to use as a signal to abort when it completes or a function that returns such when called.
- * @returns {function(T): Promise<T|Symbol>}
- *   A function that will produce a promise which will resolve after a delay.
- */
-export function delayFor(delay = 0, abortSignal) {
-  return (value) => {
-    const abortSignalPromise = abortSignal::is.func() ? abortSignal() : abortSignal;
-    return wait(delay, abortSignalPromise).then(() => value);
-  }
+  return abortableWaitPromise;
 }
 
 /**
