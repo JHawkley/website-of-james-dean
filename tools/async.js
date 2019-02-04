@@ -7,6 +7,9 @@ import { orUndefined, whenAborted } from "tools/extensions/async";
 export * as extensions from "tools/extensions/async";
 export * as iterExtensions from "tools/extensions/asyncIterables";
 
+// Re-export classes.
+export Task from "tools/async/Task";
+
 /**
  * A class that represents a promise that is resolved or rejected elsewhere.
  *
