@@ -494,8 +494,8 @@ class SoftIndexPage extends IndexPage {
       }
     }
     catch (error) {
-      if (error instanceof AbortedError) return;
       if (this.didUnmount) return;
+      if (error instanceof AbortedError) return;
       this.setState({ asyncError: error });
     }
     finally {
