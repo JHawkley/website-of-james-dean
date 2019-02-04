@@ -8,7 +8,7 @@ const abortToTrue = (error) => error instanceof AbortedError ? true : throw erro
 const abortToVoid = (error) => error instanceof AbortedError ? void 0 : throw error;
 
 const asPromise = (value) => {
-  if (this.then::is.func()) return value;
+  if (value.then::is.func()) return value;
   if (value::is.error()) return Promise.reject(value);
   return Promise.resolve(value);
 }
