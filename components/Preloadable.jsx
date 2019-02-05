@@ -96,10 +96,16 @@ const wrapped = (Component, name = nameOf(Component)) => {
   };
 };
 
-const rendered = (renderFn, name = renderFn.name ?? "[unknown]") => {
+const rendered = (renderFn, options) => {
+  if (!renderFn::is.func())
+    throw new TypeError("expected argument `renderFn` to be a function");
+  
+  const properName = options?.name ?? renderFn.name ?? "[unknown]";
+  const initialProps = options?.initialProps;
+
   return class extends Preloadable {
 
-    static displayName = `Preloadable.rendered(${name})`;
+    static displayName = `Preloadable.rendered(${properName})`;
 
     render() {
       const {
@@ -109,7 +115,8 @@ const rendered = (renderFn, name = renderFn.name ?? "[unknown]") => {
           ...childProps
         }
       } = this;
-      return renderFn(childProps, handlePreloaded, handlePreloadError, handleResetPreload);
+      const props = initialProps ? {...initialProps, ...childProps} : childProps;
+      return renderFn(props, handlePreloaded, handlePreloadError, handleResetPreload);
     }
     
   };
