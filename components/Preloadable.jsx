@@ -3,8 +3,6 @@ import PropTypes from "prop-types";
 import PreloadSync from "components/Preloader/PreloadSync";
 import { is } from "tools/common";
 
-const isProduction = process.env.NODE_ENV === 'production';
-
 const $$preloadable = Symbol("preloader:preloadable");
 
 class Preloadable extends React.PureComponent {
