@@ -75,12 +75,24 @@ class Preloadable extends React.PureComponent {
   
 }
 
-const wrapped = (Component, name = nameOf(Component)) => {
-  if (Component[$$preloadable] === true) return Component;
+const wrapped = (Component, options) => {
+  if (!Component::is.func())
+    throw new TypeError("expected argument `promise` to be a function");
+
+  const properName = options?.name ?? Component.displayName ?? Component.name ?? "[anonymous component]";
+  const initialProps = options?.initialProps;
+
+  if (Component[$$preloadable] === true) {
+    if (!initialProps) return Component;
+    
+    const Wrapped = (givenProps) => <Component {...initialProps} {...givenProps} />;
+    Wrapped.displayName = `Preloadable.wrapped(${properName})`;
+    return Preloadable.mark(Wrapped);
+  }
 
   return class extends Preloadable {
 
-    static displayName = `Preloadable.wrapped(${name})`;
+    static displayName = `Preloadable.wrapped(${properName})`;
 
     render() {
       const {
@@ -90,7 +102,8 @@ const wrapped = (Component, name = nameOf(Component)) => {
           ...childProps
         }
       } = this;
-      return <Component {...childProps} onLoaded={handlePreloaded} onError={handlePreloadError} />;
+      const props = initialProps ? {...initialProps, ...childProps} : childProps;
+      return <Component {...props} onLoaded={handlePreloaded} onError={handlePreloadError} />;
     }
     
   };
@@ -181,8 +194,6 @@ const promised = (promise, options) => {
 
   };
 };
-
-const nameOf = (Component) => Component.displayName ?? Component.name ?? "[anonymous component]";
 
 export default Preloadable;
 export { wrapped, rendered, promised };
