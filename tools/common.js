@@ -11,6 +11,11 @@ export { is };
 export const global = Function('return this')();
 
 /**
+ * An empty, immutable object.  Useful as `options` defaults.
+ */
+export const nil = Object.freeze({});
+
+/**
  * Compares the own-properties of two objects.
  *
  * @export
