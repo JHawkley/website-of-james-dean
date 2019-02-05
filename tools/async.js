@@ -1,6 +1,6 @@
 /** @module tools/propTypes */
 
-import { is } from "tools/common";
+import { is, nil } from "tools/common";
 import { orUndefined, whenAborted } from "tools/extensions/async";
 import Future from "tools/async/Future";
 import AbortedError from "tools/async/AbortedError";
@@ -128,12 +128,14 @@ const createAbortionPromise = (promise, signal) => {
  *
  * @export
  * @param {string} src The source for the image.
- * @param {number} [width] The height of the image.
- * @param {number} [height] The width of the image.
- * @param {Promise} [abortSignal] The promise to use as a signal to abort when it completes.
+ * @param {object} [options] An options object.
+ * @param {number} [options.width] The height of the image.
+ * @param {number} [options.height] The width of the image.
+ * @param {Promise} [options.abortSignal] The promise to use as a signal to abort when it completes.
  * @returns {Promise<Image>} A promise that may resolve to an image element.
  */
-export function preloadImage(src, width, height, abortSignal) {
+export function preloadImage(src, {width, height, abortSignal} = nil) {
+
   const img = new Image(width, height);
 
   const imagePromise = new Promise((resolve, reject) => {

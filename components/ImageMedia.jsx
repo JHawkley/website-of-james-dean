@@ -138,7 +138,7 @@ function importWrapper(src, width, height, type) {
     {
       propTypes: { ...Preloadable.propTypes },
       displayName: `importedImage("${src}")`,
-      preload: () => preloadImage(src, width, height)
+      preload: () => preloadImage(src, { width, height })
     },
     composition.result
   );

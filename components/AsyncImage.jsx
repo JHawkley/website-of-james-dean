@@ -69,7 +69,9 @@ class AsyncImage extends React.PureComponent {
       this.setState({ error: true });
     };
 
-    preloadImage(src, width, height, future.promise).then(onImageLoad, onImageError);
+    const preloadOptions = { width, height, abortSignal: future.promise };
+    preloadImage(src, preloadOptions).then(onImageLoad, onImageError);
+    
     this.setState({ display: true });
     
     return future.promise;
@@ -236,7 +238,7 @@ function importWrapper(src, width, height) {
   );
   ImportedImage.displayName = `importedImage("${src}")`;
   ImportedImage.src = src;
-  ImportedImage.preload = () => preloadImage(src, width, height);
+  ImportedImage.preload = () => preloadImage(src, { width, height });
   return ImportedImage;
 }
 
