@@ -115,56 +115,61 @@ const rendered = (renderFn, name = renderFn.name ?? "[unknown]") => {
   };
 };
 
-const promised = (promise, name = "[unknown]") => {
+const promised = (promise, options) => {
+  if (!promise::is.defined())
+    throw new TypeError("expected argument `promise` to be defined");
+
+  const properName = options?.name ?? promise.name ?? "[unknown]";
+  const initialProps = options?.initialProps;
+
   return class extends Preloadable {
 
-    static propTypes = { ...Preloadable.propTypes, component: PropTypes.bool };
+    static propTypes = {
+      ...Preloadable.propTypes,
+      render: PropTypes.oneOf([
+        PropTypes.func,
+        PropTypes.shape({
+          loaded: PropTypes.func.isRequired,
+          loading: PropTypes.func
+        })
+      ]).isRequired
+    };
 
-    static displayName = `Preloadable.promised(${name})`;
+    static displayName = `Preloadable.promised(${properName})`;
 
     state = {
       ...this.state,
-      rendered: null
+      value: null
     }
 
     componentDidMount() {
       super.componentDidMount();
+      const promiseProper = Promise.resolve(promise::is.func() ? promise() : promise);
 
-      promise.then(
-        (rendered) => this.isCompleted || this.setState({ rendered }, this.handlePreloaded),
+      promiseProper.then(
+        (value) => this.isCompleted || this.setState({ value }, this.handlePreloaded),
         this.handlePreloadError
       );
     }
 
-    componentDidUpdate(prevProps, prevState) {
-      super.componentDidUpdate(prevProps, prevState);
-
-      if (!isProduction && this.state.rendered !== prevState.rendered) {
-        const rendered = this.state.rendered;
-        // eslint-disable-next-line no-unused-vars
-        const { preloadSync, component, ...childProps } = this.props;
-        if (component && !rendered::is.func()) {
-          console.warn(`the promise provided to \`Preloadable.promised(${name})\` did not result in a component`);
-          console.dir({ rendered, childProps: childProps });
-        }
-      }
-    }
-
     render() {
       const {
-        props: { preloadSync, component, ...childProps },
-        state: { rendered }
+        props: { preloadSync, render, ...childProps },
+        state: { value }
       } = this;
 
-      if (!rendered) return null;
-      if (!component) return rendered;
-      if (!rendered::is.func()) return null;
+      if (!render)
+        return null;
+      
+      const props = initialProps ? {...initialProps, ...childProps} : childProps;
 
-      const Component = rendered;
-      if (Component[$$preloadable] === true)
-        return <Component {...childProps} preloadSync={preloadSync} />;
-      else
-        return <Component {...childProps} />;
+      if (render::is.func())
+        return render(value, props, preloadSync, this.isCompleted);
+
+      if (!this.isCompleted)
+        return render.loading?.(props, preloadSync);
+      
+      return render.loaded?.(value, props, preloadSync);
     }
 
   };
