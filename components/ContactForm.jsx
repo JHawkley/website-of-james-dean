@@ -1,5 +1,4 @@
 import React, { Fragment } from "react";
-import PropTypes from "prop-types";
 import ModalPopup from "./ModalPopup";
 import { dew } from "tools/common";
 import { base64 } from "tools/strings";
@@ -75,25 +74,15 @@ function extractValue(ref) {
 
 class ContactForm extends React.Component {
 
-  static propTypes = {
-    displayed: PropTypes.bool.isRequired,
-    onModalOpen: PropTypes.func,
-    onModalClose: PropTypes.func
+  state = {
+    isModalOpen: false,
+    validationErrors: nothing
   };
 
   formRef = React.createRef();
   nameRef = React.createRef();
   emailRef = React.createRef();
   msgRef = React.createRef();
-
-  constructor() {
-    super();
-
-    this.state = {
-      isModalOpen: false,
-      validationErrors: nothing
-    };
-  }
 
   handleSend = () => {
     const formEl = this.formRef.current;
@@ -126,16 +115,9 @@ class ContactForm extends React.Component {
     }
   }
 
-  openModal = () => this.setState({ isModalOpen: true }, this.props.onModalOpen);
+  openModal = () => this.setState({ isModalOpen: true });
 
-  closeModal = () => this.setState({ isModalOpen: false }, this.props.onModalClose);
-
-  componentDidUpdate(prevProps) {
-    // If the form isn't displayed, close the modal.
-    if (this.props.displayed !== prevProps.displayed)
-      if (!this.props.displayed)
-        this.closeModal();
-  }
+  closeModal = () => this.setState({ isModalOpen: false });
 
   render() {
     const isModalOpen = this.state.isModalOpen;

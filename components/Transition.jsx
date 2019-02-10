@@ -1,31 +1,36 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { extensions as objEx, is, dew, compareOwnProps } from "tools/common";
+import { extensions as objEx, is, dew } from "tools/common";
 import { CallSync, AbortedError, Task } from "tools/async";
-import { abortable, wait, frameSync } from "tools/async";
+import { abortable, wait as asyncWaitFn, frameSync } from "tools/async";
 import { extensions as propTypesEx } from "tools/propTypes";
 
-const isDev = process.env.NODE_ENV !== 'production';
-
 const mustBePositive = (v) => v >= 0 ? true : "must be a positive number";
+const mustBeFinite = (v) => v::is.finite() ? true : "must be a finite number";
 
 const $exiting = "exiting";
 const $exited = "exited";
+const $entering = "entering";
 const $entered = "entered";
 
 const $componentUnmounted = "component unmounted";
 
-class Transition extends React.Component {
+class Transition extends React.PureComponent {
 
   static propTypes = {
-    page: PropTypes.shape({
+    content: PropTypes.shape({
       Component: PropTypes.func.isRequired,
       props: PropTypes.object,
       render: PropTypes.func,
-      exitDelay: PropTypes.number::propTypesEx.predicate(mustBePositive)
+      exitDelay: PropTypes.number
+        ::propTypesEx.predicate(mustBePositive)
+        ::propTypesEx.predicate(mustBeFinite)
     }),
-    onBegin: PropTypes.func,
-    onEnd: PropTypes.func,
+    onExiting: PropTypes.func,
+    onCanceled: PropTypes.func,
+    onExited: PropTypes.func,
+    onEntering: PropTypes.func,
+    onEntered: PropTypes.func,
     wait: PropTypes.bool,
     asap: PropTypes.bool
   };
@@ -35,80 +40,69 @@ class Transition extends React.Component {
     asap: false
   };
 
-  static getDerivedStateFromProps({page}, {exiting, entering}) {
-    if (!page)
-      return transitionToUnresolved(exiting, entering);
-    if (entering && entering.Component === page.Component)
-      return updateEntering(entering, page);
-    if (exiting && exiting.Component === page.Component)
-      return cancelExiting(exiting, page);
-    return transitionToResolved(exiting, entering, page);
+  static getDerivedStateFromProps(props, state) {
+    const { exiting, entering, contentShown, stage } = state;
+    const newStage = updateStage(exiting, entering, contentShown);
+    if (newStage === stage) return null;
+    return { stage: newStage };
   }
 
-  state = this.props::objEx.map(({page, asap}) => {
-    const entering = page ? createTransition(page) : null;
-    const stage = asap || !page ? $exited : $entered;
+  state = this.props::objEx.map(({content, asap}) => {
+    const entering = content ? createTransition(content) : null;
+    const contentShown = asap && entering != null;
+    const stage = updateStage(null, entering, contentShown);
 
-    return { exiting: null, error: null, entering, stage };
+    return { exiting: null, entering, contentShown, stage, error: null };
   });
-
-  transitioning = false;
   
   didUnmount = false;
 
-  updatedSync = new CallSync();
+  whenCanceled = new CallSync();
+
+  whenUpdated = new CallSync();
 
   transitionTask = dew(() => {
     const transition = async (stopSignal) => {
       // No transition if we're unmounted.
       if (this.didUnmount) return;
-      // Do not proceed if another transition is already happening.
-      if (this.transitioning) return;
+      // Or if we're already in the `$entered` stage.
+      if (this.state.stage === $entered) return;
+
+      // Track whether the outro has already been performed.  During the loop, certain steps
+      // will be skipped to prevent callback spam and waiting when it is unnecessary.
+      // Immediately after initialization, it is possible for the transition to not be in the
+      // `$exiting` stage, which means there is no outro to perform.
+      let outroPerformed = this.state.stage !== $exiting;
 
       try {
-        // If we're already exited, just announce the beginning of a transition.
-        // This state is common after the component first mounts.
-        if (this.state.stage === $exited) {
-          this.props.onBegin?.();
-        }
-        // If we're in the `$entered` state, but there is nothing exiting, then
-        // this transition was probably triggered inappropriately.
-        else if (this.state.stage === $entered && !this.state.exiting) {
-          if (isDev) console.warn("a transition was started with no exiting page");
-          return;
-        }
-        // Otherwise, we have a outro to perform.
-        else {
-          this.props.onBegin?.();
+        while (this.state.stage !== $entered) {
+          const { props: { wait }, state: { exiting, entering, stage } } = this;
 
-          // If there is an `exitDelay` on the exiting page, carry it out.
-          if (this.state.exiting) {
-            const { exitDelay } = this.state.exiting;
-            if (exitDelay > 0) {
-              await this.promiseState({ stage: $exiting });
-              await wait(exitDelay, stopSignal);
-            }
-          }
-
-          await this.promiseState({ stage: $exited });
-        }
-      
-        while (this.mustHold || this.state.exiting) {
-          // Hold up until we're no longer told to `wait` and we have an `entering` page.
-          while (this.mustHold) await this.nextUpdate(stopSignal);
-          
-          if (this.state.exiting) {
-            // Show the entering page by dismissing the exiting page.
-            await this.promiseState({ exiting: null });
-            // Allow the entering page to render in the `$exited` state for a frame
-            // to give it time to setup for its intro animation.
-            await frameSync(stopSignal);
+          switch (true) {
+            case stage === $exiting && outroPerformed:
+              await this.promiseState({ contentShown: false }, stopSignal);
+              break;
+            case stage === $exiting:
+              outroPerformed = true;
+              await asyncWaitFn(exiting.exitDelay, stopSignal);
+              await this.promiseState({ contentShown: false }, stopSignal);
+              break;
+            case Boolean(wait || !entering):
+              // Hold up until we're no longer told to `wait` and we have some `entering` content.
+              await this.nextUpdate(stopSignal);
+              break;
+            case Boolean(exiting):
+              // Render the entering content by dismissing the exiting content.
+              await this.promiseState({ exiting: null }, stopSignal);
+              // Allow the entering content to render in the `$entering` state for a frame
+              // to give it time to setup for its intro animation.
+              await frameSync(stopSignal);
+              break;
+            default:
+              await this.promiseState({ contentShown: true }, stopSignal);
+              break;
           }
         }
-      
-        // Finish the transition.
-        await this.promiseState({ stage: $entered });
-        this.props.onEnd?.();
       }
       catch (error) {
         if (this.didUnmount) return;
@@ -120,55 +114,85 @@ class Transition extends React.Component {
     return new Task(transition);
   });
 
-  get mustHold() {
-    return this.props.wait || !this.state.entering;
-  }
-
   nextUpdate(abortSignal) {
-    return abortable(this.updatedSync.sync, abortSignal);
+    return abortable(this.whenUpdated.sync, abortSignal);
   }
 
-  promiseState(newState) {
-    return new Promise((resolve, reject) => {
-      if (this.didUnmount) return reject(new AbortedError($componentUnmounted));
+  promiseState(newState, abortSignal) {
+    const promise = new Promise((resolve) => {
+      if (this.didUnmount) return;
       this.setState(newState, resolve);
     });
+    return abortable(promise, abortSignal);
+  }
+
+  onStageChanged(stage, canceled) {
+    switch(true) {
+      case stage === $exiting:
+        this.props.onExiting?.();
+        this.transitionTask.start(this.whenCanceled.sync);
+        return;
+      case stage === $exited:
+        this.props.onExited?.();
+        return;
+      case stage === $entering:
+        this.props.onEntering?.();
+        return;
+      case canceled:
+        this.whenCanceled.resolve();
+        this.props.onCanceled?.();
+        break;
+      default:
+        this.whenCanceled.discard();
+        break;
+    }
+
+    this.props.onEntered?.();
   }
 
   componentDidMount() {
-    if (this.state.stage !== $entered)
-      this.transitionTask.start();
-  }
+    const { props: { onExiting, onExited, onEntering }, state: { stage } } = this;
 
-  shouldComponentUpdate(nextProps, nextState) {
-    const { props, state } = this;
-
-    // We don't care about the callback props `onBegin` and `onEnd`; they're not related to
-    // rendering or state-keeping.  Also `asap` is only relevant during initialization.
-
-    switch (true) {
-      case props === nextProps: break;
-      case props.wait !== nextProps.wait: return true;
-      case !props.page::is.defined() && !nextProps.page::is.defined(): break;
-      case props.page::is.object() !== nextProps.page::is.object(): return true;
-      case !compareOwnProps(props.page, nextProps.page): return true;
+    // Immediately after initialization, it is possible for the transition to not be in
+    // the `$entered` stage; just run through the callbacks up to this point.
+    if (stage !== $entered) {
+      onExiting?.();
+      onExited?.();
+      if (stage === $entering)
+        onEntering?.();
     }
-    
-    if (!compareOwnProps(state, nextState)) return true;
 
-    return false;
+    if (stage !== $entered)
+      this.transitionTask.start(this.whenCanceled.sync);
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { exiting, error } = this.state;
+    const {
+      props: { content },
+      state: { exiting, entering, stage, error }
+    } = this;
 
     if (error !== prevState.error && error)
       throw error;
     
-    if (exiting && !prevState.exiting)
-      this.transitionTask.start();
+    if (content !== prevState.content) {
+      const newState = determineNewState(exiting, entering, content);
+      if (newState) this.setState(newState);
+    }
+    
+    if (stage !== prevState.stage) {
+      let canceling = false;
 
-    this.updatedSync.resolve();
+      if (stage === $entered && prevProps.exiting && entering) {
+        const prevComp = prevProps.exiting.Component;
+        const curComp = entering.Component;
+        canceling = Object.is(prevComp, curComp);
+      }
+      
+      this.onStageChanged(stage, canceling);
+    }
+
+    this.whenUpdated.resolve();
   }
 
   componentWillUnmount() {
@@ -178,12 +202,12 @@ class Transition extends React.Component {
 
   render() {
     const { exiting, entering, stage, error } = this.state;
-    const page = exiting || entering;
+    const content = exiting || entering;
 
-    if (!page) return null;
+    if (!content) return null;
     if (error) return null;
 
-    return page.render(page.Component, page.props, page.exitDelay, stage);
+    return content.render(content.Component, content.props, content.exitDelay, stage);
   }
 
 }
@@ -194,14 +218,31 @@ const defaultRender = (Component, props, exitDelay, stage) => {
       <Component {...props} />
       <style jsx>
         {`
-          .transition { transform: opacity ${exitDelay} ease-in-out; }
-          .transition.exiting, .transition.exited { opacity: 0; }
-          .transition.exited { visibility: hidden; }
-          .transition.entered { opacity: 1; }
+          .transition {
+            opacity: 0;
+            visibility: hidden;
+            transform: opacity ${exitDelay} ease-in-out;
+          }
+          .exiting, .entered {
+            visibility: unset;
+          }
+          .entered {
+            opacity: 1;
+          }
         `}
       </style>
     </div>
   );
+};
+
+const determineNewState = (exiting, entering, content) => {
+  if (!content)
+    return transitionToUnresolved(exiting, entering);
+  if (entering && Object.is(entering.Component, content.Component))
+    return updateEntering(entering, content);
+  if (exiting && Object.is(exiting.Component, content.Component))
+    return cancelExiting(exiting, content);
+  return transitionToResolved(exiting, entering, content);
 };
 
 const transitionToUnresolved = (exiting, entering) => {
@@ -210,23 +251,23 @@ const transitionToUnresolved = (exiting, entering) => {
   return { exiting: entering, entering: null };
 };
 
-const updateEntering = (entering, page) => {
-  const updated = assignProps(entering, page);
+const updateEntering = (entering, content) => {
+  const updated = assignProps(entering, content);
   if (updated === entering) return null;
   return { entering: updated };
 };
 
-const cancelExiting = (exiting, page) => {
-  return { exiting: null, entering: assignProps(exiting, page) };
+const cancelExiting = (exiting, content) => {
+  return { exiting: null, entering: assignProps(exiting, content) };
 };
 
-const transitionToResolved = (exiting, entering, page) => {
-  if (exiting) return { entering: createTransition(page) };
-  return { exiting: entering, entering: createTransition(page) };
+const transitionToResolved = (exiting, entering, content) => {
+  if (exiting || !entering) return { entering: createTransition(content) };
+  return { exiting: entering, entering: createTransition(content) };
 };
 
 const fixRender = (render) => render::is.func() ? render : defaultRender;
-const fixExitDelay = (exitDelay) => exitDelay::is.NaN() ? 0 : Math.max(exitDelay, 0);
+const fixExitDelay = (exitDelay) => exitDelay::is.finite() ? Math.max(exitDelay, 0) : 0;
 
 const createTransition = ({Component, props, render, exitDelay}) => {
   return {
@@ -236,19 +277,25 @@ const createTransition = ({Component, props, render, exitDelay}) => {
   };
 };
 
-const assignProps = (transition, page) => {
-  const props = page.props;
-  const render = fixRender(page.render);
-  const exitDelay = fixExitDelay(page.exitDelay);
+const assignProps = (transition, content) => {
+  const props = content.props;
+  const render = fixRender(content.render);
+  const exitDelay = fixExitDelay(content.exitDelay);
 
   switch (true) {
-    case transition.props !== props:
-    case transition.render !== render:
-    case transition.exitDelay !== exitDelay:
+    case !Object.is(transition.props, props):
+    case !Object.is(transition.render, render):
+    case !Object.is(transition.exitDelay, exitDelay):
       return { Component: transition.Component, props, render, exitDelay };
     default:
       return transition;
   }
+};
+
+const updateStage = (exiting, entering, contentShown) => {
+  if (exiting) return contentShown ? $exiting : $exited;
+  if (entering) return contentShown ? $entered : $entering;
+  return $exited;
 };
 
 export default Transition;

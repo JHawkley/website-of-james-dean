@@ -26,7 +26,7 @@
     &:before {
       @include image-pseudo-element();
       @include vendor('pointer-events', 'none');
-      background-image: url('/static/images/overlay.png');
+      background-image: url(_misc(img-overlay));
       background-color: _palette(bg-overlay);
       opacity: 0.5;
     }
@@ -34,6 +34,21 @@
     img {
       border-radius: _size(border-radius);
       display: block;
+    }
+
+    .label-right {
+      position: absolute;
+      right: 0.875rem;
+      bottom: 0.875rem;
+
+      background-color: transparentize(_palette(bg), 0.15);
+      border-radius: _size(border-radius);
+      padding: 0 0.5rem;
+
+      color: _palette(fg-bold);
+      font-weight: _font(weight-bold);
+      font-size: 1.5rem;
+      text-align: right;
     }
 
     &.left,
@@ -77,6 +92,34 @@
       img {
         width: 100%;
         height: auto;
+      }
+    }
+
+    &.contain {
+      max-width: 100%;
+
+      img {
+        max-width: 100%;
+        height: auto;
+      }
+    }
+
+    &.javascript-link, a#{&} {
+      color: inherit;
+      text-decoration: none;
+    
+      &:after {
+        @include image-pseudo-element();
+        @include vendor('transition', (
+          'border-color #{_duration(transition)} ease-in-out'
+        ));
+        border: solid 2px transparent;
+        padding: 2px;
+      }
+    
+      &:hover:after {
+        border: solid 2px _palette(fg);
+        background-clip: padding-box;
       }
     }
 

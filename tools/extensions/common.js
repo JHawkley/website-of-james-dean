@@ -136,8 +136,7 @@ export function map(transformationFn) {
 }
 
 /**
- * Verifies that the own-properties of `obj` have a match in this object.  A match is determined by strict-equality.
- * This is handy for verifying state during async operations.
+ * Verifies that the own-properties of `obj` have a match in this object.  A match is determined via `Object.is`.
  *
  * @export
  * @this {Object} The object to match `obj` to.
@@ -145,7 +144,8 @@ export function map(transformationFn) {
  * @returns {boolean}
  */
 export function verifyProps(obj) {
-  return Object.keys(obj).every(k => this[k] === obj[k]);
+  if (Object.is(this, obj)) return true;
+  return Object.keys(obj).every(k => Object.is(this[k], obj[k]));
 }
 
 /**
@@ -161,8 +161,10 @@ export const is = {
   defined() { "use strict"; return this != null; },
   undefined() { "use strict"; return typeof this === "undefined"; },
   null() { "use strict"; return this === null; },
+  finite() { "use strict"; return Number.isFinite(this); },
   NaN() { "use strict"; return typeof this !== "number" || Number.isNaN(this); },
   object() { "use strict"; return this != null && typeof this === "object"; },
   error() { "use strict"; return this instanceof Error },
-  instanceOf(klass) { "use strict"; return this instanceof klass; }
+  instanceOf(klass) { "use strict"; return this instanceof klass; },
+  that(other) { "use strict"; return Object.is(this, other); }
 };

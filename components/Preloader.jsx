@@ -1,11 +1,11 @@
 import React from "react";
 import PropTypes from "prop-types";
+import PreloadContext from "common/PreloadContext";
 import PreloadSync from "components/Preloader/PreloadSync";
-import Preloadable from "components/Preloadable";
-import { dew, is, Composition } from "tools/common";
+import { dew, Composition } from "tools/common";
 import { Future, CallSync, AbortedError } from "tools/async";
+import { exclusiveTo } from "tools/extensions/propTypes";
 import { extensions as asyncIterEx } from "tools/asyncIterables";
-import { extensions as classEx } from "tools/classes";
 
 const {
   fresh: $$fresh,
@@ -33,12 +33,19 @@ class Preloader extends React.PureComponent {
       PropTypes.bool,
       PropTypes.oneOf([$always, $loaded, $never])
     ]),
+    naked:
+      PropTypes.bool
+      ::exclusiveTo("id")
+      ::exclusiveTo("className")
+      ::exclusiveTo("style")
+      ::exclusiveTo("display"),
     wait: PropTypes.bool,
     once: PropTypes.bool
   };
 
   static defaultProps = {
     display: $loaded,
+    naked: false,
     wait: false,
     once: false
   };
@@ -202,14 +209,20 @@ class Preloader extends React.PureComponent {
   render() {
     const {
       display,
-      props: { id, style: customStyle, className },
+      props: { children, id, style: customStyle, className, naked },
       state: { mustRender, error, preloadSync, preloadState }
     } = this;
 
     if (!mustRender || error)
       return null;
-
-    const children = processChildren(this.props.children, preloadSync);
+    
+    if (naked) {
+      return (
+        <PreloadContext.Provider value={preloadSync}>
+          {children}
+        </PreloadContext.Provider>
+      );
+    }
 
     const hide = dew(() => {
       switch (display) {
@@ -221,35 +234,13 @@ class Preloader extends React.PureComponent {
 
     const style = Object.assign({}, customStyle, hide ? { display: "none" } : null);
 
-    return <div id={id} className={className} style={style}>{children}</div>;
+    return (
+      <PreloadContext.Provider value={preloadSync}>
+        <div id={id} className={className} style={style}>{children}</div>
+      </PreloadContext.Provider>
+    );
   }
 
 }
-
-const processChildren = (children, preloadSync) => {
-  const processChild = (child) => {
-    if (!child || !child::is.object()) return child;
-
-    if (child.type::is.func()) {
-      if (child.type::classEx.inheritsFrom(Preloader))
-        return child;
-      if (Preloadable.test(child.type))
-        return React.cloneElement(child, { preloadSync });
-    }
-
-    const oldChildren = child.props?.children;
-    const newChildren = processChildren(oldChildren);
-    if (oldChildren === newChildren) return child;
-    return React.cloneElement(child, null, newChildren);
-  };
-
-  const processChildren = (children) => {
-    const newChildren = React.Children.toArray(children).map(processChild);
-    if (!newChildren || newChildren.length === 0) return children;
-    return newChildren;
-  };
-  
-  return processChildren(children);
-};
 
 export default Preloader;

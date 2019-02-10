@@ -16,6 +16,7 @@
     max-width: 100%;
     margin-top: 2rem;
     text-align: center;
+    z-index: 3;
 
     .copyright {
       letter-spacing: _font(letter-spacing);
@@ -25,13 +26,28 @@
       text-transform: uppercase;
     }
 
-    .body.with-transitions.is-article-visible & {
-      @include vendor('transform', 'scale(0.95)');
-      @include vendor('filter', 'blur(0.1rem)');
+    /* Transitions */
+
+    opacity: 0;
+    visibility: hidden;
+    @include vendor('transform', 'scale(0.95)');
+    @include vendor('filter', 'blur(0.1rem)');
+
+    &.exiting, &.entered {
+      visibility: unset;
     }
 
-    .body.is-article-visible &,
-    .body.is-loading & {
+    &.entered, #app-root.loading & {
+      @include vendor('transform', 'none');
+      @include vendor('filter', 'none');
+    }
+
+    &.entered {
+      opacity: 1;
+    }
+
+    #app-root.loading & {
       opacity: 0;
+      visibility: hidden;
     }
   }

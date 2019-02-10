@@ -118,7 +118,10 @@ const createAbortionPromise = (promise, signal) => {
         const reason = givesReason && value::is.string() ? value : defaultReason;
         reject(new AbortedError(promise, aborter, reason));
       },
-      () => reject(new AbortedError(promise, aborter, defaultReason))
+      (error) => {
+        if (error instanceof AbortedError) reject(error);
+        else reject(new AbortedError(promise, aborter, defaultReason));
+      }
     );
   });
 };

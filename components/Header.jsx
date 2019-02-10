@@ -1,15 +1,19 @@
 import PropTypes from "prop-types";
-import { Goto } from "components/Article";
+import Jump from "components/Jump";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCode } from "@fortawesome/free-solid-svg-icons/faCode";
+import { color } from "tools/css";
+import styleVars from "styles/vars.json";
 
-import $intro from "components/articles/Intro?name";
-import $work from "components/articles/Work?name";
-import $questions from "components/articles/Questions?name";
-import $contact from "components/articles/Contact?name";
+import $intro from "pages/intro?route";
+import $work from "pages/work/index?route";
+import $questions from "pages/questions?route";
+import $contact from "pages/contact?route";
 
-const Header = ({timeout}) => (
-  <header id="header" style={timeout ? {display: 'none'} : null}>
+const bgColor = color(styleVars["palette"]["bg"]).transparentize(0.15).asRgba();
+
+const Header = ({className}) => (
+  <header id="header" className={className}>
     <div className="logo">
       <FontAwesomeIcon icon={faCode} transform="grow-18" />
     </div>
@@ -22,18 +26,26 @@ const Header = ({timeout}) => (
     </div>
     <nav>
       <ul>
-        <li><Goto article={$intro}>Intro</Goto></li>
-        <li><Goto article={$work}>Work</Goto></li>
-        <li><Goto article={$questions}>Q&amp;A</Goto></li>
-        <li><Goto article={$contact}>Contact</Goto></li>
+        <li><Jump href={$intro}>Intro</Jump></li>
+        <li><Jump href={$work}>Work</Jump></li>
+        <li><Jump href={$questions}>Q&amp;A</Jump></li>
+        <li><Jump href={$contact}>Contact</Jump></li>
       </ul>
     </nav>
+    <style jsx>
+      {`
+        #header {
+          border-radius: 4px;
+          padding: 1.5rem;
+          background-color: ${bgColor};
+        }
+      `}
+    </style>
   </header>
 );
 
 Header.propTypes = {
-  timeout: PropTypes.bool,
-  appContext: PropTypes.object.isRequired
+  className: PropTypes.string
 };
 
 export default Header;

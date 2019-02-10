@@ -2,7 +2,6 @@
 
 const path = require('path');
 const glob = require('glob');
-const toLower = require('lodash/toLower');
 const jsonImporter = require('node-sass-json-importer');
 const imageMediaLoader = require('./webpack/image-media-loader');
 const soundMediaLoader = require('./webpack/sound-media-loader');
@@ -58,10 +57,14 @@ module.exports = {
       },
       {
         enforce: 'post',
-        resourceQuery: /^\?name(-of|Of)?$/,
-        loader: 'name-of-loader'
+        resourceQuery: /^\?route$/,
+        loader: 'route-loader'
       }
     );
+
+    // Main.js patches.
+    patchMain(['./patch/polyfills.js'], config);
+    if (!isServer) patchMain(['./patch/client-router.js'], config);
 
     // Webpack plugins.
     const plugins = config.plugins || [];
@@ -87,19 +90,22 @@ module.exports = {
     config.plugins = plugins;
     return config;
   },
-  exportPathMap: () => {
-    const articlesGlob = path.join(__dirname, 'components/articles') + '/*.@(js|jsx)';
-    return glob.sync(articlesGlob).reduce(
-      (map, p) => {
-        const ext = path.extname(p);
-        const name = path.basename(p, ext);
-        map[`/${toLower(name)}.html`] = { page: '/', query: { article: name } };
-        return map;
-      },
-      { '/': { page: '/' } }
-    );
-  },
   pageExtensions: ['jsx', 'js']
+}
+
+function patchMain(patches, webkitConfig) {
+  if (patches.length === 0) return;
+
+  const originalEntry = webkitConfig.entry;
+  webkitConfig.entry = async () => {
+    const entries = await originalEntry();
+    if (!entries['main.js']) return entries;
+
+    const unincluded = patches.filter(patch => !entries['main.js'].includes(patch));
+    if (unincluded.length > 0) entries['main.js'].unshift(...unincluded);
+
+    return entries;
+  };
 }
 
 function mapAliases(jsPaths, webkitConfig, dir) {

@@ -23,7 +23,7 @@
     "@vx/text": "0.0.182",
     "lodash": "^4.17.11",
     "abab": "^2.0.0",
-    "next": "file:../nextjs",
+    "next": "7.0.2",
     "react": "^16.6.3",
     "react-dom": "^16.6.3",
     "react-image-lightbox": "^5.1.0",

@@ -1,75 +1,74 @@
 import React from "react";
 import PropTypes from "prop-types";
-import Header from "components/Header";
-import Main from "components/Main";
-import Footer from "components/Footer";
-import PreloadSync from "components/Preloader/PreloadSync";
+import ScrollLockedContext from "common/ScrollLockedContext";
 
-class Wrapper extends React.PureComponent {
+class Inner extends React.PureComponent {
+
+  static displayName = ".Wrapper";
 
   static propTypes = {
-    preventScroll: PropTypes.bool,
-    article: PropTypes.string,
-    articlePages: PropTypes.instanceOf(Map).isRequired,
-    articleTimeout: PropTypes.bool.isRequired,
-    timeout: PropTypes.bool.isRequired,
-    appContext: PropTypes.shape({
-      preloadSync: PropTypes.instanceOf(PreloadSync).isRequired,
-      makeGallery: PropTypes.func.isRequired,
-      openLightbox: PropTypes.func.isRequired,
-      closeLightbox: PropTypes.func.isRequired,
-      enableScroll: PropTypes.func.isRequired,
-      disableScroll: PropTypes.func.isRequired
-    }).isRequired
+    children: PropTypes.node,
+    preventScroll: PropTypes.bool
   };
 
-  static getDerivedStateFromProps(props) {
-    if (!props.preventScroll) return null;
+  static getDerivedStateFromProps(props, state) {
     if (!process.browser) return null;
-    return { scrollX: window.scrollX, scrollY: window.scrollY };
+    
+    const preventScroll = Boolean(props.preventScroll);
+    const scrollLocked = Boolean(state.scroll);
+    
+    if (preventScroll === scrollLocked) return null;
+
+    const scroll = preventScroll ? { x: window.scrollX, y: window.scrollY } : null;
+    return { scroll };
   }
 
-  state = { scrollX: 0, scrollY: 0 };
+  state = { scroll: null };
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps, prevState) {
     if (!process.browser) return;
-    if (this.props.preventScroll !== prevProps.preventScroll)
-      if (!this.props.preventScroll)
-        window.scrollTo(this.state.scrollX, this.state.scrollY);
+    if (this.state.scroll === prevState.scroll) return;
+    if (!prevState.scroll) return;
+
+    const { x, y } = prevState.scroll;
+    window.scrollTo(x, y);
   }
 
   render() {
-    const {
-      props: { preventScroll, article, articlePages, articleTimeout, timeout, appContext },
-      state: { scrollY }
-    } = this;
+    const { props: { children }, state: { scroll } } = this;
+
+    if (!scroll)
+      return <div id="wrapper">{children}</div>;
+
     return (
       <div id="wrapper">
-        <Header timeout={timeout} appContext={appContext} />
-        <Main
-          article={article}
-          articlePages={articlePages}
-          articleTimeout={articleTimeout}
-          timeout={timeout}
-          appContext={appContext}
-        />
-        <Footer timeout={timeout} appContext={appContext} />
-        { preventScroll && (
-          <style jsx global>
-            {`
-              .ReactModal__Body--open {
-                position: fixed;
-                width: 100%;
-                height: 100%;
-              }
-              #wrapper { margin-top: -${scrollY}px; }
-            `}
-          </style>
-        ) }
+        {children}
+        <style jsx>
+          {`
+            #wrapper {
+              margin-top: -${scroll.y}px;
+            }
+          `}
+        </style>
+        <style jsx global>
+          {`
+            .ReactModal__Body--open {
+              position: fixed;
+              width: 100%;
+              height: 100%;
+            }
+          `}
+        </style>
       </div>
     );
   }
 
 }
+
+const Wrapper = (props) => (
+  <ScrollLockedContext.Consumer>
+    {scrollLocked => <Inner {...props} preventScroll={scrollLocked} />}
+  </ScrollLockedContext.Consumer>
+);
 
 export default Wrapper;

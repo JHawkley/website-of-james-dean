@@ -1,5 +1,6 @@
 import { dew, is } from "tools/common";
-import { abortable } from "tools/async";
+import { Future, abortable } from "tools/async";
+import { abortionReason } from "tools/extensions/async";
 
 /**
  * Iterates over this async-iterable, applying `iteratorFn` for each element yielded.  Iteration can be canceled
@@ -21,6 +22,41 @@ export function forEach(iteratorFn, abortSignal) {
     return iterateWithAbort(getIterator(), abortSignal, iteratorFn);
   else
     return iterateWithoutAbort(getIterator(), iteratorFn);
+}
+
+/**
+ * Creates a promise that will resolve with the first value from this async-iterable that matches the given
+ * `valueOrPredicate`.  If no match is found before this async-iterable completes, the promise will reject.
+ *
+ * @export
+ * @template T
+ * @param {T | function(T): boolean} valueOrPredicate A value or predicate function to find.
+ * @param {Promise} [abortSignal] The promise to use as a signal to abort when it completes.
+ * @returns {Promise<T>}
+ */
+export function first(valueOrPredicate, abortSignal) {
+  const future = new Future();
+  const promise = future.promise;
+  const predicate = valueOrPredicate::is.func() ? valueOrPredicate : (v) => Object.is(v, valueOrPredicate);
+  const properAbortSignal
+    = abortSignal ? abortable(promise, abortSignal)
+    : Promise.resolve(promise);
+
+  const iteratorFn = (v) => predicate(v) && future.resolve(v);
+
+  dew(async () => {
+    try {
+      await this::forEach(iteratorFn, properAbortSignal::abortionReason("the predicate found a match"));
+      if (!future.isCompleted)
+        future.reject(new Error("no value matched the given predicate"));
+    }
+    catch (error) {
+      if (!future.isCompleted)
+        future.reject(error);
+    }
+  });
+
+  return promise;
 }
 
 /**

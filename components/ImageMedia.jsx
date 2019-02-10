@@ -3,16 +3,17 @@ import { is, Composition } from "tools/common";
 import { preloadImage } from "tools/async";
 import { extensions as propTypeEx, hasOwn as propTypeHasOwn } from "tools/propTypes";
 import Preloadable from "components/Preloadable";
+import { fluidCss, fluidMargin } from "styles/jsx/imageMedia";
 
 class ImageMedia extends Preloadable {
 
   static propTypes = {
-    ...Preloadable.propTypes,
     src: PropTypes.string::propTypeEx.notEmpty().isRequired,
     className: PropTypes.string,
     width: PropTypes.number::propTypeEx.dependsOn("height"),
     height: PropTypes.number::propTypeEx.dependsOn("width"),
     fluid: PropTypes.bool::propTypeEx.dependsOn(["width", "height"]),
+    important: PropTypes.bool,
     imgRef: PropTypes.oneOfType([
       PropTypes.func, 
       PropTypes.shape({ current: propTypeHasOwn })
@@ -20,7 +21,8 @@ class ImageMedia extends Preloadable {
   };
 
   static defaultProps = {
-    fluid: false
+    fluid: false,
+    important: false
   };
 
   imgIsComplete = false;
@@ -40,10 +42,15 @@ class ImageMedia extends Preloadable {
   onLoad = this.handlePreloaded;
 
   onError = () => {
-    const { mainSrc } = this.state;
-    const msg = ["image failed to load"];
-    if (mainSrc) msg.push(mainSrc);
-    this.handlePreloadError(new Error(msg.join(": ")));
+    if (this.props.important) {
+      const { src } = this.state;
+      const msg = ["image failed to load"];
+      if (src) msg.push(src);
+      this.handlePreloadError(new Error(msg.join(": ")));
+    }
+    else {
+      this.handlePreloaded();
+    }
   }
 
   componentDidMount() {
@@ -67,7 +74,7 @@ class ImageMedia extends Preloadable {
       props: {
         className: customClass,
         src, width, height, fluid,
-        preloadSync, // eslint-disable-line no-unused-vars
+        important, // eslint-disable-line no-unused-vars
         ...imgProps
       }
     } = this;
@@ -91,34 +98,13 @@ class ImageMedia extends Preloadable {
 
     if (!fluid) return imgElement;
 
+    const marginCss = fluidMargin(this.props);
+
     return (
-      <div className="fluid-container">
+      <div className={`fluid-container ${marginCss.className}`}>
         {imgElement}
-        <style jsx>
-          {`
-            .fluid-container {
-              display: block !important;
-              position: relative !important;
-              max-width: 100% !important;
-            }
-            .fluid {
-              position: absolute !important;
-              top: 0px !important;
-              left: 0px !important;
-              width: 100% !important;
-              height: 100% !important;
-              max-width: inherit !important;
-            }
-          `}
-        </style>
-        <style jsx>
-          {`
-            .fluid-container {
-              width: ${width}px;
-              paddingBottom: ${100.0 / (width / height)}%;
-            }
-          `}
-        </style>
+        <style jsx>{fluidCss}</style>
+        {marginCss.styles}
       </div>
     );
   }
@@ -134,9 +120,8 @@ function importWrapper(src, width, height, type) {
   if (type) composition.compose({ type });
 
   return Object.assign(
-    Preloadable.mark(ImportedImage),
+    ImportedImage,
     {
-      propTypes: { ...Preloadable.propTypes },
       displayName: `importedImage("${src}")`,
       preload: () => preloadImage(src, { width, height })
     },

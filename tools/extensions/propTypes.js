@@ -224,8 +224,8 @@ export function notEmpty() {
     throw new TypeError("expected to be bound to a prop-type validator function");
   
   const validationFn = (value) => {
-    if (isEmptyString(value)) return "string may not be empty";
-    if (isEmptyArray(value)) return "array may not be empty";
+    if (value::is.string() && isEmptyString(value)) return "string may not be empty";
+    if (value::is.array() && isEmptyArray(value)) return "array may not be empty";
   };
 
   return makeValidator(validationFn, this);

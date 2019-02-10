@@ -30,11 +30,12 @@ export function compareOwnProps(left, right) {
     throw new Error("the `left` value must be an object reference");
   if (!right::is.object())
     throw new Error("the `right` value must be an object reference");
+  
   if (left === right) return true;
 
   const keys = new Set([...Object.keys(left), ...Object.keys(right)]);
   for (const key of keys)
-    if (left[key] !== right[key])
+    if (!Object.is(left[key], right[key]))
       return false;
   return true;
 }

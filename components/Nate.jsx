@@ -1,10 +1,8 @@
 import React, { Fragment } from "react";
 import PropTypes from "prop-types";
-import { css } from "styled-jsx/css";
 import { dew, is, global } from "tools/common";
 import { extensions as asyncEx, Task, eachFrame } from "tools/async";
 import { makeArray } from "tools/array";
-import { numeric } from "tools/css";
 import bulletActionList from "./Nate/bulletActionList";
 import nateActionList from "./Nate/nateActionList";
 import { behaviorModes, facings, aimings, movings, jumps, tracks } from "./Nate/core";
@@ -15,11 +13,8 @@ import LoadingSpinner from "components/LoadingSpinner";
 import NotSupportedError from "components/Nate/NotSupportedError";
 import GameUpdateError from "components/Nate/GameUpdateError";
 
-import styleVars from "styles/vars.json";
-
-import SpriteNate from "static/images/nate-game/nate_sprite.png";
-import SpriteBullet from "static/images/nate-game/bullet_sprite.png";
-import SpriteBulletBurst from "static/images/nate-game/bullet_burst_sprite.png";
+import { fadeTime, containerCss, nateSpriteCss, bulletSpriteCss } from "styles/jsx/nate";
+import { ImgNate, ImgBullet, ImgBulletBurst } from "styles/jsx/nate";
 
 import OggBowWow from "static/sounds/nate-game/bow-wow.ogg?codec=vorbis";
 import Mp3BowWow from "static/sounds/nate-game/bow-wow.mp3";
@@ -34,9 +29,6 @@ import Mp3Pop1 from "static/sounds/nate-game/pop1.mp3";
 import OggPop2 from "static/sounds/nate-game/pop2.ogg?codec=vorbis";
 import Mp3Pop2 from "static/sounds/nate-game/pop2.mp3";
 
-// The amount of time in milliseconds to fade in/out when transitioning to/from loaded states.
-const fadeTime = 300;
-
 const $componentUnmounted = "component unmounted";
 const $gameDetached = "detaching game from a container";
 const $mountedWithError = "mounted with an error";
@@ -45,7 +37,6 @@ const $updatedWithError = "updated with an error";
 class Nate extends Preloadable {
 
   static propTypes = {
-    ...Preloadable.propTypes,
     onLoad: PropTypes.func,
     onError: PropTypes.func
   };
@@ -260,7 +251,7 @@ class Nate extends Preloadable {
       } = nate;
 
       if (el) {
-        const { className } = nateCss.nateSprite;
+        const { className } = nateSpriteCss;
         el.className = [className, "nate-sprite", main, shoot].flatten().join(" ");
         el.style.left = (x | 0) + "px";
         el.style.bottom = (y | 0) + "px";
@@ -347,11 +338,9 @@ class Nate extends Preloadable {
   }
 
   renderContainer(ready) {
-    const {
-      container: { className: containerClass },
-      nateSprite: { className: nateClass }
-    } = nateCss;
     const { nate: { ref: nateRef }, bounds: { ref: groundRef } } = this.world;
+    const { className: containerClass } = containerCss;
+    const { className: nateClass } = nateSpriteCss;
 
     const attachGame = ready ? this.attachGame : null;
     const className = [containerClass, "nate-container"];
@@ -369,7 +358,7 @@ class Nate extends Preloadable {
   }
 
   renderBullets() {
-    const { className } = nateCss.bulletSprite;
+    const { className } = bulletSpriteCss;
     return this.world.bullets.flatMap((bullet, x) => bullet.nodes.map((node, y) => {
       return <div key={`${x}.${y}`} ref={node.ref} className={`${className} node-${y + 1} despawned`} />;
     }));
@@ -377,8 +366,8 @@ class Nate extends Preloadable {
 
   renderImages() {
     return (
-      <Preloader onLoad={this.onImagesReady} onError={this.onImagesFailed} display={false} once>
-        <SpriteNate /><SpriteBullet /><SpriteBulletBurst />
+      <Preloader onLoad={this.onImagesReady} onError={this.onImagesFailed} display="never" once>
+        <ImgNate important /><ImgBullet important /><ImgBulletBurst important />
       </Preloader>
     );
   }
@@ -386,7 +375,7 @@ class Nate extends Preloadable {
   renderSounds() {
     const { nate, bullets } = this.world;
     return (
-      <Preloader onLoad={this.onSoundsReady} onError={this.onSoundsFailed} display={false} once>
+      <Preloader onLoad={this.onSoundsReady} onError={this.onSoundsFailed} naked once>
         <Audio audioRef={nate.sounds[tracks.bark].ref}><OggBowWow /><Mp3BowWow /></Audio>
         <Audio audioRef={nate.sounds[tracks.aroo].ref}><OggAroo /><Mp3Aroo /></Audio>
         <Audio audioRef={nate.sounds[tracks.land].ref}><OggLand /><Mp3Land /></Audio>
@@ -403,21 +392,20 @@ class Nate extends Preloadable {
 
   render() {
     const { imagesReady, soundsReady, error } = this.state;
-    const { container, nateSprite, bulletSprite } = nateCss;
 
     if (error) return null;
 
     const ready = imagesReady && soundsReady;
 
     return (
-      <div className={`${container.className} root`}>
+      <div className={`${containerCss.className} root`}>
         <LoadingSpinner size="2x" fadeTime={fadeTime} show={!ready} background />
         {this.renderContainer(ready)}
         {this.renderImages()}
         {this.renderSounds()}
-        {nateSprite.styles}
-        {bulletSprite.styles}
-        {container.styles}
+        {nateSpriteCss.styles}
+        {bulletSpriteCss.styles}
+        {containerCss.styles}
       </div>
     );
   }
@@ -463,183 +451,6 @@ const supported = dew(() => {
       supported = detectRequestAnimationFrame() && detectAnimation() && detectTransform() && detectSet();
     return supported;
   };
-});
-
-const nateCss = dew(() => {
-  const nateSize = [52, 52];
-  const nateOffset = [-26, 5];
-  const bulletSize = [9, 9];
-  const bulletBurstSize = [17, 17];
-  const [margin, marginUnit] = numeric(styleVars.size["element-margin"]);
-
-  const spriteRendering = `
-    image-rendering: -moz-crisp-edges;
-    image-rendering: -o-crisp-edges;
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
-    -ms-interpolation-mode: nearest-neighbor;
-  `;
-
-  const frame = ([width, height], frameX, frameY) =>
-    `background-position: ${frameX * -width}px ${frameY * -height}px;`;
-
-  const row = ([, height], row) =>
-    `background-position-y: ${height * -row}px;`;
-
-  const col = ([width,], col) =>
-    `background-position-x: ${width * -col}px;`;
-
-  const size = ([width, height]) =>
-    `width: ${width}px; height: ${height}px;`;
-
-  const translateOffset = ([offX, offY]) =>
-    `translate(${offX}px, ${offY}px)`;
-
-  const translateCenter = ([width, height]) =>
-    translateOffset([-Math.ceil(width * 0.5), Math.ceil(height * 0.5)]);
-
-  const container = css.resolve`
-    .root {
-      position: relative;
-      margin: ${-margin}${marginUnit} ${-margin}${marginUnit} 0${marginUnit};
-    }
-
-    .nate-container {
-      overflow: visible !important;
-      position: relative;
-      z-index: 0;
-      opacity: 1;
-      transition: opacity ${fadeTime}ms ease-in-out;
-    }
-
-    .nate-container.loading {
-      opacity: 0;
-    }
-
-    .buffer {
-      visibility: hidden;
-      width: 100%;
-    }
-
-    .buffer.top { height: ${3 * margin}${marginUnit}; }
-    .buffer.bottom { height: ${margin}${marginUnit}; }
-
-    .ground-plane {
-      width: 100%;
-      height: 24px;
-
-      z-index: 0;
-      border: 1px solid #004A7F;
-      background-color: #0094FF;
-    }
-  `;
-
-  const nateSprite = css.resolve`
-    @keyframes run-cycle {
-      0% { ${col(nateSize, 0)} }
-      100% { ${col(nateSize, 6)} }
-    }
-
-    @keyframes jump-cycle {
-      0% { ${col(nateSize, 0)} }
-      100% { ${col(nateSize, 1)} }
-    }
-
-    @keyframes fall-cycle {
-      0% { ${col(nateSize, 3)} }
-      100% { ${col(nateSize, 4)} }
-    }
-
-    .nate-sprite {
-      ${spriteRendering}
-      ${size(nateSize)}
-      position: absolute;
-      z-index: 3;
-      background: url('${SpriteNate.src}');
-      transform: ${translateOffset(nateOffset)};
-    }
-
-    .idle { ${frame(nateSize, 0, 0)} }
-    .idle.look-up { ${frame(nateSize, 1, 0)} }
-
-    .idle.shoot-up { ${frame(nateSize, 4, 0)} }
-    .idle.shoot-up.recoil { ${frame(nateSize, 5, 0)} }
-
-    .idle.shoot-side { ${frame(nateSize, 2, 0)} }
-    .idle.shoot-side.recoil { ${frame(nateSize, 3, 0)} }
-
-    .idle.land { ${frame(nateSize, 5, 4)} }
-    .idle.land.shoot-side { ${frame(nateSize, 5, 5)} }
-    .idle.land.shoot-up { ${frame(nateSize, 5, 6)} }
-    .idle.land.shoot-down { ${frame(nateSize, 5, 7)} }
-
-    .run {
-      animation: run-cycle 0.75s steps(6) infinite;
-      ${row(nateSize, 1)}
-    }
-
-    .run.shoot-side { ${row(nateSize, 2)} }
-    .run.shoot-up { ${row(nateSize, 3)} }
-
-    .jump {
-      animation: jump-cycle 0.125s steps(1) 1 forwards;
-      ${row(nateSize, 4)}
-    }
-
-    .jump.apex {
-      animation: none;
-      ${col(nateSize, 2)}
-    }
-
-    .jump.fall { animation: fall-cycle 0.125s steps(1) 1 forwards; }
-
-    .jump.shoot-side { ${row(nateSize, 5)} }
-    .jump.shoot-up { ${row(nateSize, 6)} }
-    .jump.shoot-down { ${row(nateSize, 7)} }
-
-    .mirror { transform: ${translateOffset(nateOffset)} scale(-1.0, 1.0); }
-
-    .despawned { display: none; }
-  `;
-
-  const bulletSprite = css.resolve`
-    @keyframes bullet-flight {
-      0% { ${col(bulletSize, 0)} }
-      100% { ${col(bulletSize, 2)} }
-    }
-
-    @keyframes bullet-burst {
-      0% { ${row(bulletBurstSize, 0)} }
-      100% { ${row(bulletBurstSize, 1)} }
-    }
-
-    .bullet-sprite {
-      ${spriteRendering}
-      ${size(bulletSize)}
-      position: absolute;
-      background: url('${SpriteBullet.src}');
-      transform: ${translateCenter(bulletSize)};
-      animation: bullet-flight 0.2s steps(2) infinite;
-    }
-
-    .node-1 { z-index: 7; }
-    .node-2 { z-index: 6; ${row(bulletSize, 1)} }
-    .node-3 { z-index: 5; ${row(bulletSize, 2)} }
-
-    .bullet-burst-sprite {
-      ${spriteRendering}
-      ${size(bulletBurstSize)}
-      position: absolute;
-      z-index: 4;
-      background: url('${SpriteBulletBurst.src}');
-      transform: ${translateCenter(bulletBurstSize)};
-      animation: bullet-burst 0.075s steps(1) 1 forwards;
-    }
-
-    .despawned { display: none; }
-  `;
-
-  return { container, nateSprite, bulletSprite };
 });
 
 // Helper function for IE11, which lacks support for the second argument

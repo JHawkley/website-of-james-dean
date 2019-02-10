@@ -8,7 +8,7 @@ const abortToTrue = (error) => error instanceof AbortedError ? true : throw erro
 const abortToVoid = (error) => error instanceof AbortedError ? void 0 : throw error;
 
 const asPromise = (value) => {
-  if (value.then::is.func()) return value;
+  if (value.then::is.func() && value.catch::is.func()) return value;
   if (value::is.error()) return Promise.reject(value);
   return Promise.resolve(value);
 }
@@ -55,12 +55,9 @@ export function orUndefined() {
  * @returns {Promise<boolean>}
  */
 export function didAbort() {
-  switch (true) {
-    case this?.then::is.func(): return this.then(alwaysFalse, abortToTrue);
-    case this instanceof AbortedError: return Promise.resolve(true);
-    case this::is.error(): return  Promise.reject(this);
-    default: return Promise.resolve(false);
-  }
+  if (this instanceof AbortedError)
+    return Promise.resolve(true);
+  return asPromise(this).then(alwaysFalse, abortToTrue);
 }
 
 /**
@@ -72,7 +69,38 @@ export function didAbort() {
  * @returns {Promise<T>}
  */
 export function voidOnAbort() {
-  return asPromise(this).then(identityFn, abortToVoid);
+  return asPromise(this).catch(abortToVoid);
+}
+
+/**
+ * Creates a promise that will:
+ * * call `onResolved` if the promise resolves.
+ * * call `onError` if the promise rejects and that error is not an abortion.
+ * * call `onError` if no `onAbort` was provided.
+ * * call `onAbort` if the promise aborts.
+ * * rethrow the error in any other case.
+ *
+ * @export
+ * @template T
+ * @this {T|Promise<T>} This value or promise.
+ * @param {function(T): void} onResolved The function to call if the promise resolves.
+ * @param {function(*): void} onError The function to call if the promise rejects.
+ * @param {function(AbortedError): void} onAborted The function to call if the promise aborts.
+ * @returns {Promise<T>}
+ */
+export function thenSplit(onResolved, onError, onAborted) {
+  const promise = asPromise(this);
+  
+  if (!onAborted) return promise.then(onResolved, onError);
+
+  return promise.then(onResolved, (error) => {
+    if (error instanceof AbortedError)
+      return onAborted(error);
+    else if (onError)
+      return onError(error);
+    else
+      throw error;
+  });
 }
 
 /**
@@ -81,17 +109,14 @@ export function voidOnAbort() {
  * @export
  * @template T
  * @this {T|Promise<T>} This value or promise.
- * @param {function(): void} onAborted The function to call if the promise aborts.
+ * @param {function(AbortedError): void} onAborted The function to call if the promise aborts.
  * @returns {Promise<T>}
  */
 export function whenAborted(onAborted) {
-  return asPromise(this).then(
-    identityFn,
-    (error) => {
-      if (error instanceof AbortedError) onAborted();
-      throw error;
-    }
-  );
+  return asPromise(this).catch((error) => {
+    if (error instanceof AbortedError) onAborted(error);
+    throw error;
+  });
 }
 
 /**

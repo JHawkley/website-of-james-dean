@@ -21,6 +21,7 @@
     background-image: radial-gradient(rgba(0,0,0,0.25) 25%, rgba(0,0,0,0) 55%);
     max-width: 100%;
     text-align: center;
+    z-index: 3;
 
     > * {
       position: relative;
@@ -152,15 +153,28 @@
       }
     }
 
-    .body.with-transitions.is-article-visible & {
-      @include vendor('transform', 'scale(0.95)');
-      @include vendor('filter', 'blur(0.1rem)');
-      opacity: 0;
+    /* Transitions */
+
+    opacity: 0;
+    visibility: hidden;
+    @include vendor('transform', 'scale(0.95)');
+    @include vendor('filter', 'blur(0.1rem)');
+
+    &.exiting, &.entered {
+      visibility: unset;
     }
 
-    .body.is-loading & {
-      opacity: 0;
+    &.entered {
+      opacity: 1;
+      @include vendor('transform', 'none');
+      @include vendor('filter', 'none');
+    }
 
+    #app-root.loading & {
+      opacity: 0;
+      visibility: hidden;
+
+      @include vendor('transform', 'none');
       @include vendor('filter', 'blur(0.125rem)');
 
       .content {
@@ -172,6 +186,8 @@
         }
       }
     }
+
+    /* Breakpoints */
 
     @include breakpoint(medium) {
       .content {

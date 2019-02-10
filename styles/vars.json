@@ -1,11 +1,13 @@
 {
   "misc": {
     "z-index-base": 10000,
+    "img-overlay": "'/static/images/overlay.png'",
     "bg-image": "'/static/images/placeholder_bg.jpg'"
   },
   "duration": {
     "transition": "0.2s",
     "bg": "2.5s",
+    "bg-unblur": "25ms",
     "intro": "0.75s",
     "article": "0.325s",
     "modal": "0.325s"

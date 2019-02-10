@@ -1,8 +1,9 @@
-import Article from "components/Article";
+import Page from "components/Page";
 import Jump from "components/Jump";
+import styleVars from "styles/vars.json";
 
-const Questions = (props) => (
-  <Article {...props}>
+const Questions = () => (
+  <Page>
     <h2 className="major">Questions &amp; Answers</h2>
     <p>Below I'll answer some questions that I suspect might be pretty common.</p>
     <dl>
@@ -31,7 +32,8 @@ const Questions = (props) => (
       <dd>I suppose I haven't started with it yet because I'm waiting for <Jump href="https://docs.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-7">C# 7</Jump> support, which is slated to come in <Jump href="https://blogs.unity3d.com/2018/09/13/unity-2018-3-beta-get-early-access-now/">Unity 2018.3</Jump>.  After my time with Scala, working in C# 6 and lower just seems like a chore by comparison.</dd>
       <dd>But, if you need a Unity dev, I can likely manage it.  I will just be a little sad without my pattern-matching and out-variables is all  ...for a few months anyways.  They do have the open beta out now; surely it won't be too much longer!</dd>
     </dl>
-  </Article>
+    <style jsx>{`dl dd { margin-bottom: ${styleVars["size"]["element-margin"]}; }`}</style>
+  </Page>
 );
 
 export default Questions;

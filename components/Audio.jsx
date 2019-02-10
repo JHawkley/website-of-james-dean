@@ -1,6 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { is, dew } from "tools/common";
+import { memoize } from "tools/functions";
 import { extensions as arrEx } from "tools/array";
 import { extensions as propTypeEx, hasOwn as propTypeHasOwn } from "tools/propTypes";
 import Preloadable from "components/Preloadable";
@@ -59,7 +60,6 @@ class Audio extends Preloadable {
   }
 
   static propTypes = {
-    ...Preloadable.propTypes,
     src:
       PropTypes.string
       ::propTypeEx.notEmpty().isRequired
@@ -74,16 +74,35 @@ class Audio extends Preloadable {
     ])
   };
 
-  static getDerivedStateFromProps({ src, children }, { renderData }) {
-    if (src) return { renderData: null };
-    if (renderData && children === renderData.children) return null;
-    const sources = processChildren(children);
-    return { renderData: { children, sources } };
-  }
+  processChildren = memoize((src, childrenTree) => {
+    if (src) return null;
+  
+    return React.Children.toArray(childrenTree)::arrEx.collect((child) => {
+      if (!child)
+        return void 0;
+      
+      const { type, props } = child;
+      
+      if (type === "source")
+        return child;
+      
+      if (isSourceable(type))
+        return props.asSource ? child : React.cloneElement(child, { asSource: true });
+      
+      const sourceFromType = Audio.sourceFromObj(type);
+      if (sourceFromType) return sourceFromType;
+  
+      const sourceFromProps = Audio.sourceFromObj(props);
+      if (sourceFromProps) return sourceFromProps;
+  
+      return void 0;
+    });
+  });
 
   get haveRenderData() {
-    const { renderData } = this.state;
-    return renderData && renderData.sources.length > 0;
+    const { src, children } = this.props;
+    const renderData = this.processChildren(src, children);
+    return renderData && renderData.length > 0;
   }
 
   audioIsReady = false;
@@ -116,14 +135,14 @@ class Audio extends Preloadable {
 
   componentDidUpdate(prevProps, prevState) {
     super.componentDidUpdate(prevProps, prevState);
-    const { props: { src, children }, haveRenderData } = this;
+    const { src, children } = this.props;
     let resetPreload = false;
     let preloadDone = false;
 
     if (src !== prevProps.src) preloadDone = Boolean(src);
 
     if (!src && children !== prevProps.children) {
-      if (haveRenderData && !this.audioIsReady)
+      if (this.haveRenderData && !this.audioIsReady)
         resetPreload = true;
       else
         preloadDone = true;
@@ -136,16 +155,13 @@ class Audio extends Preloadable {
   render() {
     const {
       checkReadiness, onCanPlayThrough, onError,
-      props: {
-        src, preloadSync, audioRef,
-        children, // eslint-disable-line no-unused-vars
-        ...audioProps
-      },
-      state: { renderData }
+      props: { src, preloadSync, audioRef, children, ...audioProps }
     } = this;
 
     if (src)
       return <SoundMedia {...audioProps} preloadSync={preloadSync} audioRef={audioRef} src={src} />;
+    
+    const renderData = this.processChildren(src, children);
 
     return (
       <audio
@@ -154,7 +170,7 @@ class Audio extends Preloadable {
         onCanPlayThrough={onCanPlayThrough}
         onError={onError}
       >
-        { renderData?.sources }
+        {renderData}
       </audio>
     );
   }
@@ -179,29 +195,6 @@ const getFirstSrc = (children) => {
   });
   
   return result;
-};
-
-const processChildren = (childrenTree) => {
-  return React.Children.toArray(childrenTree)::arrEx.collect((child) => {
-    if (!child)
-      return void 0;
-    
-    const { type, props } = child;
-    
-    if (type === "source")
-      return child;
-    
-    if (isSourceable(type))
-      return props.asSource ? child : React.cloneElement(child, { asSource: true });
-    
-    const sourceFromType = Audio.sourceFromObj(type);
-    if (sourceFromType) return sourceFromType;
-
-    const sourceFromProps = Audio.sourceFromObj(props);
-    if (sourceFromProps) return sourceFromProps;
-
-    return void 0;
-  });
 };
 
 export default Audio;

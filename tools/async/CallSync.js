@@ -74,6 +74,19 @@ export default class CallSync {
         return this;
       }
     });
+
+    /**
+     * Discards the promise created from the last `sync`, if any, without resolving or rejecting it.
+     * 
+     * @function CallSync#discard
+     * @returns {this}
+     */
+    Object.defineProperty(this, "discard", {
+      value: () => {
+        nextSync = null;
+        return this;
+      }
+    });
   }
 
   /**

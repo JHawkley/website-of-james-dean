@@ -45,6 +45,10 @@
     }
   }
 
+  .javascript-link {
+    cursor: pointer;
+  }
+
   strong, b {
     color: _palette(fg-bold);
     font-weight: _font(weight-bold);

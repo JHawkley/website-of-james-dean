@@ -3,38 +3,37 @@ import PropTypes from "prop-types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons/faSpinner";
 import { dew, is } from "tools/common";
-import { color } from "tools/css";
-import { AbortedError, Task, wait } from "tools/async";
+import { AbortedError, Task, wait, frameSync } from "tools/async";
 import { extensions as propTypesEx } from "tools/propTypes";
-import styleVars from "styles/vars.json";
-
-const bgColor = color(styleVars.palette.bg).transparentize(0.15).asRgba();
+import { values, mainCss, dynamicCss } from "styles/jsx/loadingSpinner";
 
 const $componentUnmounted = "component unmounted";
 
-const $left = "left";
-const $center = "center";
-const $right = "right";
-const $top = "top";
-const $middle = "middle";
-const $bottom = "bottom";
-
 const mustBePositive = (v) => v >= 0 ? true : "must be a positive number";
+const mustBeFinite = (v) => v::is.finite() ? true : "must be a finite number";
 
 class LoadingSpinner extends React.PureComponent {
 
   static propTypes = {
     fixed: PropTypes.bool,
-    hPos: PropTypes.oneOf([$center, $left, $right]),
+    hPos: PropTypes.oneOf(Object.values(values.hPos)),
     hOffset: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-    vPos: PropTypes.oneOf([$middle, $top, $bottom]),
+    vPos: PropTypes.oneOf(Object.values(values.vPos)),
     vOffset: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     className: PropTypes.string,
     style: PropTypes.object,
     size: PropTypes.oneOf(["xs", "sm", "lg", "1x", "2x", "3x", "4x", "5x", "6x", "7x", "8x", "9x", "10x"]),
     background: PropTypes.bool,
-    delay: PropTypes.number::propTypesEx.predicate(mustBePositive),
-    fadeTime: PropTypes.number::propTypesEx.predicate(mustBePositive),
+    delay: PropTypes.oneOfType([
+      PropTypes.bool,
+      PropTypes.number
+        ::propTypesEx.predicate(mustBePositive)
+        ::propTypesEx.predicate(mustBeFinite)
+    ]),
+    fadeTime:
+      PropTypes.number
+      ::propTypesEx.predicate(mustBePositive)
+      ::propTypesEx.predicate(mustBeFinite),
     show: PropTypes.bool,
     onShown: PropTypes.func,
     onHidden: PropTypes.func
@@ -42,13 +41,13 @@ class LoadingSpinner extends React.PureComponent {
 
   static defaultProps = {
     fixed: false,
-    hPos: $center,
+    hPos: values.hPos.center,
     hOffset: "2rem",
-    vPos: $middle,
+    vPos: values.vPos.middle,
     vOffset: "2rem",
     size: "1x",
     background: false,
-    delay: 0,
+    delay: true,
     fadeTime: 0,
     show: true
   };
@@ -58,7 +57,7 @@ class LoadingSpinner extends React.PureComponent {
   }
 
   state = {
-    shown: this.props.delay === 0 && this.props.show,
+    shown: !this.props.delay && this.props.show,
     vanishing: false,
     error: null
   };
@@ -74,9 +73,9 @@ class LoadingSpinner extends React.PureComponent {
       else {
         // Wait for the delay, then show.
         const { delay } = this.props;
-        if (delay > 0) await wait(delay, stopSignal);
+        if (delay === true) await frameSync(stopSignal);
+        else if (delay::is.number() && delay > 0) await wait(delay, stopSignal);
         await this.promiseState({ shown: true });
-        this.props.onShown?.();
       }
     };
 
@@ -89,7 +88,6 @@ class LoadingSpinner extends React.PureComponent {
       const { fadeTime } = this.props;
       if (fadeTime > 0) await wait(fadeTime, stopSignal);
       await this.promiseState({ vanishing: false });
-      this.props.onHidden?.();
     };
 
     return new Task(clearVanish, () => this.showTask.whenStarted);
@@ -103,12 +101,12 @@ class LoadingSpinner extends React.PureComponent {
 
   beginShow() {
     if (this.state.shown) return;
-    this.showTask.start().catch(this.captureAsyncError);
+    this.showTask.restart().catch(this.captureAsyncError);
   }
 
   beginVanish() {
     if (!this.state.vanishing) return;
-    this.vanishTask.start().catch(this.captureAsyncError);
+    this.vanishTask.restart().catch(this.captureAsyncError);
   }
 
   promiseState(newState) {
@@ -128,11 +126,23 @@ class LoadingSpinner extends React.PureComponent {
       state: { shown, vanishing, error }
     } = this;
 
+    let doShow = false, doVanish = false;
+
     if (error !== prevState.error && error)
       throw error;
 
-    let doShow = show !== prevProps.show && show && !shown;
-    let doVanish = vanishing !== prevState.vanishing && vanishing;
+    if (show !== prevProps.show && show)
+      if (!shown)
+        doShow = true;
+
+    if (shown !== prevState.shown && shown)
+      if (!prevState.vanishing)
+        this.props.onShown?.();
+
+    if (vanishing !== prevState.vanishing) {
+      if (vanishing) doVanish = true;
+      else if (!show && !shown) this.props.onHidden?.();
+    }
 
     // Refresh the delay.
     if (delay !== prevProps.delay)
@@ -155,7 +165,7 @@ class LoadingSpinner extends React.PureComponent {
 
   render() {
     const {
-      props: { className: customClass, style: customStyle, size, fixed, background, fadeTime, show },
+      props: { className: customClass, style: customStyle, size, background, show },
       state: { shown, vanishing, error }
     } = this;
 
@@ -171,61 +181,14 @@ class LoadingSpinner extends React.PureComponent {
       display: show || shown || vanishing ? "block" : "none"
     };
 
-    const transform = dew(() => {
-      const { hPos, vPos } = this.props;
-      if (hPos !== $center && vPos !== $middle) return "none";
-      const xTrans = hPos === $center ? "-50%" : "0%";
-      const yTrans = vPos === $middle ? "-50%" : "0%";
-      return `translate(${xTrans}, ${yTrans})`;
-    });
-
-    const [horizAttr, horizVal] = dew(() => {
-      const { hPos, hOffset } = this.props;
-      const offset = hOffset::is.string() ? hOffset : `${hOffset}px`;
-      switch (hPos) {
-        case $left: return [$left, offset];
-        case $right: return [$right, offset];
-        default: return [$left, "50%"];
-      }
-    });
-
-    const [vertAttr, vertVal] = dew(() => {
-      const { vPos, vOffset } = this.props;
-      const offset = vOffset::is.string() ? vOffset : `${vOffset}px`;
-      switch (vPos) {
-        case $top: return [$top, offset];
-        case $bottom: return [$bottom, offset];
-        default: return [$top, "50%"];
-      }
-    });
+    const dynamicResolved = dynamicCss(this.props);
+    className.push(dynamicResolved.className);
 
     return (
       <div className={className.join(" ")} style={style}>
         <FontAwesomeIcon icon={faSpinner} size={size === "1x" ? null : size} spin />
-        <style jsx>
-          {`
-            .root {
-              pointer-events: none;
-              opacity: 0;
-            }
-            .bg {
-              border-radius: 4px;
-              padding: 1.5rem;
-              background-color: ${bgColor};
-            }
-          `}
-        </style>
-        <style jsx>
-          {`
-            .root {
-              position: ${fixed ? "fixed" : "absolute"};
-              ${fadeTime > 0 ? `transition: opacity ${fadeTime}ms ease-in-out;` : ""}
-              transform: ${transform};
-              ${horizAttr}: ${horizVal};
-              ${vertAttr}: ${vertVal};
-            }
-          `}
-        </style>
+        <style jsx>{mainCss}</style>
+        {dynamicResolved.styles}
       </div>
     );
   }

@@ -7,7 +7,6 @@ import Audio from "components/Audio";
 class SoundMedia extends Preloadable {
 
   static propTypes = {
-    ...Preloadable.propTypes,
     src: PropTypes.string::propTypeEx.notEmpty().isRequired,
     audioRef: PropTypes.oneOfType([
       PropTypes.func, 
@@ -58,7 +57,7 @@ class SoundMedia extends Preloadable {
       checkReadiness, onCanPlayThrough, onError,
       props: {
         src,
-        audioRef, preloadSync, // eslint-disable-line no-unused-vars
+        audioRef, // eslint-disable-line no-unused-vars
         ...audioProps
       }
     } = this;
@@ -92,12 +91,9 @@ function importWrapper(src, type, codec) {
   };
 
   return Object.assign(
-    Audio.markSourceable(Preloadable.mark(ImportedSound)),
+    Audio.markSourceable(ImportedSound),
     {
-      propTypes: {
-        ...Preloadable.propTypes,
-        asSource: PropTypes.bool
-      },
+      propTypes: { asSource: PropTypes.bool },
       displayName: `importedSound("${src}")`
     },
     soundData

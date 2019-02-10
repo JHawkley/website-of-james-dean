@@ -1,24 +1,12 @@
 import React from "react";
 import PropTypes from "prop-types";
-import PreloadSync from "components/Preloader/PreloadSync";
+import PreloadContext from "common/PreloadContext";
 import { is } from "tools/common";
-
-const $$preloadable = Symbol("preloader:preloadable");
+import { inheritsFrom } from "tools/extensions/classes";
 
 class Preloadable extends React.PureComponent {
 
-  static [$$preloadable] = true;
-
-  static propTypes = { preloadSync: PropTypes.instanceOf(PreloadSync) };
-
-  static mark(Component) {
-    Component[$$preloadable] = true;
-    return Component;
-  }
-
-  static test(Component) {
-    return Component[$$preloadable] === true;
-  }
+  static contextType = PreloadContext;
 
   state = {
     preloaded: false,
@@ -47,25 +35,26 @@ class Preloadable extends React.PureComponent {
   }
 
   componentDidMount() {
-    const { preloaded, error } = this.state;
-    this.props.preloadSync?.update(this, preloaded, error);
+    const { context: preloadSync, state: { preloaded, error } } = this;
+    preloadSync?.update?.(this, preloaded, error);
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { props: { preloadSync }, state: { preloaded, error } } = this;
+    const { context: preloadSync, state: { preloaded, error } } = this;
     let forceUpdate = false;
 
     if (preloadSync !== prevProps.preloadSync) {
-      prevProps.preloadSync?.dismount(this);
+      prevProps.preloadSync?.dismount?.(this);
       forceUpdate = Boolean(preloaded || error);
     }
 
     if (forceUpdate || preloaded !== prevState.preloaded || error !== prevState.error)
-      preloadSync?.update(this, preloaded, error);
+      preloadSync?.update?.(this, preloaded, error);
   }
 
   componentWillUnmount() {
-    this.props.preloadSync?.dismount(this);
+    const { context: preloadSync } = this;
+    preloadSync?.dismount?.(this);
     this.didUnmount = true;
   }
 
@@ -75,17 +64,19 @@ class Preloadable extends React.PureComponent {
 
 const wrapped = (Component, options) => {
   if (!Component::is.func())
-    throw new TypeError("expected argument `promise` to be a function");
+    throw new TypeError("expected argument `Component` to be a function");
 
   const properName = options?.name ?? Component.displayName ?? Component.name ?? "[anonymous component]";
   const initialProps = options?.initialProps;
+  const onLoadedKey = options?.onLoadedKey ?? "onLoaded";
+  const onErrorKey = options?.onErrorKey ?? "onError";
 
-  if (Component[$$preloadable] === true) {
+  if (Component::inheritsFrom(Preloadable)) {
     if (!initialProps) return Component;
     
     const Wrapped = (givenProps) => <Component {...initialProps} {...givenProps} />;
     Wrapped.displayName = `Preloadable.wrapped(${properName})`;
-    return Preloadable.mark(Wrapped);
+    return Wrapped;
   }
 
   return class extends Preloadable {
@@ -93,15 +84,14 @@ const wrapped = (Component, options) => {
     static displayName = `Preloadable.wrapped(${properName})`;
 
     render() {
-      const {
-        handlePreloaded, handlePreloadError,
-        props: {
-          preloadSync, // eslint-disable-line no-unused-vars
-          ...childProps
-        }
-      } = this;
-      const props = initialProps ? {...initialProps, ...childProps} : childProps;
-      return <Component {...props} onLoaded={handlePreloaded} onError={handlePreloadError} />;
+      const { handlePreloaded, handlePreloadError, props: givenProps } = this;
+      const props = {
+        ...initialProps,
+        ...givenProps,
+        [onLoadedKey]: handlePreloaded,
+        [onErrorKey]: handlePreloadError
+      };
+      return <Component {...props} />;
     }
     
   };
@@ -119,14 +109,8 @@ const rendered = (renderFn, options) => {
     static displayName = `Preloadable.rendered(${properName})`;
 
     render() {
-      const {
-        handlePreloaded, handlePreloadError, handleResetPreload,
-        props: {
-          preloadSync, // eslint-disable-line no-unused-vars
-          ...childProps
-        }
-      } = this;
-      const props = initialProps ? {...initialProps, ...childProps} : childProps;
+      const { handlePreloaded, handlePreloadError, handleResetPreload, props: givenProps } = this;
+      const props = initialProps ? {...initialProps, ...givenProps} : givenProps;
       return renderFn(props, handlePreloaded, handlePreloadError, handleResetPreload);
     }
     
@@ -143,8 +127,7 @@ const promised = (promise, options) => {
   return class extends Preloadable {
 
     static propTypes = {
-      ...Preloadable.propTypes,
-      render: PropTypes.oneOf([
+      render: PropTypes.oneOfType([
         PropTypes.func,
         PropTypes.shape({
           loaded: PropTypes.func.isRequired,
@@ -158,7 +141,7 @@ const promised = (promise, options) => {
     state = {
       ...this.state,
       value: null
-    }
+    };
 
     componentDidMount() {
       super.componentDidMount();
@@ -172,14 +155,15 @@ const promised = (promise, options) => {
 
     render() {
       const {
-        props: { preloadSync, render, ...childProps },
+        context: preloadSync,
+        props: { render, ...givenProps },
         state: { value }
       } = this;
 
       if (!render)
         return null;
       
-      const props = initialProps ? {...initialProps, ...childProps} : childProps;
+      const props = initialProps ? {...initialProps, ...givenProps} : givenProps;
 
       if (render::is.func())
         return render(value, props, preloadSync, this.isCompleted);
