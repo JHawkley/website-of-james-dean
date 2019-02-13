@@ -163,7 +163,7 @@ class Preloader extends React.PureComponent {
       state: { error, preloadSync, preloadState, ownedPreloadSync }
     } = this;
 
-    if (promiseFn !== prevProps.promiseFn) {
+    if (promiseFn !== prevProps.promise) {
       prevProps.promise?.(null);
       promiseFn?.(this.promise);
     }
