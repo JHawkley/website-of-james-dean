@@ -16,7 +16,6 @@ import RouterContext, { create as createRouterContext } from "common/RouterConte
 import PreloadContext from "common/PreloadContext";
 
 import PreloadSync from "components/Preloader/PreloadSync";
-import NoJavaScript from "components/NoJavaScript";
 import Transition from "components/Transition";
 import AppRoot from "components/AppRoot";
 import Wrapper from "components/Wrapper";
@@ -271,7 +270,7 @@ class ScrollRestoringApp extends App {
     return (
       <AppRoot loading={loading} routeChanging={routeChanging}>
         <Wrapper>
-          {render(Component, props, exitDelay)}
+          {render(Component, props, exitDelay, "entered")}
         </Wrapper>
         {this.renderAppLoader()}
         <LoadingSpinner
@@ -322,14 +321,7 @@ class ScrollRestoringApp extends App {
     return (
       <RouterContext.Provider value={this.routerContext}>
         <PreloadContext.Provider value={this.preloadContext}>
-          <AppRoot.NoScript>
-            <Wrapper>
-              {Page.transition.render(NoJavaScript)}
-            </Wrapper>
-          </AppRoot.NoScript>
-
           {transitionsSupported ? this.renderWithTransitions() : this.renderNoTransitions()}
-
           <style jsx global>{globalCss}</style>
           {throbberCss.styles}
         </PreloadContext.Provider>
