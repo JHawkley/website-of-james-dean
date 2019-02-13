@@ -101,7 +101,7 @@ export const memoize = (fn) => {
  * @param {Function} resolver The function to resolve the cache key.
  * @returns {Function} The new memoized function.
  */
-export const memoiziest = (fn, resolver) => {
+memoize.each = (fn, resolver) => {
   if (!fn::is.func())
     throw new TypeError('expected `fn` to be a function');
   if (resolver::is.defined() && !resolver::is.func())

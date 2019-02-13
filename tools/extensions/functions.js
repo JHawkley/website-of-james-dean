@@ -1,4 +1,4 @@
-import { memoize as memoizeFn, memoiziest as memoiziestFn } from "tools/functions";
+import { memoize as memoizeFn } from "tools/functions";
 
 /**
  * Creates a function that memoizes the last result of this function.  If the arguments are not identical
@@ -22,11 +22,11 @@ export function memoize() {
  *
  * @export
  * @this {Function} The function to have its result memoized.
- * @param {Function} resolver The function to resolve the cache key.
+ * @param {Function} [resolver] The function to resolve the cache key.
  * @returns {Function} The new memoized function.
  */
-export function memoiziest(resolver) {
-  return memoiziestFn(this, resolver);
+export function memoizeEach(resolver) {
+  return memoize.each(this, resolver);
 }
 
 /**
