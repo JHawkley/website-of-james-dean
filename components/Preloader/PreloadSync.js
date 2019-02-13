@@ -1,5 +1,7 @@
+import { is } from "tools/common";
 import { Stream, debounce } from "tools/async";
 import { extensions as asyncIterEx } from "tools/asyncIterables";
+import PreloadError from "components/Preloader/PreloadError";
 
 const $$fresh = Symbol("preload-sync:fresh");
 const $$preloading = Symbol("preload-sync:preloading");
@@ -34,6 +36,8 @@ class PreloadSync {
     if (this.stream.isCompleted) return;
 
     if (error) {
+      if (!error::is.instanceOf(PreloadError))
+        error = PreloadError.wrap(error);
       this.stream.fail(error);
       this.preloading.clear();
     }
