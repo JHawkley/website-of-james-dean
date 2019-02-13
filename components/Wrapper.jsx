@@ -1,74 +1,55 @@
 import React from "react";
 import PropTypes from "prop-types";
+import { dew } from "tools/common";
+import { memoize } from "tools/functions";
 import ScrollLockedContext from "common/ScrollLockedContext";
+import { resolveScrollCss } from "styles/jsx/wrapper";
 
-class Inner extends React.PureComponent {
-
-  static displayName = ".Wrapper";
+class Wrapper extends React.PureComponent {
 
   static propTypes = {
-    children: PropTypes.node,
-    preventScroll: PropTypes.bool
+    children: PropTypes.node
   };
 
-  static getDerivedStateFromProps(props, state) {
-    if (!process.browser) return null;
-    
-    const preventScroll = Boolean(props.preventScroll);
-    const scrollLocked = Boolean(state.scroll);
-    
-    if (preventScroll === scrollLocked) return null;
+  static contextType = ScrollLockedContext;
 
-    const scroll = preventScroll ? { x: window.scrollX, y: window.scrollY } : null;
-    return { scroll };
-  }
+  getScroll = dew(() => {
+    let current = null;
+    let previous = null;
 
-  state = { scroll: null };
+    const restore = () => {
+      if (current) return;
+      if (!previous) return;
+      window.scrollTo(previous.x, previous.y);
+      previous = null;
+    };
 
-  componentDidUpdate(prevProps, prevState) {
-    if (!process.browser) return;
-    if (this.state.scroll === prevState.scroll) return;
-    if (!prevState.scroll) return;
+    const _getScroll = memoize((preventScroll) => {
+      current = preventScroll ? { x: window.scrollX, y: window.scrollY } : null;
+      if (current) previous = current;
+      const { className, styles } = resolveScrollCss(current);
+      return { restore, className, styles };
+    });
 
-    const { x, y } = prevState.scroll;
-    window.scrollTo(x, y);
+    return () => _getScroll(this.context);
+  });
+
+  componentDidUpdate() {
+    this.getScroll().restore();
   }
 
   render() {
-    const { props: { children }, state: { scroll } } = this;
-
-    if (!scroll)
-      return <div id="wrapper">{children}</div>;
+    const { children } = this.props;
+    const { className, styles } = this.getScroll();
 
     return (
-      <div id="wrapper">
+      <div id="wrapper" className={className}>
         {children}
-        <style jsx>
-          {`
-            #wrapper {
-              margin-top: -${scroll.y}px;
-            }
-          `}
-        </style>
-        <style jsx global>
-          {`
-            .ReactModal__Body--open {
-              position: fixed;
-              width: 100%;
-              height: 100%;
-            }
-          `}
-        </style>
+        {styles}
       </div>
     );
   }
 
 }
-
-const Wrapper = (props) => (
-  <ScrollLockedContext.Consumer>
-    {scrollLocked => <Inner {...props} preventScroll={scrollLocked} />}
-  </ScrollLockedContext.Consumer>
-);
 
 export default Wrapper;
