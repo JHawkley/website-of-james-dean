@@ -375,7 +375,7 @@ class Nate extends Preloadable {
   renderSounds() {
     const { nate, bullets } = this.world;
     return (
-      <Preloader onLoad={this.onSoundsReady} onError={this.onSoundsFailed} naked once>
+      <Preloader onLoad={this.onSoundsReady} onError={this.onSoundsFailed} display="never" once>
         <Audio audioRef={nate.sounds[tracks.bark].ref}><OggBowWow /><Mp3BowWow /></Audio>
         <Audio audioRef={nate.sounds[tracks.aroo].ref}><OggAroo /><Mp3Aroo /></Audio>
         <Audio audioRef={nate.sounds[tracks.land].ref}><OggLand /><Mp3Land /></Audio>

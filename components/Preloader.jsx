@@ -2,9 +2,9 @@ import React from "react";
 import PropTypes from "prop-types";
 import PreloadContext from "common/PreloadContext";
 import PreloadSync from "components/Preloader/PreloadSync";
-import { dew, Composition } from "tools/common";
+import { is, dew, Composition } from "tools/common";
 import { Future, CallSync, AbortedError } from "tools/async";
-import { exclusiveTo } from "tools/extensions/propTypes";
+import { predicate } from "tools/extensions/propTypes";
 import { extensions as asyncIterEx } from "tools/asyncIterables";
 
 const {
@@ -16,6 +16,13 @@ const {
 const $always = "always";
 const $loaded = "loaded";
 const $never = "never";
+const $naked = "naked";
+
+const notNaked = (value, key, props) => {
+  if (!value::is.defined()) return true;
+  if (props.display !== $naked) return true;
+  return `${key} must be unset when \`display\` is set to "naked"`;
+};
 
 class Preloader extends React.PureComponent {
 
@@ -26,26 +33,19 @@ class Preloader extends React.PureComponent {
     onPreload: PropTypes.func,
     onLoad: PropTypes.func,
     onError: PropTypes.func,
-    id: PropTypes.string,
-    className: PropTypes.string,
-    style: PropTypes.object,
+    id: PropTypes.string::predicate(notNaked),
+    className: PropTypes.string::predicate(notNaked),
+    style: PropTypes.object::predicate(notNaked),
     display: PropTypes.oneOfType([
       PropTypes.bool,
-      PropTypes.oneOf([$always, $loaded, $never])
+      PropTypes.oneOf([$always, $loaded, $never, $naked])
     ]),
-    naked:
-      PropTypes.bool
-      ::exclusiveTo("id")
-      ::exclusiveTo("className")
-      ::exclusiveTo("style")
-      ::exclusiveTo("display"),
     wait: PropTypes.bool,
     once: PropTypes.bool
   };
 
   static defaultProps = {
     display: $loaded,
-    naked: false,
     wait: false,
     once: false
   };
@@ -209,14 +209,14 @@ class Preloader extends React.PureComponent {
   render() {
     const {
       display,
-      props: { children, id, style: customStyle, className, naked },
+      props: { children, id, style: customStyle, className },
       state: { mustRender, error, preloadSync, preloadState }
     } = this;
 
     if (!mustRender || error)
       return null;
     
-    if (naked) {
+    if (display === $naked) {
       return (
         <PreloadContext.Provider value={preloadSync}>
           {children}
