@@ -2,6 +2,8 @@
 
 const path = require('path');
 const glob = require('glob');
+const startsWith = require('lodash/startsWith');
+const fromPairs = require('lodash/fromPairs');
 const jsonImporter = require('node-sass-json-importer');
 const imageMediaLoader = require('./webpack/image-media-loader');
 const soundMediaLoader = require('./webpack/sound-media-loader');
@@ -89,6 +91,28 @@ module.exports = {
 
     config.plugins = plugins;
     return config;
+  },
+  exportPathMap: function(defaultPathMap, {dir}) {
+    const exts = this.pageExtensions.join('|');
+    const pagesDir = path.join(dir, 'pages');
+    const pagesGlob = `${pagesDir}/**/*.@(${exts})`;
+
+    const kvps =
+      glob.sync(pagesGlob)
+      .map((page) => {
+        const { dir, name } = path.parse(path.relative(pagesDir, page));
+        if (startsWith(name, '_')) return null;
+
+        const routeParts = [''];
+        if (dir) routeParts.push(dir);
+        if (name !== 'index') routeParts.push(name);
+
+        const route = routeParts.join('/') || '/';
+        return [route, { page: route }];
+      })
+      .filter(Boolean);
+    
+    return fromPairs(kvps);
   },
   pageExtensions: ['jsx', 'js']
 }
