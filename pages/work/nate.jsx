@@ -4,6 +4,7 @@ import GalleryContext from "common/GalleryContext";
 import Gallery from "components/Gallery";
 import Page from "components/Page";
 import Jump from "components/Jump";
+import Preloader from "components/Preloader";
 import NateWidget from "components/Nate";
 import NotSupportedError from "components/Nate/NotSupportedError";
 import GameUpdateError from "components/Nate/GameUpdateError";
@@ -77,7 +78,7 @@ class Nate extends React.PureComponent {
   }
 
   render() {
-    const { nateWidgetError } = this.state;
+    const { handleNateError, state: { nateWidgetError } } = this;
 
     return (
       <Page {...this.props}>
@@ -119,7 +120,9 @@ class Nate extends React.PureComponent {
           <p>When he is in his passive state, he will just pace around, showing off his move-set through random actions.  But when he sees the cursor, he'll bark at it and switch to his aggressive state.</p>
           <p>He'll chase the cursor around and try to shoot at it.  If it gets too close, he'll flee, but try and take potshots at it.  If the cursor sits still too long or gets to a place he can't reach, he'll stare at it and display frustration in not being able to play anymore.</p>
           <p>If he is left bored for too long, he'll make a sad, confused whine and return to his passive behaviors.  Be nice and give him some fun!  It gets boring on that blue platform...</p>
-          <NateWidget onError={this.handleNateError} />
+          <Preloader onError={handleNateError} display={!nateWidgetError}>
+            <NateWidget onGameError={handleNateError} />
+          </Preloader>
           {nateWidgetError && this.renderError(nateWidgetError)}
           <p>All of this was made using a combination of HTML, JavaScript (with ESNext features via <Jump href="https://babeljs.io/">Babel</Jump>), and CSS (via <Jump href="https://github.com/zeit/styled-jsx">styled-jsx</Jump>).  The sounds were created using <Jump href="http://github.grumdrig.com/jsfxr/">jsfxr</Jump> and hopefully the sounds he makes when he changes between his behavior states are recognized as sounds a dog might make.</p>
           <p>While the Canvas API would probably have been the more performant option, an HTML-element based solution is fine for such a simple interactive piece.  His animations are all driven and controlled by CSS, and an action-list coded in a data-driven style drives his rather complicated behavior, made up of around 50 individual actions spread across 4 major behaviors.</p>
