@@ -71,7 +71,7 @@ const wrapped = (Component, options) => {
   if (!Component::is.func())
     throw new TypeError("expected argument `Component` to be a function");
 
-  const properName = options?.name ?? Component.displayName ?? Component.name ?? "[anonymous component]";
+  const properName = (options?.name ?? Component.displayName ?? Component.name) || "[anonymous component]";
   const initialProps = options?.initialProps;
   const onLoadedKey = options?.onLoadedKey ?? "onLoaded";
   const onErrorKey = options?.onErrorKey ?? "onError";
@@ -106,7 +106,7 @@ const rendered = (renderFn, options) => {
   if (!renderFn::is.func())
     throw new TypeError("expected argument `renderFn` to be a function");
   
-  const properName = options?.name ?? renderFn.name ?? "[unknown]";
+  const properName = (options?.name ?? renderFn.name) || "[unnamed]";
   const initialProps = options?.initialProps;
 
   return class extends Preloadable {
@@ -126,7 +126,7 @@ const promised = (promise, options) => {
   if (!promise::is.defined())
     throw new TypeError("expected argument `promise` to be defined");
 
-  const properName = options?.name ?? promise.name ?? "[unknown]";
+  const properName = (options?.name ?? promise.name) || "[unnamed]";
   const initialProps = options?.initialProps;
 
   return class extends Preloadable {
