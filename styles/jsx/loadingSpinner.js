@@ -18,10 +18,19 @@ const values = {
   vPos: { top: $top, middle: $middle, bottom: $bottom }
 };
 
-const mainCss = css`
-  .root {
+const mainCss = css.resolve`
+  * {
     pointer-events: none;
     opacity: 0;
+    display: none;
+  }
+
+  .is-shown {
+    opacity: 1;
+  }
+
+  .is-displayed {
+    display: block;
   }
 
   .bg {
@@ -31,7 +40,7 @@ const mainCss = css`
   }
 `;
 
-const dynamicCss = ({fixed, fadeTime, hPos, hOffset, vPos, vOffset}) => {
+const resolvePositionCss = (fixed, fadeTime, hPos, hOffset, vPos, vOffset) => {
   const transform = dew(() => {
     if (hPos !== $center && vPos !== $middle) return "none";
     const xTrans = hPos === $center ? "-50%" : "0%";
@@ -58,14 +67,14 @@ const dynamicCss = ({fixed, fadeTime, hPos, hOffset, vPos, vOffset}) => {
   });
 
   return css.resolve`
-    .root {
+    * {
       position: ${fixed ? "fixed" : "absolute"};
-      ${fadeTime > 0 ? `transition: opacity ${fadeTime}ms ease-in-out;` : ""}
+      transition: ${fadeTime > 0 ? `opacity ${fadeTime}ms ease-in-out` : "none"};
       transform: ${transform};
       ${horizAttr}: ${horizVal};
       ${vertAttr}: ${vertVal};
     }
   `;
-}
+};
 
-export { values, mainCss, dynamicCss };
+export { values, mainCss, resolvePositionCss };

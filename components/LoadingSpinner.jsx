@@ -3,9 +3,10 @@ import PropTypes from "prop-types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons/faSpinner";
 import { dew, is } from "tools/common";
+import { memoize } from "tools/functions";
 import { AbortedError, Task, wait, frameSync } from "tools/async";
 import { extensions as propTypesEx } from "tools/propTypes";
-import { values, mainCss, dynamicCss } from "styles/jsx/loadingSpinner";
+import { values, mainCss, resolvePositionCss } from "styles/jsx/loadingSpinner";
 
 const $componentUnmounted = "component unmounted";
 
@@ -99,6 +100,8 @@ class LoadingSpinner extends React.PureComponent {
     this.setState({ error });
   }
 
+  memoizedPositionCss = memoize(resolvePositionCss);
+
   beginShow() {
     if (this.state.shown) return;
     this.showTask.restart().catch(this.captureAsyncError);
@@ -165,30 +168,31 @@ class LoadingSpinner extends React.PureComponent {
 
   render() {
     const {
-      props: { className: customClass, style: customStyle, size, background, show },
+      props: {
+        className: customClass, style, size, background, show,
+        fixed, fadeTime, hPos, hOffset, vPos, vOffset
+      },
       state: { shown, vanishing, error }
     } = this;
 
     if (error) return null;
 
-    const className = ["root"];
-    if (customClass) className.push(customClass);
-    if (background) className.push("bg");
-
-    const style = {
-      ...customStyle,
-      opacity: shown ? 1 : 0,
-      display: show || shown || vanishing ? "block" : "none"
-    };
-
-    const dynamicResolved = dynamicCss(this.props);
-    className.push(dynamicResolved.className);
+    const isDisplayed = show || shown || vanishing;
+    const positionCss = this.memoizedPositionCss(fixed, fadeTime, hPos, hOffset, vPos, vOffset);
+    const className = [
+      customClass,
+      mainCss.className,
+      positionCss.className,
+      background && "bg",
+      shown && "is-shown",
+      isDisplayed && "is-displayed"
+    ].filter(Boolean).join(" ");
 
     return (
-      <div className={className.join(" ")} style={style}>
+      <div className={className} style={style}>
         <FontAwesomeIcon icon={faSpinner} size={size === "1x" ? null : size} spin />
-        <style jsx>{mainCss}</style>
-        {dynamicResolved.styles}
+        {mainCss.styles}
+        {positionCss.styles}
       </div>
     );
   }
