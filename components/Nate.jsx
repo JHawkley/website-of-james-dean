@@ -359,7 +359,7 @@ class Nate extends Preloadable {
 
   renderBullets() {
     const { className } = bulletSpriteCss;
-    return this.world.bullets.flatMap((bullet, x) => bullet.nodes.map((node, y) => {
+    return this.world.bullets::flatMap((bullet, x) => bullet.nodes.map((node, y) => {
       return <div key={`${x}.${y}`} ref={node.ref} className={`${className} node-${y + 1} despawned`} />;
     }));
   }
