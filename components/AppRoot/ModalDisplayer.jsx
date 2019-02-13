@@ -23,6 +23,7 @@ const contentClasses = {
 class ModalDisplayer extends React.PureComponent {
 
   static propTypes = {
+    appElement: PropTypes.func.isRequired,
     modalProps: PropTypes.any
   };
 
@@ -62,13 +63,17 @@ class ModalDisplayer extends React.PureComponent {
   }
 
   render() {
-    const { props: { modalProps }, state: { cachedModalProps } } = this;
+    const {
+      props: { appElement, modalProps },
+      state: { cachedModalProps }
+    } = this;
 
     if (!cachedModalProps) return null;
 
     return (
       <Modal
         {...cachedModalProps}
+        appElement={appElement()}
         isOpen={Boolean(!modalProps ? false : cachedModalProps)}
         portalClassName="modal-popup"
         overlayClassName={overlayClasses}

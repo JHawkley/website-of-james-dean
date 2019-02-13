@@ -1,5 +1,4 @@
 import React from "react";
-import Modal from "react-modal";
 import PropTypes from "prop-types";
 import ModalContext from "common/ModalContext";
 import LightboxContext from "common/LightboxContext";
@@ -27,15 +26,27 @@ class AppRoot extends React.PureComponent {
     lightboxIndex: 0
   };
 
+  appElement = null;
+
   modalContext = {
-    open: (modalProps) => this.setState({ modalProps }),
+    open: (modalProps) => {
+      if (this.props.routeChanging) return;
+      this.setState({ modalProps });
+    },
     close: () => this.setState({ modalProps: null })
   };
 
   lightboxContext = {
-    open: (lightboxData, lightboxIndex) => this.setState({ lightboxData, lightboxIndex }),
+    open: (lightboxData, lightboxIndex) => {
+      if (this.props.routeChanging) return;
+      this.setState({ lightboxData, lightboxIndex });
+    },
     close: () => this.setState({ lightboxData: null })
   };
+
+  setAppElement = (el) => this.appElement = el;
+
+  getAppElement = () => this.appElement;
 
   componentDidUpdate(prevProps) {
     const { routeChanging } = this.props;
@@ -45,7 +56,8 @@ class AppRoot extends React.PureComponent {
 
   render() {
     const {
-      lightboxContext,
+      lightboxContext, modalContext,
+      getAppElement, setAppElement,
       props: { children, className: customClass, loading },
       state: { modalProps, lightboxData, lightboxIndex }
     } = this;
@@ -53,22 +65,26 @@ class AppRoot extends React.PureComponent {
     const className = ["app-root", customClass, loading && "app-loading"].filter(Boolean).join(" ");
 
     return (
-      <div ref={Modal.setAppElement} className={className}>
+      <div ref={setAppElement} className={className}>
         <div className="app-container">
           <ScrollLockedContext.Provider value={Boolean(modalProps || lightboxData)}>
-            <ModalContext.Provider value={this.modalContext}>
-              <LightboxContext.Provider value={this.lightboxContext}>
+            <ModalContext.Provider value={modalContext}>
+              <LightboxContext.Provider value={lightboxContext}>
                 {children}
               </LightboxContext.Provider>
             </ModalContext.Provider>
           </ScrollLockedContext.Provider>
         </div>
         <LightboxDisplayer
+          appElement={getAppElement}
           onCloseRequest={lightboxContext.close}
           images={lightboxData}
           initialIndex={lightboxIndex}
         />
-        <ModalDisplayer modalProps={modalProps} />
+        <ModalDisplayer
+          appElement={getAppElement}
+          modalProps={modalProps}
+        />
       </div>
     );
   }

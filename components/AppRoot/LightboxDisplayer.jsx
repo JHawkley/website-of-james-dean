@@ -1,12 +1,14 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { is } from "tools/common";
+import { memoize } from "tools/functions";
 import { extensions as numEx } from "tools/numbers";
 import ReactLightbox from "react-image-lightbox";
 
 class LightboxDisplayer extends React.PureComponent {
 
   static propTypes = {
+    appElement: PropTypes.func.isRequired,
     onCloseRequest: PropTypes.func.isRequired,
     images: PropTypes.arrayOf(
       PropTypes.oneOfType([
@@ -35,6 +37,8 @@ class LightboxDisplayer extends React.PureComponent {
     index: this.props.initialIndex
   };
 
+  getModalProps = memoize((appElement) => ({ appElement: appElement() }));
+
   onMovePrevRequest = () => {
     const { images } = this.props;
     if (!images) return;
@@ -49,7 +53,7 @@ class LightboxDisplayer extends React.PureComponent {
 
   render() {
     const {
-      props: { onCloseRequest, images },
+      props: { appElement, onCloseRequest, images },
       state: { index: galleryIndex }
     } = this;
 
@@ -69,6 +73,7 @@ class LightboxDisplayer extends React.PureComponent {
         onMoveNextRequest={this.onMoveNextRequest}
         animationOnKeyInput={true}
         enableZoom={false}
+        reactModalProps={this.getModalProps(appElement)}
       />
     );
   }

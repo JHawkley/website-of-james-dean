@@ -1,12 +1,14 @@
 import React from "react";
 import PropTypes from "prop-types";
+import { dew } from "tools/common";
+import { memoize } from "tools/functions";
 import ModalContext from "common/ModalContext";
 
-class Inner extends React.PureComponent {
+class ModalPopup extends React.PureComponent {
+
+  static contextType = ModalContext;
 
   static propTypes = {
-    modalContext: PropTypes.any.isRequired,
-    modalProps: PropTypes.any.isRequired,
     isOpen: PropTypes.bool
   };
 
@@ -14,32 +16,28 @@ class Inner extends React.PureComponent {
     isOpen: false
   };
 
-  static displayName = ".ModalPopup";
+  getModalProps = dew(() => {
+    // eslint-disable-next-line no-unused-vars
+    const _getter = memoize(({isOpen, ...modalProps}) => modalProps);
+    return () => _getter(this.props);
+  });
 
   componentDidMount() {
-    const { modalContext, modalProps, isOpen } = this.props;
-    if (isOpen) modalContext.open(modalProps);
+    if (this.props.isOpen)
+      this.context.open(this.getModalProps());
   }
 
   componentDidUpdate(prevProps) {
-    const { modalContext, modalProps, isOpen } = this.props;
-    let doOpen = false;
+    const { isOpen } = this.props;
 
     if (isOpen !== prevProps.isOpen) {
-      if (isOpen) doOpen = true;
-      else modalContext.close();
+      if (isOpen) this.context.open(this.getModalProps());
+      else this.context.close();
     }
-
-    if (modalProps !== prevProps.modalProps)
-      doOpen = isOpen;
-    
-    if (doOpen)
-      modalContext.open(modalProps);
   }
 
   componentWillUnmount() {
-    const { modalContext, isOpen } = this.props;
-    if (isOpen) modalContext.close();
+    if (this.props.isOpen) this.context.close();
   }
 
   render() {
@@ -47,19 +45,5 @@ class Inner extends React.PureComponent {
   }
 
 }
-
-const ModalPopup = ({isOpen, ...modalProps}) => (
-  <ModalContext.Consumer>
-    {modal => <Inner modalContext={modal} modalProps={modalProps} isOpen={isOpen} />}
-  </ModalContext.Consumer>
-);
-
-ModalPopup.propTypes = {
-  isOpen: PropTypes.bool
-};
-
-ModalPopup.defaultProps = {
-  isOpen: false
-};
 
 export default ModalPopup;
