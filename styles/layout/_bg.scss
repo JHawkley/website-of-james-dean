@@ -59,7 +59,7 @@
       @include vendor('filter', 'blur(0.2rem)');
     }
    
-    #app-root.loading &:before {
+    .app-loading &:before {
       background-color:	_palette(bg-alt);
     }
   }

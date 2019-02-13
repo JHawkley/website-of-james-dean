@@ -78,7 +78,7 @@ class AppRoot extends React.PureComponent {
 
     const className = ["js-only"];
     if (customClass) className.push(customClass);
-    if (loading) className.push("loading");
+    if (loading) className.push("app-loading");
 
     return (
       <div ref={Modal.setAppElement} id="app-root" className={className.join(" ")}>
