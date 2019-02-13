@@ -223,9 +223,10 @@ export function notEmpty() {
   if (!this::is.func())
     throw new TypeError("expected to be bound to a prop-type validator function");
   
-  const validationFn = (value) => {
-    if (value::is.string() && isEmptyString(value)) return "string may not be empty";
-    if (value::is.array() && isEmptyArray(value)) return "array may not be empty";
+  const validationFn = (value, key) => {
+    if (key === "children" && isEmptyChildren(value)) return "must have at least one child";
+    else if (value::is.string() && isEmptyString(value)) return "string may not be empty";
+    else if (value::is.array() && isEmptyArray(value)) return "array may not be empty";
   };
 
   return makeValidator(validationFn, this);
