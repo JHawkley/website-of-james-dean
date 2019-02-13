@@ -46,21 +46,30 @@ export function tryCall(thisArg = null, ...args) {
 }
 
 /**
- * Creates a function that will only call this function once.  The return value of this function is discarded,
- * so only apply this extension-method to side-effecting functions.
+ * Creates a function that will only call this function once.  The result of the function is stored and
+ * returned if another call is made.
  *
  * @export
- * @template T
- * @this {function(...T): void} The function to use as a basis.
- * @returns {function(...T): void} A function that will only execute a side-effect once.
+ * @template T,U
+ * @this {function(...U): T} The function to use as a basis.
+ * @returns {function(...U): T} A function that will only execute once.
  */
 export function callableOnce() {
   const fn = this;
   let doOnce = true;
-  return function(...args) {
+  let result = void 0;
+  
+  const onceFn = function() {
     if (doOnce) {
       doOnce = false;
-      fn.apply(this, args);
+      result = fn.apply(this, arguments);
     }
+    return result;
   }
+
+  Object.defineProperties(onceFn, {
+    name: { value: fn.name ? `callable once ${fn.name}` : "callable once anonymous" }
+  });
+
+  return onceFn;
 }
