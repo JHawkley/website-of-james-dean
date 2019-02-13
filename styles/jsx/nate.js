@@ -41,13 +41,24 @@ const translateOffset = ([offX, offY]) =>
 const translateCenter = ([width, height]) =>
   translateOffset([-Math.ceil(width * 0.5), Math.ceil(height * 0.5)]);
 
-const containerCss = css.resolve`
-  .root {
+const componentCss = css.resolve`
+  * {
     position: relative;
     margin: ${-margin}${marginUnit} ${-margin}${marginUnit} 0${marginUnit};
   }
 
-  .nate-container {
+  /* 
+   * Prevents bullets from causing scroll-bars to appear as they
+   * fly off the edge of the screen.
+   */
+  :global(.app-root > .app-container) {
+    position: relative;
+    overflow: hidden;
+  }
+`;
+
+const containerCss = css.resolve`
+  * {
     overflow: visible !important;
     position: relative;
     z-index: 0;
@@ -55,19 +66,19 @@ const containerCss = css.resolve`
     transition: opacity ${fadeTime}ms ease-in-out;
   }
 
-  .nate-container.loading {
+  *.loading {
     opacity: 0;
   }
 
-  .buffer {
+  * > :global(.buffer) {
     visibility: hidden;
     width: 100%;
   }
 
-  .buffer.top { height: ${3 * margin}${marginUnit}; }
-  .buffer.bottom { height: ${margin}${marginUnit}; }
+  * > :global(.buffer.top) { height: ${3 * margin}${marginUnit}; }
+  * > :global(.buffer.bottom) { height: ${margin}${marginUnit}; }
 
-  .ground-plane {
+  * > :global(.ground-plane) {
     width: 100%;
     height: 24px;
 
@@ -93,7 +104,7 @@ const nateSpriteCss = css.resolve`
     100% { ${col(nateSize, 4)} }
   }
 
-  .nate-sprite {
+  * {
     ${spriteRendering}
     ${size(nateSize)}
     position: absolute;
@@ -156,7 +167,7 @@ const bulletSpriteCss = css.resolve`
     100% { ${row(bulletBurstSize, 1)} }
   }
 
-  .bullet-sprite {
+  .bullet {
     ${spriteRendering}
     ${size(bulletSize)}
     position: absolute;
@@ -169,7 +180,7 @@ const bulletSpriteCss = css.resolve`
   .node-2 { z-index: 6; ${row(bulletSize, 1)} }
   .node-3 { z-index: 5; ${row(bulletSize, 2)} }
 
-  .bullet-burst-sprite {
+  .bullet-burst {
     ${spriteRendering}
     ${size(bulletBurstSize)}
     position: absolute;
@@ -183,4 +194,4 @@ const bulletSpriteCss = css.resolve`
 `;
 
 export { ImgNate, ImgBullet, ImgBulletBurst }
-export { fadeTime, containerCss, nateSpriteCss, bulletSpriteCss };
+export { fadeTime, componentCss, containerCss, nateSpriteCss, bulletSpriteCss };

@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { dew, is, global } from "tools/common";
 import { extensions as asyncEx, Task, eachFrame } from "tools/async";
 import { makeArray } from "tools/array";
+import { flatMap } from "tools/extensions/array";
 import bulletActionList from "./Nate/bulletActionList";
 import nateActionList from "./Nate/nateActionList";
 import { behaviorModes, facings, aimings, movings, jumps, tracks } from "./Nate/core";
@@ -13,7 +14,7 @@ import LoadingSpinner from "components/LoadingSpinner";
 import NotSupportedError from "components/Nate/NotSupportedError";
 import GameUpdateError from "components/Nate/GameUpdateError";
 
-import { fadeTime, containerCss, nateSpriteCss, bulletSpriteCss } from "styles/jsx/nate";
+import { fadeTime, componentCss, containerCss, nateSpriteCss, bulletSpriteCss } from "styles/jsx/nate";
 import { ImgNate, ImgBullet, ImgBulletBurst } from "styles/jsx/nate";
 
 import OggBowWow from "static/sounds/nate-game/bow-wow.ogg?codec=vorbis";
@@ -29,10 +30,9 @@ import Mp3Pop1 from "static/sounds/nate-game/pop1.mp3";
 import OggPop2 from "static/sounds/nate-game/pop2.ogg?codec=vorbis";
 import Mp3Pop2 from "static/sounds/nate-game/pop2.mp3";
 
-const $componentUnmounted = "component unmounted";
-const $gameDetached = "detaching game from a container";
-const $mountedWithError = "mounted with an error";
-const $updatedWithError = "updated with an error";
+const $gameDetached = "game detached from the container";
+const $preloadingFailed = "preloading failed with an error";
+const $gameFailed = "game failed with an error";
 
 class Nate extends Preloadable {
 
@@ -47,14 +47,15 @@ class Nate extends Preloadable {
   }
 
   static getDerivedStateFromError(error) {
-    return { error };
+    return error instanceof GameUpdateError ? { gameError: error } : { error };
   }
 
   state = {
     ...this.state,
     imagesReady: false,
     soundsReady: false,
-    error: dew(() => {
+    error: null,
+    gameError: dew(() => {
       if (supported()) return null;
       return new NotSupportedError("the `Nate` component is not supported by the current browser");
     })
@@ -153,10 +154,10 @@ class Nate extends Preloadable {
           }
         });
       }
-      catch (error) {
+      catch (gameError) {
         if (this.didUnmount) return;
-        if (error::asyncEx.isAborted()) return;
-        this.setState({ error });
+        if (gameError::asyncEx.isAborted()) return;
+        this.setState({ gameError });
       }
       finally {
         document.removeEventListener("mousemove", this.mouseMoveHandler);
@@ -185,12 +186,16 @@ class Nate extends Preloadable {
 
   onSoundsFailed = () => {
     if (this.didUnmount) return;
+    // We can run fine without sounds; just disable them and continue.
     this.soundsEnabled = false;
     this.setState({ soundsReady: true });
   }
 
   attachGame = (container) => {
-    if (!container) this.runGameLoopTask.stop($gameDetached);
+    const { error, gameError } = this.state;
+    if (error) this.runGameLoopTask.stop($preloadingFailed);
+    else if (gameError) this.runGameLoopTask.stop($gameFailed);
+    else if (!container) this.runGameLoopTask.stop($gameDetached);
     else this.runGameLoopTask.start(container);
   }
 
@@ -251,8 +256,7 @@ class Nate extends Preloadable {
       } = nate;
 
       if (el) {
-        const { className } = nateSpriteCss;
-        el.className = [className, "nate-sprite", main, shoot].flatten().join(" ");
+        el.className = [nateSpriteCss.className, main, shoot].flatten().join(" ");
         el.style.left = (x | 0) + "px";
         el.style.bottom = (y | 0) + "px";
       }
@@ -273,8 +277,8 @@ class Nate extends Preloadable {
         el::toggleClass("despawned", isDespawned);
         if (isDespawned) return;
 
-        el::toggleClass("bullet-sprite", !isBursting);
-        el::toggleClass("bullet-burst-sprite", isBursting);
+        el::toggleClass("bullet", !isBursting);
+        el::toggleClass("bullet-burst", isBursting);
         el.style.left = (x | 0) + "px";
         el.style.bottom = (y | 0) + "px";
       });
@@ -287,6 +291,9 @@ class Nate extends Preloadable {
     const play = async () => {
       if (!sound) return;
       if (!this.soundsEnabled) return;
+      // Only play sounds when Nate is in his aggressive behavior.
+      // This is just to make the page less annoying; it only starts making sounds when
+      // the user is supposedly interacting with Nate.
       if (this.world.nate.brain.behavior !== behaviorModes.aggressive) return;
 
       try {
@@ -308,50 +315,42 @@ class Nate extends Preloadable {
 
   componentDidMount() {
     super.componentDidMount();
-    const { props: { onLoad, onError }, state: { preloaded, error } } = this;
+    const { props: { onGameError }, state: { gameError } } = this;
 
-    if (error) {
-      this.runGameLoopTask.stop($mountedWithError);
-      onError?.(error);
-    }
-    else if (preloaded) {
-      onLoad?.();
+    switch (true) {
+      case !gameError: break;
+      case onGameError::is.func(): onGameError(gameError); break;
+      default: throw gameError;
     }
   }
 
   componentDidUpdate(prevProps, prevState) {
     super.componentDidUpdate(prevProps, prevState);
-    const { props: { onLoad, onError }, state: { preloaded, error } } = this;
+    const { props: { onGameError }, state: { gameError } } = this;
 
-    if ((error !== prevState.error || onError !== prevProps.onError) && error) {
-      this.runGameLoopTask.stop($updatedWithError);
-      onError?.(error);
-    }
-    else if ((preloaded !== prevState.preloaded || onLoad !== prevProps.onLoad) && preloaded) {
-      onLoad?.();
+    if (gameError !== prevState.gameError || onGameError !== prevProps.onGameError) {
+      switch (true) {
+        case !gameError: break;
+        case onGameError::is.func(): onGameError(gameError); break;
+        default: throw gameError;
+      }
     }
   }
 
-  componentWillUnmount() {
-    super.componentWillUnmount();
-    this.runGameLoopTask.stop($componentUnmounted);
-  }
-
-  renderContainer(ready) {
+  renderContainer(preloaded) {
     const { nate: { ref: nateRef }, bounds: { ref: groundRef } } = this.world;
     const { className: containerClass } = containerCss;
     const { className: nateClass } = nateSpriteCss;
 
-    const attachGame = ready ? this.attachGame : null;
-    const className = [containerClass, "nate-container"];
-    if (!ready) className.push("loading");
+    const attachGame = preloaded ? this.attachGame : null;
+    const className = [containerClass, !preloaded && "loading"].filter(Boolean).join(" ");
     
     return (
-      <div ref={attachGame} className={className.join(" ")}>
-        <div className={`${containerClass} buffer top`} />
-        <div ref={groundRef} className={`${containerClass} ground-plane`} />
-        <div className={`${containerClass} buffer bottom`} />
-        <div ref={nateRef} className={`${nateClass} nate-sprite despawned`} />
+      <div ref={attachGame} className={className}>
+        <div className="buffer top" />
+        <div ref={groundRef} className="ground-plane" />
+        <div className="buffer bottom" />
+        <div ref={nateRef} className={`${nateClass} despawned`} />
         {this.renderBullets()}
       </div>
     );
@@ -391,18 +390,17 @@ class Nate extends Preloadable {
   }
 
   render() {
-    const { imagesReady, soundsReady, error } = this.state;
+    const { preloaded, error, gameError } = this.state;
 
-    if (error) return null;
-
-    const ready = imagesReady && soundsReady;
+    if (error || gameError) return null;
 
     return (
-      <div className={`${containerCss.className} root`}>
-        <LoadingSpinner size="2x" fadeTime={fadeTime} show={!ready} background />
-        {this.renderContainer(ready)}
+      <div className={componentCss.className}>
+        <LoadingSpinner size="2x" fadeTime={fadeTime} show={!preloaded} background />
+        {this.renderContainer(preloaded)}
         {this.renderImages()}
         {this.renderSounds()}
+        {componentCss.styles}
         {nateSpriteCss.styles}
         {bulletSpriteCss.styles}
         {containerCss.styles}
