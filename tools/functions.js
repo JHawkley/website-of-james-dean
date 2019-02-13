@@ -5,6 +5,7 @@ import { identical } from "tools/array";
 export * as extensions from "tools/extensions/functions";
 
 const $$unset = Symbol("memoize:unset");
+const $$noArgs = Symbol("memoiziest:no-args");
 
 /**
  * Creates a new function that wraps `fn` in a try-catch.  If `fn` throws an error, it will return `undefined`.
@@ -88,10 +89,10 @@ export const memoize = (fn) => {
 };
 
 /**
- * Creates a function that memoizes all the result of the given function.  If `resolver` is provided, it determines
+ * Creates a function that memoizes all the results of the given function.  If `resolver` is provided, it determines
  * the cache key for storing the result based on the arguments provided to the memoized function.  By default, the
- * first argument provided to the memoized function is used as the map cache key. The function being memoized is
- * invoked with the `this` binding of the memoized function.
+ * first argument provided to the memoized function is used as the map cache key. The function `fn` is invoked
+ * with the `this` binding of the returned, memoized function.
  * 
  * Note: based on the `memoize` function of lodash.
  *
@@ -100,24 +101,31 @@ export const memoize = (fn) => {
  * @param {Function} resolver The function to resolve the cache key.
  * @returns {Function} The new memoized function.
  */
-export function memoiziest(fn, resolver) {
+export const memoiziest = (fn, resolver) => {
   if (!fn::is.func())
     throw new TypeError('expected `fn` to be a function');
   if (resolver::is.defined() && !resolver::is.func())
     throw new TypeError('expected `resolver` to be a function');
 
-  const memoized = function(...args) {
-    const key = resolver ? resolver.apply(this, args) : args[0];
-    const cache = memoized.cache;
+  const memoizedFn = function() {
+    const key =
+      resolver ? resolver.apply(this, arguments) :
+      arguments.length > 0 ? arguments[0] :
+      $$noArgs;
+    const cache = memoizedFn.cache;
 
     if (cache.has(key))
       return cache.get(key);
 
-    const result = fn.apply(this, args);
+    const result = fn.apply(this, arguments);
     cache.set(key, result);
     return result;
   }
-  
-  memoized.cache = new Map();
-  return memoized;
-}
+
+  Object.defineProperties(memoizedFn, {
+    name: { value: fn.name ? `memoiziest of ${fn.name}` : "memoiziest of anonymous" },
+    cache: { value: new Map() }
+  });
+
+  return memoizedFn;
+};
