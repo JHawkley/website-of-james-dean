@@ -80,7 +80,7 @@ class Nate extends React.PureComponent {
     const { nateWidgetError } = this.state;
 
     return (
-      <Page>
+      <Page {...this.props}>
         <GalleryContext.Provider value={gallery}>
           <h2 className="major">Nate Game</h2>
           <Gallery.Span className="image main">

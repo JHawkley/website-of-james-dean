@@ -3,8 +3,8 @@ import Jump from "components/Jump";
 
 import ImgHeader from "static/images/miscprogramming/header.png";
 
-const MiscProgramming = () => (
-  <Page>
+const MiscProgramming = (props) => (
+  <Page {...props}>
     <h2 className="major">Misc Programming</h2>
     <span className="image main"><ImgHeader alt="Misc Programming" fluid /></span>
     <p>For the following projects, I have less to show, but they're still worth mentioning.</p>

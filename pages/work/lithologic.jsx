@@ -15,8 +15,8 @@ const gallery = [
   { i: $gallery$3, d: "Lithologic's original design concept (top) compared to the final product (bottom)." }
 ];
 
-const Lithologic = () => (
-  <Page>
+const Lithologic = (props) => (
+  <Page {...props}>
     <GalleryContext.Provider value={gallery}>
       <h2 className="major">Lithologic</h2>
       <Gallery.Span className="image main">

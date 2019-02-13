@@ -5,8 +5,8 @@ import ImgPlaceholderPhoto from "static/images/placeholder_photo.jpg";
 
 import $work from "pages/work/index?route";
 
-const Intro = () => (
-  <Page>
+const Intro = (props) => (
+  <Page {...props}>
     <h2 className="major">Intro</h2>
     <span className="image right">
       <ImgPlaceholderPhoto alt="A Photo of James Dean" fluid />

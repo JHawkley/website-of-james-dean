@@ -5,8 +5,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faLinkedin } from "@fortawesome/free-brands-svg-icons/faLinkedin";
 import { faGithub } from "@fortawesome/free-brands-svg-icons/faGithub";
 
-const Contact = () => (
-  <Page>
+const Contact = (props) => (
+  <Page {...props}>
     <h2 className="major">Contact</h2>
     <ContactForm />
     <ul className="icons">

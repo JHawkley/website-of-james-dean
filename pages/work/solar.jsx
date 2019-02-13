@@ -21,8 +21,8 @@ const gallery = [
   { i: $gallery$br5, d: "Another greenhouse concept; definitely a lot more detailed.  I think the idea here was to integrate a basic water desalination system into a greenhouse.  Salty water would be sprayed onto the curtains in the center and allowed to evaporate, while fresh water would condense on the plastic enclosing the greenhouse and drip down into collectors." }
 ];
 
-const Solar = () => (
-  <Page>
+const Solar = (props) => (
+  <Page {...props}>
     <GalleryContext.Provider value={gallery}>
       <h2 className="major">Solar Bio-Reactor</h2>
       <Gallery.Span className="image main">
