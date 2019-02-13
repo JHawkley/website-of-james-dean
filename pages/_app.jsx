@@ -1,6 +1,8 @@
 import { hashScroll } from "patch/client-router";
 
+import { Fragment } from "react";
 import App, { createUrl } from "next/app";
+import Head from "next/head";
 import { getUrl } from "next/dist/lib/utils";
 import { config as faConfig } from "@fortawesome/fontawesome-svg-core";
 
@@ -319,12 +321,15 @@ class ScrollRestoringApp extends App {
 
   render() {
     return (
-      <RouterContext.Provider value={this.routerContext}>
-        <PreloadContext.Provider value={this.preloadContext}>
-          {transitionsSupported ? this.renderWithTransitions() : this.renderNoTransitions()}
-          {throbberCss.styles}
-        </PreloadContext.Provider>
-      </RouterContext.Provider>
+      <Fragment>
+        <Head><title>A Programmer's Place</title></Head>
+        <RouterContext.Provider value={this.routerContext}>
+          <PreloadContext.Provider value={this.preloadContext}>
+            {transitionsSupported ? this.renderWithTransitions() : this.renderNoTransitions()}
+            {throbberCss.styles}
+          </PreloadContext.Provider>
+        </RouterContext.Provider>
+      </Fragment>
     );
   }
 
