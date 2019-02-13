@@ -10,11 +10,7 @@
     @include vendor('display', 'flex');
     @include vendor('flex-direction', 'column');
     @include vendor('align-items', 'center');
-    @include vendor('transition', (
-      'transform #{_duration(article)} ease-in-out',
-      'filter #{_duration(article)} ease-in-out',
-      'opacity #{_duration(article)} ease-in-out'
-    ));
+
     background-image: -moz-radial-gradient(rgba(0,0,0,0.25) 25%, rgba(0,0,0,0) 55%);
     background-image: -webkit-radial-gradient(rgba(0,0,0,0.25) 25%, rgba(0,0,0,0) 55%);
     background-image: -ms-radial-gradient(rgba(0,0,0,0.25) 25%, rgba(0,0,0,0) 55%);
@@ -155,35 +151,39 @@
 
     /* Transitions */
 
-    opacity: 0;
-    visibility: hidden;
-    @include vendor('transform', 'scale(0.95)');
-    @include vendor('filter', 'blur(0.1rem)');
-
-    &.exiting, &.entered {
-      visibility: unset;
-    }
-
-    &.entered {
-      opacity: 1;
-      @include vendor('transform', 'none');
-      @include vendor('filter', 'none');
-    }
-
-    #app-root.loading & {
+    &.is-exiting, &.is-hidden {
+      @include vendor('transform', 'scale(0.95)');
+      @include vendor('filter', 'blur(0.1rem)');
       opacity: 0;
+    }
+
+    &.is-hidden, .app-loading & {
       visibility: hidden;
+    }
 
-      @include vendor('transform', 'none');
+    & > * {
+      @include vendor('transition', 'opacity #{_duration(article)} ease-in-out');
+    }
+
+    & .content .inner {
+      @include vendor('transition', (
+        'max-height #{_duration(intro)} ease',
+        'padding #{_duration(intro)} ease',
+        'opacity #{_duration(article)} ease-in-out'
+      ));
+      @include vendor('transition-delay', '0.25s');
+    }
+
+    .app-loading & {
       @include vendor('filter', 'blur(0.125rem)');
+      @include vendor('transform', 'none');
+      opacity: 0;
 
-      .content {
-        .inner {
-          max-height: 0;
-          padding-top: 0;
-          padding-bottom: 0;
-          opacity: 0;
-        }
+      & .content .inner {
+        max-height: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        opacity: 0;
       }
     }
 

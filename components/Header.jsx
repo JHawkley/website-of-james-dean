@@ -1,51 +1,79 @@
+import React from "react";
 import PropTypes from "prop-types";
-import Jump from "components/Jump";
+import { dew } from "tools/common";
+import { extensions as propTypeEx } from "tools/propTypes";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCode } from "@fortawesome/free-solid-svg-icons/faCode";
-import { color } from "tools/css";
-import styleVars from "styles/vars.json";
 
-import $intro from "pages/intro?route";
-import $work from "pages/work/index?route";
-import $questions from "pages/questions?route";
-import $contact from "pages/contact?route";
+const strictChildren = (value) => {
+  const children = React.Children.toArray(value);
+  if (children.length !== 2)
+    return "must have only two children, a `Header.Content` followed by a `Header.Nav`";
+  if (children[0].type !== Header.Content)
+    return "first child must be a `Header.Content` component";
+  if (children[1].type !== Header.Nav)
+    return "second child must be a `Header.Nav` component";
+  return true;
+};
 
-const bgColor = color(styleVars["palette"]["bg"]).transparentize(0.15).asRgba();
-
-const Header = ({className}) => (
-  <header id="header" className={className}>
-    <div className="logo">
-      <FontAwesomeIcon icon={faCode} transform="grow-18" />
-    </div>
-    <div className="content">
-      <div className="inner">
-        <h1>A Programmer's Place</h1>
-        <p>My name is James Dean; this is a place to get to know me<br />
-        and get more information on the works I've done.</p>
+const Header = ({children, className, logo}) => {
+  return (
+    <header id="header" className={className}>
+      <div className="logo">
+        <FontAwesomeIcon icon={logo} transform="grow-18" />
       </div>
-    </div>
-    <nav>
-      <ul>
-        <li><Jump href={$intro}>Intro</Jump></li>
-        <li><Jump href={$work}>Work</Jump></li>
-        <li><Jump href={$questions}>Q&amp;A</Jump></li>
-        <li><Jump href={$contact}>Contact</Jump></li>
-      </ul>
-    </nav>
-    <style jsx>
-      {`
-        #header {
-          border-radius: 4px;
-          padding: 1.5rem;
-          background-color: ${bgColor};
-        }
-      `}
-    </style>
-  </header>
-);
+      {children}
+    </header>
+  );
+};
 
 Header.propTypes = {
-  className: PropTypes.string
+  children: PropTypes.node::propTypeEx.predicate(strictChildren),
+  className: PropTypes.string,
+  logo: PropTypes.any
 };
+
+Header.Content = dew(() => {
+  const HeaderContent = ({children, className: customClass}) => {
+    const className = ["content", customClass].filter(Boolean).join(" ");
+
+    return (
+      <div className={className}>
+        <div className="inner">
+          {children}
+        </div>
+      </div>
+    );
+  };
+
+  HeaderContent.displayName = "Header.Content";
+
+  HeaderContent.propTypes = {
+    children: PropTypes.node,
+    className: PropTypes.string
+  };
+
+  return HeaderContent;
+});
+
+Header.Nav = dew(() => {
+  const childLister = (child, i) => <li key={i}>{child}</li>;
+
+  const HeaderNav = ({children, className}) => (
+    <nav className={className}>
+      <ul>
+        {React.Children.toArray(children).map(childLister)}
+      </ul>
+    </nav>
+  );
+
+  HeaderNav.displayName = "Header.Nav";
+
+  HeaderNav.propTypes = {
+    children: PropTypes.node,
+    className: PropTypes.string
+  };
+
+  return HeaderNav;
+});
 
 export default Header;
