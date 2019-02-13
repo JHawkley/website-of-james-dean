@@ -6,18 +6,24 @@ export * as extensions from "tools/extensions/functions";
 
 /**
  * Creates a new function that wraps `fn` in a try-catch.  If `fn` throws an error, it will return `undefined`.
+ * The function `fn` is invoked with the `this` binding of the returned, trial function.
  *
  * @export
  * @template T,U
  * @param {function(...U): T} fn The function to wrap in a try-catch.
- * @param {*} [thisArg=null] The object to bind to `fn`, when it is called.
  * @returns {function(...U): T|undefined} A new function.
  */
-export function trial(fn, thisArg = null) {
-  return function(...args) {
-    try { return args.length === 0 ? thisArg::fn() : thisArg::fn(...args); }
+export const trial = (fn) => {
+  const trialFn = function() {
+    try { return arguments.length === 0 ? fn.call(this) : fn.apply(this, arguments); }
     catch { return void 0; }
   }
+
+  Object.defineProperty(trialFn, "name", {
+    value: fn.name ? `trial of ${fn.name}` : "trial of anonymous"
+  });
+
+  return trialFn;
 }
 
 /**
