@@ -41,7 +41,7 @@ export function memoizeEach(resolver) {
  * @returns {T|undefined} The result of this function or `undefined`.
  */
 export function tryCall(thisArg = null, ...args) {
-  try { return args.length === 0 ? thisArg::this() : thisArg::this(...args); }
+  try { return args.length === 0 ? this.call(thisArg) : this.apply(thisArg, args); }
   catch { return void 0; }
 }
 
