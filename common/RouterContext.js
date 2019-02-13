@@ -1,16 +1,16 @@
 import React from "react";
 import { noop } from "tools/common";
 
-const RouterContext = React.createContext({ router: null, upToIndex: noop, upLevel: noop });
+const RouterContext = React.createContext(null);
 
 const create = (router, onRouteChangeStart = noop) => {
-  const upToIndex = (options = {}) => {
+  const upToIndex = () => {
     if (router.route === "/") return;
-    try { router.push("/", "/", options); }
+    try { router.push("/", "/"); }
     catch { void 0; }
   };
 
-  const upLevel = async (options = {}) => {
+  const upLevel = async () => {
     if (router.route === "/") return;
     
     const routeParts = router.route.split("/");
@@ -27,7 +27,7 @@ const create = (router, onRouteChangeStart = noop) => {
           await router.fetchComponent(newRoute, newRoute);
           // And if it was successful, this should be nearly instantaneous, since the
           // fetched page was cached.
-          router.push(newRoute, newRoute, options);
+          router.push(newRoute, newRoute);
           return;
         }
         catch (error) {
@@ -39,7 +39,7 @@ const create = (router, onRouteChangeStart = noop) => {
       }
     }
 
-    upToIndex(options);
+    upToIndex();
   };
 
   return { router, upToIndex, upLevel };
