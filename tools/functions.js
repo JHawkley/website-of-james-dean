@@ -1,8 +1,10 @@
-import { is } from "tools/common";
+import { is, allEq } from "tools/common";
 import { identical } from "tools/array";
 
 // Re-export extension methods.
 export * as extensions from "tools/extensions/functions";
+
+const $$unset = Symbol("memoize:unset");
 
 /**
  * Creates a new function that wraps `fn` in a try-catch.  If `fn` throws an error, it will return `undefined`.
@@ -27,35 +29,63 @@ export const trial = (fn) => {
 }
 
 /**
- * Creates a function that memoizes the last result of the given function.  If the arguments are not identical
- * to the last call, the function will be called again and its arguments and result stored.
+ * Creates a new function that memoizes the last result of the given function.  If the arguments or
+ * `this` binding are not identical to the last call, the function will be called again and its
+ * arguments and result stored.  The function `fn` is invoked with the `this` binding of the returned,
+ * memoized function.
+ * 
+ * The last return value can be accessed via the function's `lastResult` property.  It will be `undefined`
+ * until the function has been called at least once.
  *
  * @export
  * @param {Function} fn The function to have its result memoized.
  * @returns {Function} The memoized function.
  */
-export function memoize(fn) {
+export const memoize = (fn) => {
   if (!fn::is.func())
     throw new TypeError('expected `fn` to be a function');
 
-  let oldArgs = [];
-  let oldResult = void 0;
+  let oldThis = $$unset;
+  let oldArgs = $$unset;
+  let oldResult = $$unset;
 
-  return function(...newArgs) {
-    // Short-circuit for empty arguments.
-    if (newArgs.length === 0 && oldArgs.length === 0) {
-      if (oldResult::is.undefined()) oldResult = fn();
-      return oldResult;
+  const memoizedFn = function() {
+    const newArgsLen = arguments.length;
+    const oldArgsLen = oldArgs.length;
+    let newArgs;
+    switch (true) {
+      case Object.is(oldResult, $$unset):
+      case !Object.is(oldThis, this):
+        newArgs = [...arguments];
+        break;
+      case allEq(0, newArgsLen, oldArgsLen):
+        return oldResult;
+      case allEq(1, newArgsLen, oldArgsLen):
+        if (Object.is(arguments[0], oldArgs[0]))
+          return oldResult;
+        newArgs = [...arguments];
+        break;
+      default:
+        // Do not leak `arguments` into `identical`.
+        newArgs = [...arguments];
+        if (identical(newArgs, oldArgs))
+          return oldResult;
+        break;
     }
 
-    if (identical(newArgs, oldArgs))
-      return oldResult;
-
+    oldThis = this;
     oldArgs = newArgs;
-    oldResult = fn.apply(null, newArgs);
+    oldResult = fn.apply(this, arguments);
     return oldResult;
   };
-}
+
+  Object.defineProperties(memoizedFn, {
+    name: { value: fn.name ? `memoized ${fn.name}` : "memoized anonymous" },
+    lastResult: { get: () => Object.is(oldResult, $$unset) ? void 0 : oldResult }
+  });
+
+  return memoizedFn;
+};
 
 /**
  * Creates a function that memoizes all the result of the given function.  If `resolver` is provided, it determines
