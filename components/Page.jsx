@@ -1,61 +1,72 @@
-import React, { Fragment } from "react";
+import { Fragment } from "react";
 import PropTypes from "prop-types";
+import { memoize } from "tools/functions";
 import RouterContext from "common/RouterContext";
 import Background from "components/Background";
-import { timespan } from "tools/css";
-import styleVars from "styles/vars.json";
+import { exitDelay, resolveDelayCss } from "styles/jsx/page";
 
-const articleTransition = timespan(styleVars["duration"]["article"]);
+const Page = (props) => {
+  const {
+    id, style, children,
+    className: customClass, transitionClass
+  } = props;
 
-class Inner extends React.PureComponent {
+  const className = [customClass, transitionClass].filter(Boolean).join(" ");
 
-  static displayName = ".Page";
-
-  static propTypes = {
-    routerContext: PropTypes.shape({
-      router: PropTypes.any,
-      upLevel: PropTypes.func,
-      upToIndex: PropTypes.func
-    }).isRequired,
-    id: PropTypes.string,
-    className: PropTypes.string,
-    style: PropTypes.object,
-    children: PropTypes.node
-  };
-
-  upLevel = () => this.props.routerContext.upLevel();
-
-  upToIndex = () => this.props.routerContext.upToIndex();
-
-  render() {
-    const { id, className, style, children } = this.props;
-
-    return (
-      <article id={id} className={className} style={style}>
-        <div onClick={this.upLevel} className="back"></div>
-        <div onClick={this.upToIndex} className="close"></div>
-        {children}
-      </article>
-    );
-  }
-
-}
-
-const Page = (props) => (
-  <RouterContext.Consumer>
-    {router => <Inner {...props} routerContext={router} />}
-  </RouterContext.Consumer>
-);
-
-Page.transition = {
-  exitDelay: articleTransition,
-  // eslint-disable-next-line react/display-name
-  render: (Component, props, exitDelay, stage = "entered") => (
+  return (
     <Fragment>
-      <div key="content" className={`page ${stage}`}><Component {...props} /></div>
+      <div key="content" className="page">
+        <article id={id} className={className || null} style={style}>
+          <RouterContext.Consumer>
+            {renderRouterContext}
+          </RouterContext.Consumer>
+          {children}
+        </article>
+      </div>
       <Background key="background" className="blur" />
     </Fragment>
-  )
+  );
+}
+
+Page.propTypes = {
+  children: PropTypes.node,
+  id: PropTypes.string,
+  className: PropTypes.string,
+  transitionClass: PropTypes.string,
+  style: PropTypes.object
 };
+
+Page.transition = {
+  exitDelay,
+  // eslint-disable-next-line react/display-name
+  render(Component, props, exitDelay, stage) {
+    const isExiting = stage === "exiting" || stage === "exited";
+    const isHidden = stage === "exited" || stage === "entering";
+    const delayCss = resolveDelayCss(exitDelay);
+
+    const transitionClass = [
+      delayCss.className,
+      isExiting && "is-exiting",
+      isHidden && "is-hidden"
+    ].filter(Boolean).join(" ");
+
+    return (
+      <Fragment>
+        <Component {...props} transitionClass={transitionClass} />
+        {delayCss.styles}
+      </Fragment>
+    );
+  }
+};
+
+const renderRouterContext = memoize((router) => {
+  if (!router) return null;
+  return (
+    <Fragment>
+      <div onClick={router.upLevel} className="back" />
+      <div onClick={router.upToIndex} className="close" />
+    </Fragment>
+  );
+});
 
 export default Page;

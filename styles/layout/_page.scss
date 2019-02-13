@@ -19,10 +19,6 @@
     display: flex;
 
     article {
-      @include vendor('transition', (
-        'opacity #{_duration(article)} ease-in-out',
-        'transform #{_duration(article)} ease-in-out'
-      ));
       @include padding(2.5rem, 2.5rem, (2rem, 0, 1rem, 0));
       position: relative;
       width: 40rem;
@@ -90,25 +86,15 @@
     /* Transitions */
 
     article {
-      opacity: 0;
-      visibility: hidden;
-      @include vendor('transform', 'translateY(0.25rem)');
-    }
+      &.is-exiting, &.is-hidden {
+        @include vendor('transform', 'translateY(0.25rem)');
+        opacity: 0;
+      }
 
-    &.exiting article {
-      visibility: unset;
-    }
-
-    &.entered article {
-      opacity: 1;
-      visibility: unset;
-      @include vendor('transform', 'translateY(0rem)');
-    }
-
-    #app-root.loading & article {
-      opacity: 0;
-      visibility: hidden;
-      @include vendor('transform', 'translateY(0.25rem)');
+      &.is-hidden, .app-loading & {
+        opacity: 0;
+        visibility: hidden;
+      }
     }
 
     /* Breakpoints */
