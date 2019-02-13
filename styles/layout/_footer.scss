@@ -7,11 +7,6 @@
 /* Footer */
 
   #footer {
-    @include vendor('transition', (
-      'transform #{_duration(article)} ease-in-out',
-      'filter #{_duration(article)} ease-in-out',
-      'opacity #{_duration(article)} ease-in-out'
-    ));
     width: 100%;
     max-width: 100%;
     margin-top: 2rem;
@@ -28,26 +23,20 @@
 
     /* Transitions */
 
-    opacity: 0;
-    visibility: hidden;
-    @include vendor('transform', 'scale(0.95)');
-    @include vendor('filter', 'blur(0.1rem)');
-
-    &.exiting, &.entered {
-      visibility: unset;
-    }
-
-    &.entered, #app-root.loading & {
-      @include vendor('transform', 'none');
-      @include vendor('filter', 'none');
-    }
-
-    &.entered {
-      opacity: 1;
-    }
-
-    #app-root.loading & {
+    &.is-exiting, &.is-hidden {
+      @include vendor('transform', 'scale(0.95)');
+      @include vendor('filter', 'blur(0.1rem)');
       opacity: 0;
+    }
+    
+    &.is-hidden, .app-loading & {
       visibility: hidden;
     }
+    
+    .app-loading & {
+      @include vendor('transform', 'none');
+      @include vendor('filter', 'none');
+      opacity: 0;
+    }
+
   }
