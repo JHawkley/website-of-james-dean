@@ -1,5 +1,4 @@
-import React, { Fragment } from "react";
-import ReactDOMServer from "react-dom/server";
+import React from "react";
 import Modal from "react-modal";
 import PropTypes from "prop-types";
 import ModalContext from "common/ModalContext";
@@ -7,29 +6,6 @@ import LightboxContext from "common/LightboxContext";
 import ScrollLockedContext from "common/ScrollLockedContext";
 import ModalDisplayer from "components/AppRoot/ModalDisplayer";
 import LightboxDisplayer from "components/AppRoot/LightboxDisplayer";
-
-const NoScriptAppRoot = ({children, className}) => {
-  // Based on: https://github.com/facebook/react/issues/11423#issuecomment-341760646
-  const staticMarkup = ReactDOMServer.renderToStaticMarkup(
-    <Fragment>
-      <style dangerouslySetInnerHTML={{ __html: ".js-only { display: none !important; }"}} />
-      <div id="app-root" className={className}>
-        <div id="app-container">
-          {children}
-        </div>
-      </div>
-    </Fragment>
-  );
-
-  return <noscript dangerouslySetInnerHTML={{ __html: staticMarkup }} />;
-};
-
-NoScriptAppRoot.displayName = "AppRoot.NoScript";
-
-NoScriptAppRoot.propTypes = {
-  children: PropTypes.node,
-  className: PropTypes.string
-}
 
 class AppRoot extends React.PureComponent {
 
@@ -44,8 +20,6 @@ class AppRoot extends React.PureComponent {
     loading: false,
     routeChanging: false
   }
-
-  static NoScript = NoScriptAppRoot;
 
   state = {
     modalProps: null,
