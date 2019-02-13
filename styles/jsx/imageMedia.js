@@ -1,18 +1,13 @@
 import { css } from "styled-jsx/css";
 
-const fluidCss = css`
-  .fluid-container {
+const fluidCss = css.resolve`
+  * {
     display: block !important;
     position: relative !important;
     max-width: 100% !important;
   }
-
-  /* Fixes image overlay with .fluid-container. */
-  .fluid-container :global(.image:before) {
-    z-index: 1;
-  }
   
-  .fluid {
+  img {
     position: absolute !important;
     top: 0px !important;
     left: 0px !important;
@@ -20,13 +15,22 @@ const fluidCss = css`
     height: 100% !important;
     max-width: inherit !important;
   }
-`;
 
-const fluidMargin = ({width, height}) => css.resolve`
-  .fluid-container {
-    width: ${width}px;
-    paddingBottom: ${100.0 / (width / height)}%;
+  /* These fix the grainy image overlay. */
+  :global(.image) * {
+    z-index: -1;
+  }
+
+  * :global(.image:before) {
+    z-index: 1;
   }
 `;
 
-export { fluidCss, fluidMargin };
+const resolveMarginCss = (width, height) => css.resolve`
+  * {
+    width: ${width}px;
+    padding-bottom: ${100.0 / (width / height)}%;
+  }
+`;
+
+export { fluidCss, resolveMarginCss };

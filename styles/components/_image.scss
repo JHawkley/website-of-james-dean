@@ -22,6 +22,7 @@
     border: 0;
     display: inline-block;
     position: relative;
+    z-index: 0;
 
     &:before {
       @include image-pseudo-element();
@@ -104,25 +105,6 @@
       }
     }
 
-    &.javascript-link, a#{&} {
-      color: inherit;
-      text-decoration: none;
-    
-      &:after {
-        @include image-pseudo-element();
-        @include vendor('transition', (
-          'border-color #{_duration(transition)} ease-in-out'
-        ));
-        border: solid 2px transparent;
-        padding: 2px;
-      }
-    
-      &:hover:after {
-        border: solid 2px _palette(fg);
-        background-clip: padding-box;
-      }
-    }
-
     @include breakpoint(small) {
       &.main {
         margin: (_size(element-margin) * 1) 0;
@@ -133,5 +115,24 @@
       &.main {
         margin: (_size(element-margin) * 0.75) 0;
       }
+    }
+  }
+
+  .image.javascript-link, a.image {
+    color: inherit;
+    text-decoration: none;
+  
+    &:after {
+      @include image-pseudo-element();
+      @include vendor('transition', (
+        'border-color #{_duration(transition)} ease-in-out'
+      ));
+      border: solid 2px transparent;
+      padding: 2px;
+    }
+  
+    &:hover:after {
+      border: solid 2px _palette(fg);
+      background-clip: padding-box;
     }
   }

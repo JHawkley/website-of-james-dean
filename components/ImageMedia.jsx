@@ -1,9 +1,10 @@
 import PropTypes from "prop-types";
 import { is, Composition } from "tools/common";
 import { preloadImage } from "tools/async";
+import { memoize } from "tools/functions";
 import { extensions as propTypeEx, hasOwn as propTypeHasOwn } from "tools/propTypes";
 import Preloadable from "components/Preloadable";
-import { fluidCss, fluidMargin } from "styles/jsx/imageMedia";
+import { fluidCss, resolveMarginCss } from "styles/jsx/imageMedia";
 
 class ImageMedia extends Preloadable {
 
@@ -53,6 +54,8 @@ class ImageMedia extends Preloadable {
     }
   }
 
+  memoizedMarginCss = memoize(resolveMarginCss);
+
   componentDidMount() {
     super.componentDidMount();
     const { src } = this.props;
@@ -68,45 +71,48 @@ class ImageMedia extends Preloadable {
     }
   }
 
+  renderImage(className, src, width, height, imgProps) {
+    return (
+      <img
+        {...imgProps}
+        ref={this.checkComplete}
+        width={width} height={height}
+        src={src}
+        className={className}
+        onLoad={this.onLoad}
+        onError={this.onError}
+      />
+    );
+  }
+
+  renderFluid(customClass, src, width, height, imgProps) {
+    const marginCss = this.memoizedMarginCss(width, height);
+    const imgClass = [customClass, fluidCss.className].filter(Boolean).join(" ");
+    const containerClass = [marginCss.className, fluidCss.className].join(" ");
+
+    const imgElement = this.renderImage(imgClass, src, width, height, imgProps);
+
+    return (
+      <div className={containerClass}>
+        {imgElement}
+        {fluidCss.styles}
+        {marginCss.styles}
+      </div>
+    );
+  }
+
   render() {
     const {
-      checkComplete, onLoad, onError,
       props: {
-        className: customClass,
-        src, width, height, fluid,
+        className, src, width, height, fluid,
         important, // eslint-disable-line no-unused-vars
         ...imgProps
       }
     } = this;
 
     if (!src) return null;
-
-    const classNameBuilder = [];
-    if (customClass) classNameBuilder.push(customClass);
-    if (fluid) classNameBuilder.push("fluid");
-    const className = classNameBuilder.length > 0 ? classNameBuilder.join(" ") : null;
-
-    const imgElement = (
-      <img
-        {...imgProps}
-        ref={checkComplete}
-        width={width} height={height}
-        src={src} className={className}
-        onLoad={onLoad} onError={onError}
-      />
-    );
-
-    if (!fluid) return imgElement;
-
-    const marginCss = fluidMargin(this.props);
-
-    return (
-      <div className={`fluid-container ${marginCss.className}`}>
-        {imgElement}
-        <style jsx>{fluidCss}</style>
-        {marginCss.styles}
-      </div>
-    );
+    if (fluid) return this.renderFluid(className, src, width, height, imgProps);
+    return this.renderImage(className, src, width, height, imgProps);
   }
 
 }
