@@ -76,13 +76,11 @@ class AppRoot extends React.PureComponent {
       state: { modalProps, lightboxData, lightboxIndex }
     } = this;
 
-    const className = ["js-only"];
-    if (customClass) className.push(customClass);
-    if (loading) className.push("app-loading");
+    const className = ["js-only", "app-root", customClass, loading && "app-loading"].filter(Boolean).join(" ");
 
     return (
-      <div ref={Modal.setAppElement} id="app-root" className={className.join(" ")}>
-        <div id="app-container">
+      <div ref={Modal.setAppElement} className={className}>
+        <div className="app-container">
           <ScrollLockedContext.Provider value={Boolean(modalProps || lightboxData)}>
             <ModalContext.Provider value={this.modalContext}>
               <LightboxContext.Provider value={this.lightboxContext}>
