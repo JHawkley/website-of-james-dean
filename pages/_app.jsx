@@ -10,7 +10,7 @@ import { Task, wait } from "tools/async";
 import { extensions as maybe } from "tools/maybe";
 import { memoize } from "tools/functions";
 import { canScrollRestore as transitionsSupported } from "tools/scrollRestoration";
-import { globalCss, throbberCss } from "styles/jsx/app";
+import { throbberCss } from "styles/jsx/app";
 
 import RouterContext, { create as createRouterContext } from "common/RouterContext";
 import PreloadContext from "common/PreloadContext";
@@ -322,7 +322,6 @@ class ScrollRestoringApp extends App {
       <RouterContext.Provider value={this.routerContext}>
         <PreloadContext.Provider value={this.preloadContext}>
           {transitionsSupported ? this.renderWithTransitions() : this.renderNoTransitions()}
-          <style jsx global>{globalCss}</style>
           {throbberCss.styles}
         </PreloadContext.Provider>
       </RouterContext.Provider>
