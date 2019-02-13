@@ -9,6 +9,7 @@ class Preloadable extends React.PureComponent {
   static contextType = PreloadContext;
 
   state = {
+    preloadSync: null,
     preloaded: false,
     error: null
   };
@@ -35,17 +36,21 @@ class Preloadable extends React.PureComponent {
   }
 
   componentDidMount() {
-    const { context: preloadSync, state: { preloaded, error } } = this;
-    preloadSync?.update?.(this, preloaded, error);
+    this.setState({ preloadSync: this.context });
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { context: preloadSync, state: { preloaded, error } } = this;
+    const { context: preloadContext, state: { preloadSync, preloaded, error } } = this;
     let forceUpdate = false;
 
-    if (preloadSync !== prevProps.preloadSync) {
-      prevProps.preloadSync?.dismount?.(this);
-      forceUpdate = Boolean(preloaded || error);
+    if (preloadContext !== preloadSync) {
+      this.setState({ preloadSync: preloadContext });
+      return;
+    }
+
+    if (preloadSync !== prevState.preloadSync) {
+      prevState.preloadSync?.dismount?.(this);
+      forceUpdate = true;
     }
 
     if (forceUpdate || preloaded !== prevState.preloaded || error !== prevState.error)
@@ -53,7 +58,7 @@ class Preloadable extends React.PureComponent {
   }
 
   componentWillUnmount() {
-    const { context: preloadSync } = this;
+    const { preloadSync } = this.state;
     preloadSync?.dismount?.(this);
     this.didUnmount = true;
   }
