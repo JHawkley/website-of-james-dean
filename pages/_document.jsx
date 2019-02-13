@@ -2,14 +2,9 @@ import Document, { Head, Main, NextScript } from "next/document";
 import siteStyle from "styles/main.scss";
 import lightboxStyle from "react-image-lightbox/style.css";
 import { dom as faDom } from "@fortawesome/fontawesome-svg-core";
-import flush from "styled-jsx/server";
+
 
 export default class StyledDocument extends Document {
-
-  static async getInitialProps(ctx) {
-    const props = await Document.getInitialProps(ctx);
-    return { ...props, styles: flush() };
-  }
 
   render() {
     return (
