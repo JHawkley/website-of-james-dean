@@ -126,6 +126,29 @@ export function singleton(factory) {
 }
 
 /**
+ * Compares all the arguments provided to this function, returning whether they are all equivalent, according
+ * to `Object.is`.  Has short-circuits up to arity-3.
+ *
+ * @export
+ * @param {...*} arguments The arguments to compare.
+ * @returns {boolean} Whether the arguments were all equivalent.
+ * @throws When no arguments were provided.
+ */
+export function allEq() {
+  switch (arguments.length) {
+    case 0: throw new Error("no arguments to compare were provided");
+    case 1: return true;
+    case 2: return Object.is(arguments[0], arguments[1]);
+    case 3: return Object.is(arguments[0], arguments[1]) && Object.is(arguments[1], arguments[2]);
+    default:
+      for (let i = 1, len = arguments.length; i < len; i++)
+        if (!Object.is(arguments[i - 1], arguments[i]))
+          return false;
+      return true;
+  }
+}
+
+/**
  * A class to aid object composition.
  *
  * @export
