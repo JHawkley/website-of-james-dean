@@ -183,8 +183,8 @@ class Transition extends React.PureComponent {
     if (stage !== prevState.stage) {
       let canceling = false;
 
-      if (stage === $entered && prevProps.exiting && entering) {
-        const prevComp = prevProps.exiting.Component;
+      if (stage === $entered && prevState.exiting && entering) {
+        const prevComp = prevState.exiting.Component;
         const curComp = entering.Component;
         canceling = Object.is(prevComp, curComp);
       }
