@@ -50,7 +50,7 @@ class AppRoot extends React.PureComponent {
       state: { modalProps, lightboxData, lightboxIndex }
     } = this;
 
-    const className = ["js-only", "app-root", customClass, loading && "app-loading"].filter(Boolean).join(" ");
+    const className = ["app-root", customClass, loading && "app-loading"].filter(Boolean).join(" ");
 
     return (
       <div ref={Modal.setAppElement} className={className}>
