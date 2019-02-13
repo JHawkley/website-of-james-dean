@@ -46,6 +46,22 @@ export function tryCall(thisArg = null, ...args) {
 }
 
 /**
+ * Tries to apply this function, wrapping its execution in a try-catch.  If the function throws, `undefined`
+ * will be returned instead.
+ *
+ * @export
+ * @template T,U
+ * @this {function(...U): T} The function to have its output memoized.
+ * @param {*} [thisArg=null] The object to bind to the function.
+ * @param {U[]} args The arguments to supply to the function.
+ * @returns {T|undefined} The result of this function or `undefined`.
+ */
+export function tryApply(thisArg = null, args) {
+  try { return args.length === 0 ? this.call(thisArg) : this.apply(thisArg, args); }
+  catch { return void 0; }
+}
+
+/**
  * Creates a function that will only call this function once.  The result of the function is stored and
  * returned if another call is made.
  *
