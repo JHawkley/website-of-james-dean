@@ -7,7 +7,7 @@ const fluidCss = css.resolve`
     max-width: 100% !important;
   }
   
-  img {
+  * > :global(img) {
     position: absolute !important;
     top: 0px !important;
     left: 0px !important;

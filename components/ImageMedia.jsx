@@ -87,10 +87,9 @@ class ImageMedia extends Preloadable {
 
   renderFluid(customClass, src, width, height, imgProps) {
     const marginCss = this.memoizedMarginCss(width, height);
-    const imgClass = [customClass, fluidCss.className].filter(Boolean).join(" ");
     const containerClass = [marginCss.className, fluidCss.className].join(" ");
 
-    const imgElement = this.renderImage(imgClass, src, width, height, imgProps);
+    const imgElement = this.renderImage(customClass, src, width, height, imgProps);
 
     return (
       <div className={containerClass}>
