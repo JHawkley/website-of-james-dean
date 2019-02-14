@@ -4,15 +4,17 @@ import { Fragment } from "react";
 import App, { createUrl } from "next/app";
 import Head from "next/head";
 import { getUrl } from "next-server/dist/lib/utils";
+import { css } from "styled-jsx/css";
 import { config as faConfig } from "@fortawesome/fontawesome-svg-core";
 
 import { dew } from "tools/common";
+import { timespan } from "tools/css";
 import { iterExtensions as asyncIterEx } from "tools/async";
 import { Task, wait } from "tools/async";
 import { extensions as maybe } from "tools/maybe";
 import { memoize } from "tools/functions";
 import { canScrollRestore as transitionsSupported } from "tools/scrollRestoration";
-import { throbberCss } from "styles/jsx/app";
+import styleVars from "styles/vars.json";
 
 import RouterContext, { create as createRouterContext } from "common/RouterContext";
 import PreloadContext from "common/PreloadContext";
@@ -334,6 +336,13 @@ class ScrollRestoringApp extends App {
   }
 
 }
+
+const throbberCss = dew(() => {
+  const fadeTime = timespan(styleVars["duration"]["modal"]);
+  const { className, styles } = css.resolve`* { z-index: 3; }`;
+
+  return { fadeTime, className, styles };
+});
 
 const updateHistoryState = (fn) => {
   const { url = getUrl(), as = url, options: oldOptions = {} } = window.history.state ?? {};
