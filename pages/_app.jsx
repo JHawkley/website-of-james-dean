@@ -3,7 +3,7 @@ import { hashScroll } from "patch/client-router";
 import { Fragment } from "react";
 import App, { createUrl } from "next/app";
 import Head from "next/head";
-import { getUrl } from "next/dist/lib/utils";
+import { getUrl } from "next-server/dist/lib/utils";
 import { config as faConfig } from "@fortawesome/fontawesome-svg-core";
 
 import { dew } from "tools/common";
