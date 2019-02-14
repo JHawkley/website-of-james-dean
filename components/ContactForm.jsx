@@ -86,8 +86,7 @@ class ContactForm extends React.Component {
 
   handleSend = () => {
     const formEl = this.formRef.current;
-    if (formEl::maybe.isEmpty())
-      throw new Error("contact form's send-message handler activated before being rendered");
+    if (!formEl) return;
     
     const name = extractValue(this.nameRef);
     const email = extractValue(this.emailRef);

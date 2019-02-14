@@ -4,6 +4,7 @@ import { preloadImage } from "tools/async";
 import { memoize } from "tools/functions";
 import { extensions as propTypeEx, hasOwn as propTypeHasOwn } from "tools/propTypes";
 import Preloadable from "components/Preloadable";
+import ImagePreloadError from "components/ImageMedia/ImagePreloadError";
 import { fluidCss, resolveMarginCss } from "styles/jsx/components/ImageMedia";
 
 class ImageMedia extends Preloadable {
@@ -45,9 +46,8 @@ class ImageMedia extends Preloadable {
   onError = () => {
     if (this.props.important) {
       const { src } = this.state;
-      const msg = ["image failed to load"];
-      if (src) msg.push(src);
-      this.handlePreloadError(new Error(msg.join(": ")));
+      const msg = ["image failed to load", src].filter(Boolean).join(": ");
+      this.handlePreloadError(new ImagePreloadError(msg));
     }
     else {
       this.handlePreloaded();

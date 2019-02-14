@@ -3,6 +3,7 @@ import { is, Composition } from "tools/common";
 import { extensions as propTypeEx, hasOwn as propTypeHasOwn } from "tools/propTypes";
 import Preloadable from "components/Preloadable";
 import Audio from "components/Audio";
+import SoundPreloadError from "components/SoundMedia/SoundPreloadError";
 
 class SoundMedia extends Preloadable {
 
@@ -32,9 +33,8 @@ class SoundMedia extends Preloadable {
 
   onError = () => {
     const src = this.props.src;
-    const msg = ["sound failed to load"];
-    if (src) msg.push(src);
-    this.handlePreloadError(new Error(msg.join(": ")));
+    const msg = ["sound failed to load", src].filter(Boolean).join(": ");
+    this.handlePreloadError(new SoundPreloadError(msg));
   }
 
   componentDidMount() {
@@ -90,14 +90,11 @@ function importWrapper(src, type, codec) {
     return <Audio {...props}>{Audio.sourceFromObj(soundData)}</Audio>;
   };
 
-  return Object.assign(
-    Audio.markSourceable(ImportedSound),
-    {
-      propTypes: { asSource: PropTypes.bool },
-      displayName: `importedSound("${src}")`
-    },
-    soundData
-  );
+  ImportedSound.propTypes = { asSource: PropTypes.bool };
+
+  ImportedSound.displayName = `importedSound("${src}")`;
+
+  return Object.assign(Audio.markSourceable(ImportedSound), soundData);
 }
 
 export default SoundMedia;

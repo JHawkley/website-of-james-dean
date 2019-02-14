@@ -6,6 +6,7 @@ import { extensions as arrEx } from "tools/array";
 import { extensions as propTypeEx, hasOwn as propTypeHasOwn } from "tools/propTypes";
 import Preloadable from "components/Preloadable";
 import SoundMedia from "components/SoundMedia";
+import SoundPreloadError from "components/SoundMedia/SoundPreloadError";
 
 const $$sourceable = Symbol("audio:sourceable");
 
@@ -44,7 +45,7 @@ class Audio extends Preloadable {
 
   static markSourceable(fn) {
     if (!fn::is.func())
-      throw new Error("only components (as in functions) can be marked as sourceable");
+      throw new TypeError("only components (as in functions) can be marked as sourceable");
     fn[$$sourceable] = true;
     return fn;
   }
@@ -123,9 +124,8 @@ class Audio extends Preloadable {
 
   onError = () => {
     const src = getFirstSrc(this.props.children);
-    const msg = ["sound failed to load"];
-    if (src) msg.push(src);
-    this.handlePreloadError(new Error(msg.join(": ")));
+    const msg = ["sound failed to load", src].filter(Boolean).join(": ");
+    this.handlePreloadError(new SoundPreloadError(msg));
   }
 
   componentDidMount() {

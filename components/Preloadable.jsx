@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import PreloadContext from "lib/PreloadContext";
 import { is } from "tools/common";
 import { inheritsFrom } from "tools/extensions/classes";
+import PreloadError from "components/Preloader/PreloadError";
 
 class Preloadable extends React.PureComponent {
 
@@ -32,7 +33,8 @@ class Preloadable extends React.PureComponent {
 
   handlePreloadError = (reason) => {
     if (this.isCompleted) return;
-    this.setState({ preloaded: false, error: reason ?? new Error("preload failed without a reason") });
+    const error = reason ?? new PreloadError("preload failed without a reason");
+    this.setState({ preloaded: false, error });
   }
 
   componentDidMount() {
