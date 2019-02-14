@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { dew } from "tools/common";
 import { memoize } from "tools/functions";
 import ScrollLockedContext from "common/ScrollLockedContext";
-import { resolveScrollCss } from "styles/jsx/wrapper";
+import { resolveScrollCss } from "styles/jsx/components/Wrapper";
 
 class Wrapper extends React.PureComponent {
 

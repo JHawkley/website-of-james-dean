@@ -4,7 +4,7 @@ import { preloadImage } from "tools/async";
 import { memoize } from "tools/functions";
 import { extensions as propTypeEx, hasOwn as propTypeHasOwn } from "tools/propTypes";
 import Preloadable from "components/Preloadable";
-import { fluidCss, resolveMarginCss } from "styles/jsx/imageMedia";
+import { fluidCss, resolveMarginCss } from "styles/jsx/components/ImageMedia";
 
 class ImageMedia extends Preloadable {
 

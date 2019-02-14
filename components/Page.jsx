@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { memoize } from "tools/functions";
 import RouterContext from "common/RouterContext";
 import Background from "components/Background";
-import { exitDelay, resolveDelayCss } from "styles/jsx/page";
+import { exitDelay, resolveDelayCss } from "styles/jsx/components/Page";
 
 const Page = (props) => {
   const {

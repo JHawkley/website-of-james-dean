@@ -14,8 +14,8 @@ import LoadingSpinner from "components/LoadingSpinner";
 import NotSupportedError from "components/Nate/NotSupportedError";
 import GameUpdateError from "components/Nate/GameUpdateError";
 
-import { fadeTime, componentCss, containerCss, nateSpriteCss, bulletSpriteCss } from "styles/jsx/nate";
-import { ImgNate, ImgBullet, ImgBulletBurst } from "styles/jsx/nate";
+import { fadeTime, componentCss, containerCss, nateSpriteCss, bulletSpriteCss } from "styles/jsx/components/Nate";
+import { ImgNate, ImgBullet, ImgBulletBurst } from "styles/jsx/components/Nate";
 
 import OggBowWow from "static/sounds/nate-game/bow-wow.ogg?codec=vorbis";
 import Mp3BowWow from "static/sounds/nate-game/bow-wow.mp3";

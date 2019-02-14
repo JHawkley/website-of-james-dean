@@ -6,7 +6,7 @@ import { dew, is } from "tools/common";
 import { memoize } from "tools/functions";
 import { AbortedError, Task, wait, frameSync } from "tools/async";
 import { extensions as propTypesEx } from "tools/propTypes";
-import { values, mainCss, resolvePositionCss } from "styles/jsx/loadingSpinner";
+import { values, mainCss, resolvePositionCss } from "styles/jsx/components/LoadingSpinner";
 
 const $componentUnmounted = "component unmounted";
 
