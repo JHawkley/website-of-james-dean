@@ -1,40 +1,27 @@
 import React from "react";
 import PropTypes from "prop-types";
-import PreloadSync from "components/Preloader/PreloadSync";
+import PreloadContext from "lib/PreloadContext";
 import { is } from "tools/common";
-
-const isProduction = process.env.NODE_ENV === 'production';
-
-const $$preloadable = Symbol("preloader:preloadable");
+import { inheritsFrom } from "tools/extensions/classes";
 
 class Preloadable extends React.PureComponent {
 
-  static [$$preloadable] = true;
-
-  static propTypes = { preloadSync: PropTypes.instanceOf(PreloadSync) };
-
-  static mark(Component) {
-    Component[$$preloadable] = true;
-    return Component;
-  }
-
-  static test(Component) {
-    return Component[$$preloadable] === true;
-  }
+  static contextType = PreloadContext;
 
   state = {
+    preloadSync: null,
     preloaded: false,
     error: null
   };
 
-  isUnmounted = false;
+  didUnmount = false;
 
   get isCompleted() {
-    return Boolean(this.isUnmounted || this.state.preloaded || this.state.error);
+    return Boolean(this.didUnmount || this.state.preloaded || this.state.error);
   }
 
   handleResetPreload = () => {
-    if (this.isUnmounted) return;
+    if (this.didUnmount) return;
     this.setState({ preloaded: false, error: null });
   }
 
@@ -49,128 +36,151 @@ class Preloadable extends React.PureComponent {
   }
 
   componentDidMount() {
-    const { preloaded, error } = this.state;
-    this.props.preloadSync?.update(this, preloaded, error);
+    this.setState({ preloadSync: this.context });
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { props: { preloadSync }, state: { preloaded, error } } = this;
+    const { context: preloadContext, state: { preloadSync, preloaded, error } } = this;
     let forceUpdate = false;
 
-    if (preloadSync !== prevProps.preloadSync) {
-      prevProps.preloadSync?.dismount(this);
-      forceUpdate = Boolean(preloaded || error);
+    if (preloadContext !== preloadSync) {
+      this.setState({ preloadSync: preloadContext });
+      return;
+    }
+
+    if (preloadSync !== prevState.preloadSync) {
+      prevState.preloadSync?.dismount?.(this);
+      forceUpdate = true;
     }
 
     if (forceUpdate || preloaded !== prevState.preloaded || error !== prevState.error)
-      preloadSync?.update(this, preloaded, error);
+      preloadSync?.update?.(this, preloaded, error);
   }
 
   componentWillUnmount() {
-    this.props.preloadSync?.dismount(this);
-    this.isUnmounted = true;
+    const { preloadSync } = this.state;
+    preloadSync?.dismount?.(this);
+    this.didUnmount = true;
   }
 
   render() { return null; }
   
 }
 
-const wrapped = (Component, name = nameOf(Component)) => {
-  if (Component[$$preloadable] === true) return Component;
+const wrapped = (Component, options) => {
+  if (!Component::is.func())
+    throw new TypeError("expected argument `Component` to be a function");
+
+  const properName = (options?.name ?? Component.displayName ?? Component.name) || "[anonymous component]";
+  const initialProps = options?.initialProps;
+  const onLoadedKey = options?.onLoadedKey ?? "onLoaded";
+  const onErrorKey = options?.onErrorKey ?? "onError";
+
+  if (Component::inheritsFrom(Preloadable)) {
+    if (!initialProps) return Component;
+    
+    const Wrapped = (givenProps) => <Component {...initialProps} {...givenProps} />;
+    Wrapped.displayName = `Preloadable.wrapped(${properName})`;
+    return Wrapped;
+  }
 
   return class extends Preloadable {
 
-    static displayName = `Preloadable.wrapped(${name})`;
+    static displayName = `Preloadable.wrapped(${properName})`;
 
     render() {
-      const {
-        handlePreloaded, handlePreloadError,
-        props: {
-          preloadSync, // eslint-disable-line no-unused-vars
-          ...childProps
-        }
-      } = this;
-      return <Component {...childProps} onLoaded={handlePreloaded} onError={handlePreloadError} />;
+      const { handlePreloaded, handlePreloadError, props: givenProps } = this;
+      const props = {
+        ...initialProps,
+        ...givenProps,
+        [onLoadedKey]: handlePreloaded,
+        [onErrorKey]: handlePreloadError
+      };
+      return <Component {...props} />;
     }
     
   };
 };
 
-const rendered = (renderFn, name = renderFn.name ?? "[unknown]") => {
+const rendered = (renderFn, options) => {
+  if (!renderFn::is.func())
+    throw new TypeError("expected argument `renderFn` to be a function");
+  
+  const properName = (options?.name ?? renderFn.name) || "[unnamed]";
+  const initialProps = options?.initialProps;
+
   return class extends Preloadable {
 
-    static displayName = `Preloadable.rendered(${name})`;
+    static displayName = `Preloadable.rendered(${properName})`;
 
     render() {
-      const {
-        handlePreloaded, handlePreloadError, handleResetPreload,
-        props: {
-          preloadSync, // eslint-disable-line no-unused-vars
-          ...childProps
-        }
-      } = this;
-      return renderFn(childProps, handlePreloaded, handlePreloadError, handleResetPreload);
+      const { handlePreloaded, handlePreloadError, handleResetPreload, props: givenProps } = this;
+      const props = initialProps ? {...initialProps, ...givenProps} : givenProps;
+      return renderFn(props, handlePreloaded, handlePreloadError, handleResetPreload);
     }
     
   };
 };
 
-const promised = (promise, name = "[unknown]") => {
+const promised = (promise, options) => {
+  if (!promise::is.defined())
+    throw new TypeError("expected argument `promise` to be defined");
+
+  const properName = (options?.name ?? promise.name) || "[unnamed]";
+  const initialProps = options?.initialProps;
+
   return class extends Preloadable {
 
-    static propTypes = { ...Preloadable.propTypes, component: PropTypes.bool };
+    static propTypes = {
+      render: PropTypes.oneOfType([
+        PropTypes.func,
+        PropTypes.shape({
+          loaded: PropTypes.func.isRequired,
+          loading: PropTypes.func
+        })
+      ]).isRequired
+    };
 
-    static displayName = `Preloadable.promised(${name})`;
+    static displayName = `Preloadable.promised(${properName})`;
 
     state = {
       ...this.state,
-      rendered: null
-    }
+      value: null
+    };
 
     componentDidMount() {
       super.componentDidMount();
+      const promiseProper = Promise.resolve(promise::is.func() ? promise() : promise);
 
-      promise.then(
-        (rendered) => this.isCompleted || this.setState({ rendered }, this.handlePreloaded),
+      promiseProper.then(
+        (value) => this.isCompleted || this.setState({ value }, this.handlePreloaded),
         this.handlePreloadError
       );
     }
 
-    componentDidUpdate(prevProps, prevState) {
-      super.componentDidUpdate(prevProps, prevState);
-
-      if (!isProduction && this.state.rendered !== prevState.rendered) {
-        const rendered = this.state.rendered;
-        // eslint-disable-next-line no-unused-vars
-        const { preloadSync, component, ...childProps } = this.props;
-        if (component && !rendered::is.func()) {
-          console.warn(`the promise provided to \`Preloadable.promised(${name})\` did not result in a component`);
-          console.dir({ rendered, childProps: childProps });
-        }
-      }
-    }
-
     render() {
       const {
-        props: { preloadSync, component, ...childProps },
-        state: { rendered }
+        context: preloadSync,
+        props: { render, ...givenProps },
+        state: { value }
       } = this;
 
-      if (!rendered) return null;
-      if (!component) return rendered;
-      if (!rendered::is.func()) return null;
+      if (!render)
+        return null;
+      
+      const props = initialProps ? {...initialProps, ...givenProps} : givenProps;
 
-      const Component = rendered;
-      if (Component[$$preloadable] === true)
-        return <Component {...childProps} preloadSync={preloadSync} />;
-      else
-        return <Component {...childProps} />;
+      if (render::is.func())
+        return render(value, props, preloadSync, this.isCompleted);
+
+      if (!this.isCompleted)
+        return render.loading?.(props, preloadSync);
+      
+      return render.loaded?.(value, props, preloadSync);
     }
 
   };
 };
-
-const nameOf = (Component) => Component.displayName ?? Component.name ?? "[anonymous component]";
 
 export default Preloadable;
 export { wrapped, rendered, promised };

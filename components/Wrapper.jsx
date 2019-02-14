@@ -1,71 +1,51 @@
 import React from "react";
 import PropTypes from "prop-types";
-import Header from "components/Header";
-import Main from "components/Main";
-import Footer from "components/Footer";
-import PreloadSync from "components/Preloader/PreloadSync";
+import { dew } from "tools/common";
+import { memoize } from "tools/functions";
+import ScrollLockedContext from "lib/ScrollLockedContext";
+import { resolveScrollCss } from "styles/jsx/components/Wrapper";
 
 class Wrapper extends React.PureComponent {
 
   static propTypes = {
-    preventScroll: PropTypes.bool,
-    article: PropTypes.string,
-    articlePages: PropTypes.instanceOf(Map).isRequired,
-    articleTimeout: PropTypes.bool.isRequired,
-    timeout: PropTypes.bool.isRequired,
-    appContext: PropTypes.shape({
-      preloadSync: PropTypes.instanceOf(PreloadSync).isRequired,
-      makeGallery: PropTypes.func.isRequired,
-      openLightbox: PropTypes.func.isRequired,
-      closeLightbox: PropTypes.func.isRequired,
-      enableScroll: PropTypes.func.isRequired,
-      disableScroll: PropTypes.func.isRequired
-    }).isRequired
+    children: PropTypes.node
   };
 
-  static getDerivedStateFromProps(props) {
-    if (!props.preventScroll) return null;
-    if (!process.browser) return null;
-    return { scrollX: window.scrollX, scrollY: window.scrollY };
-  }
+  static contextType = ScrollLockedContext;
 
-  state = { scrollX: 0, scrollY: 0 };
+  getScroll = dew(() => {
+    let current = null;
+    let previous = null;
 
-  componentDidUpdate(prevProps) {
-    if (!process.browser) return;
-    if (this.props.preventScroll !== prevProps.preventScroll)
-      if (!this.props.preventScroll)
-        window.scrollTo(this.state.scrollX, this.state.scrollY);
+    const restore = () => {
+      if (current) return;
+      if (!previous) return;
+      window.scrollTo(previous.x, previous.y);
+      previous = null;
+    };
+
+    const _getScroll = memoize((preventScroll) => {
+      current = preventScroll ? { x: window.scrollX, y: window.scrollY } : null;
+      if (current) previous = current;
+      const { className, styles } = resolveScrollCss(current);
+      return { restore, className, styles };
+    });
+
+    return () => _getScroll(this.context);
+  });
+
+  componentDidUpdate() {
+    this.getScroll().restore();
   }
 
   render() {
-    const {
-      props: { preventScroll, article, articlePages, articleTimeout, timeout, appContext },
-      state: { scrollY }
-    } = this;
+    const { children } = this.props;
+    const { className, styles } = this.getScroll();
+
     return (
-      <div id="wrapper">
-        <Header timeout={timeout} appContext={appContext} />
-        <Main
-          article={article}
-          articlePages={articlePages}
-          articleTimeout={articleTimeout}
-          timeout={timeout}
-          appContext={appContext}
-        />
-        <Footer timeout={timeout} appContext={appContext} />
-        { preventScroll && (
-          <style jsx global>
-            {`
-              .ReactModal__Body--open {
-                position: fixed;
-                width: 100%;
-                height: 100%;
-              }
-              #wrapper { margin-top: -${scrollY}px; }
-            `}
-          </style>
-        ) }
+      <div id="wrapper" className={className}>
+        {children}
+        {styles}
       </div>
     );
   }

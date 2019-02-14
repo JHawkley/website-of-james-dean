@@ -5,14 +5,13 @@ import { faImage } from "@fortawesome/free-regular-svg-icons/faImage";
 import { faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons/faExternalLinkAlt";
 import { faFilm } from "@fortawesome/free-solid-svg-icons/faFilm";
 import { faImages } from "@fortawesome/free-solid-svg-icons/faImages";
-import { Url, parse as parseUrl } from "url";
-import { extensions as objEx, dew, is } from "tools/common";
-import { extensions as maybe, nothing } from "tools/maybe";
+import { extensions as objEx, dew } from "tools/common";
+import { extensions as maybe } from "tools/maybe";
 
 const buildIcon = (props) => {
   const icon = dew(() => {
     switch (props.icon) {
-      case "none": return nothing;
+      case "none": return null;
       case "image": return faImage;
       case "images": return faImages;
       case "movie": return faFilm;
@@ -30,28 +29,8 @@ const buildIcon = (props) => {
   ));
 };
 
-const getLocationOrigin = () => {
-  const { protocol, hostname, port } = window.location;
-  return `${protocol}//${hostname}${port ? ":" + port : ""}`;
-}
-
-const doesItScroll = (href, router) => {
-  const parsedHref = href::is.string() ? parseUrl(href) : Object.assign(new Url(), href);
-  if (parsedHref.host::maybe.isDefined()) {
-    if (typeof window === "undefined") return void 0;
-    const parsedOrigin = parseUrl(getLocationOrigin());
-    if (parsedHref.protocol !== parsedOrigin.protocol) return void 0;
-    if (parsedHref.host !== parsedOrigin.host) return void 0;
-  }
-  
-  if (parsedHref.pathname::maybe.isEmpty()) return false;
-  const resolvedHref = parseUrl(router.pathname).resolveObject(parsedHref);
-  if (resolvedHref.pathname === router.pathname) return false;
-  return true;
-};
-
-const ownPropKeys = new Set(["children", "icon", "href", "scroll", "router"]);
-const linkPropKeys = new Set(["as", "prefetch", "replace", "shallow", "passHref"]);
+const ownPropKeys = new Set(["children", "icon", "href", "router"]);
+const linkPropKeys = new Set(["as", "prefetch", "replace", "shallow", "scroll", "passHref"]);
 
 const Jump = (props) => {
   const linkProps = {};
@@ -63,16 +42,19 @@ const Jump = (props) => {
   });
 
   const href = props.href;
-  const shouldScroll = props.scroll ?? doesItScroll(href, props.router);
 
   return (
-    <Link {...linkProps} href={href} scroll={shouldScroll}>
+    <Link {...linkProps} href={href}>
       <a {...anchorProps}>
         {props.children}
         {buildIcon(props)}
       </a>
     </Link>
   );
+};
+
+Jump.defaultProps = {
+  scroll: false
 };
 
 export default withRouter(Jump);

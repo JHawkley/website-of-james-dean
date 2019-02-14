@@ -66,3 +66,19 @@ export const fold = (a, b) => {
   }
   return result;
 }
+
+/**
+ * Determines if the two arrays have identical contents.  This is a shallow check, using `Object.is`.
+ *
+ * @param {Array} a The first array.
+ * @param {Array} b The second array.
+ * @returns {boolean} Whether the two arrays are identical.
+ */
+export const identical = (a, b) => {
+  if (Object.is(a, b)) return true;
+  if (a.length !== b.length) return false;
+  for (let i = 0, len = a.length; i < len; i++)
+    if (!Object.is(a[i], b[i]))
+      return false;
+  return true;
+}

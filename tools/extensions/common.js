@@ -123,6 +123,32 @@ export function times(count) {
 }
 
 /**
+ * Transforms this value into something else.
+ *
+ * @export
+ * @template T,U
+ * @this {T} The object to be transformed.
+ * @param {function(T): U} transformationFn The transformation function.
+ * @returns {U} The result of the transformation.
+ */
+export function map(transformationFn) {
+  return transformationFn(this);
+}
+
+/**
+ * Verifies that the own-properties of `obj` have a match in this object.  A match is determined via `Object.is`.
+ *
+ * @export
+ * @this {Object} The object to match `obj` to.
+ * @param {Object} obj The object whose own-properties to match.
+ * @returns {boolean}
+ */
+export function verifyProps(obj) {
+  if (Object.is(this, obj)) return true;
+  return Object.keys(obj).every(k => Object.is(this[k], obj[k]));
+}
+
+/**
  * Contains several extension methods for matching based on type.
 */
 export const is = {
@@ -132,10 +158,13 @@ export const is = {
   func() { "use strict"; return typeof this === "function"; },
   symbol() { "use strict"; return typeof this === "symbol"; },
   boolean() { "use strict"; return typeof this === "boolean"; },
+  defined() { "use strict"; return this != null; },
   undefined() { "use strict"; return typeof this === "undefined"; },
   null() { "use strict"; return this === null; },
-  NaN() { "use strict"; return Number.isNaN(this); },
-  object() { "use strict"; return this !== null && typeof this === "object"; },
+  finite() { "use strict"; return Number.isFinite(this); },
+  NaN() { "use strict"; return typeof this !== "number" || Number.isNaN(this); },
+  object() { "use strict"; return this != null && typeof this === "object"; },
   error() { "use strict"; return this instanceof Error },
-  instanceOf(klass) { "use strict"; return this instanceof klass; }
+  instanceOf(klass) { "use strict"; return this instanceof klass; },
+  that(other) { "use strict"; return Object.is(this, other); }
 };

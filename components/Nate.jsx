@@ -1,10 +1,9 @@
 import React, { Fragment } from "react";
 import PropTypes from "prop-types";
-import { css } from "styled-jsx/css";
 import { dew, is, global } from "tools/common";
-import { CallSync, eachFrame } from "tools/async";
+import { extensions as asyncEx, Task, eachFrame } from "tools/async";
 import { makeArray } from "tools/array";
-import { numeric } from "tools/css";
+import { flatMap } from "tools/extensions/array";
 import bulletActionList from "./Nate/bulletActionList";
 import nateActionList from "./Nate/nateActionList";
 import { behaviorModes, facings, aimings, movings, jumps, tracks } from "./Nate/core";
@@ -15,11 +14,8 @@ import LoadingSpinner from "components/LoadingSpinner";
 import NotSupportedError from "components/Nate/NotSupportedError";
 import GameUpdateError from "components/Nate/GameUpdateError";
 
-import styleVars from "styles/vars.json";
-
-import SpriteNate from "static/images/nate-game/nate_sprite.png";
-import SpriteBullet from "static/images/nate-game/bullet_sprite.png";
-import SpriteBulletBurst from "static/images/nate-game/bullet_burst_sprite.png";
+import { fadeTime, componentCss, containerCss, nateSpriteCss, bulletSpriteCss } from "styles/jsx/components/Nate";
+import { ImgNate, ImgBullet, ImgBulletBurst } from "styles/jsx/components/Nate";
 
 import OggBowWow from "static/sounds/nate-game/bow-wow.ogg?codec=vorbis";
 import Mp3BowWow from "static/sounds/nate-game/bow-wow.mp3";
@@ -34,13 +30,13 @@ import Mp3Pop1 from "static/sounds/nate-game/pop1.mp3";
 import OggPop2 from "static/sounds/nate-game/pop2.ogg?codec=vorbis";
 import Mp3Pop2 from "static/sounds/nate-game/pop2.mp3";
 
-// The amount of time in milliseconds to fade in/out when transitioning to/from loaded states.
-const fadeTime = 300;
+const $gameDetached = "game detached from the container";
+const $preloadingFailed = "preloading failed with an error";
+const $gameFailed = "game failed with an error";
 
 class Nate extends Preloadable {
 
   static propTypes = {
-    ...Preloadable.propTypes,
     onLoad: PropTypes.func,
     onError: PropTypes.func
   };
@@ -51,22 +47,21 @@ class Nate extends Preloadable {
   }
 
   static getDerivedStateFromError(error) {
-    return { error };
+    return error instanceof GameUpdateError ? { gameError: error } : { error };
   }
-
-  cancelAsync = new CallSync();
-
-  soundsEnabled = false;
 
   state = {
     ...this.state,
     imagesReady: false,
     soundsReady: false,
-    error: dew(() => {
+    error: null,
+    gameError: dew(() => {
       if (supported()) return null;
       return new NotSupportedError("the `Nate` component is not supported by the current browser");
     })
   };
+
+  soundsEnabled = false;
 
   world = {
     nate: {
@@ -139,55 +134,69 @@ class Nate extends Preloadable {
     }))
   };
 
+  runGameLoopTask = dew(() => {
+    const runGameLoop = async (stopSignal, container) => {
+      try {
+        document.addEventListener("mousemove", this.mouseMoveHandler);
+        document.addEventListener("scroll", this.scrollHandler);
+
+        let timeLast = performance.now();
+        await eachFrame(stopSignal, (timeNow) => {
+          try {
+            const delta = Math.min(timeNow - timeLast, 50.0);
+            //const delta = (1000 / 60) / 10;
+            timeLast = timeNow;
+            this.doGameUpdate(delta, container);
+            return true;
+          }
+          catch (capturedError) {
+            throw new GameUpdateError("an error occurred while updating the game state", capturedError);
+          }
+        });
+      }
+      catch (gameError) {
+        if (this.didUnmount) return;
+        if (gameError::asyncEx.isAborted()) return;
+        this.setState({ gameError });
+      }
+      finally {
+        document.removeEventListener("mousemove", this.mouseMoveHandler);
+        document.removeEventListener("scroll", this.scrollHandler);
+      }
+    };
+
+    return new Task(runGameLoop);
+  });
+
   onImagesReady = () => {
-    if (this.isUnmounted) return;
+    if (this.didUnmount) return;
     this.setState({ imagesReady: true });
   }
 
   onImagesFailed = (error) => {
-    if (this.isUnmounted) return;
+    if (this.didUnmount) return;
     this.setState({ imagesReady: false, error });
   }
 
   onSoundsReady = () => {
-    if (this.isUnmounted) return;
+    if (this.didUnmount) return;
     this.soundsEnabled = true;
     this.setState({ soundsReady: true });
   }
 
   onSoundsFailed = () => {
-    if (this.isUnmounted) return;
+    if (this.didUnmount) return;
+    // We can run fine without sounds; just disable them and continue.
     this.soundsEnabled = false;
     this.setState({ soundsReady: true });
   }
 
   attachGame = (container) => {
-    this.cancelAsync.resolve();
-
-    if (container) {
-      document.addEventListener("mousemove", this.mouseMoveHandler);
-      document.addEventListener("scroll", this.scrollHandler);
-
-      let timeLast = performance.now();
-      eachFrame(this.cancelAsync.sync, (timeNow) => {
-        try {
-          const delta = Math.min(timeNow - timeLast, 50.0);
-          //const delta = (1000 / 60) / 10;
-          timeLast = timeNow;
-          this.doGameUpdate(delta, container);
-        }
-        catch (capturedError) {
-          this.cancelAsync.resolve();
-          if (this.isUnmounted) return;
-          const error = new GameUpdateError("an error occurred while updating the game state", capturedError);
-          this.setState({ error });
-        }
-      });
-    }
-    else {
-      document.removeEventListener("mousemove", this.mouseMoveHandler);
-      document.removeEventListener("scroll", this.scrollHandler);
-    }
+    const { error, gameError } = this.state;
+    if (error) this.runGameLoopTask.stop($preloadingFailed);
+    else if (gameError) this.runGameLoopTask.stop($gameFailed);
+    else if (!container) this.runGameLoopTask.stop($gameDetached);
+    else this.runGameLoopTask.start(container);
   }
 
   mouseMoveHandler = (e) => {
@@ -247,8 +256,7 @@ class Nate extends Preloadable {
       } = nate;
 
       if (el) {
-        const { className } = nateCss.nateSprite;
-        el.className = [className, "nate-sprite", main, shoot].flatten().join(" ");
+        el.className = [nateSpriteCss.className, main, shoot].flatten().join(" ");
         el.style.left = (x | 0) + "px";
         el.style.bottom = (y | 0) + "px";
       }
@@ -269,8 +277,8 @@ class Nate extends Preloadable {
         el::toggleClass("despawned", isDespawned);
         if (isDespawned) return;
 
-        el::toggleClass("bullet-sprite", !isBursting);
-        el::toggleClass("bullet-burst-sprite", isBursting);
+        el::toggleClass("bullet", !isBursting);
+        el::toggleClass("bullet-burst", isBursting);
         el.style.left = (x | 0) + "px";
         el.style.bottom = (y | 0) + "px";
       });
@@ -283,6 +291,9 @@ class Nate extends Preloadable {
     const play = async () => {
       if (!sound) return;
       if (!this.soundsEnabled) return;
+      // Only play sounds when Nate is in his aggressive behavior.
+      // This is just to make the page less annoying; it only starts making sounds when
+      // the user is supposedly interacting with Nate.
       if (this.world.nate.brain.behavior !== behaviorModes.aggressive) return;
 
       try {
@@ -304,68 +315,58 @@ class Nate extends Preloadable {
 
   componentDidMount() {
     super.componentDidMount();
-    const { props: { onLoad, onError }, state: { preloaded, error } } = this;
+    const { props: { onGameError }, state: { gameError } } = this;
 
-    if (error) {
-      this.cancelAsync.resolve();
-      onError?.(error);
-    }
-    else if (preloaded) {
-      onLoad?.();
+    switch (true) {
+      case !gameError: break;
+      case onGameError::is.func(): onGameError(gameError); break;
+      default: throw gameError;
     }
   }
 
   componentDidUpdate(prevProps, prevState) {
     super.componentDidUpdate(prevProps, prevState);
-    const { props: { onLoad, onError }, state: { preloaded, error } } = this;
+    const { props: { onGameError }, state: { gameError } } = this;
 
-    if ((error !== prevState.error || onError !== prevProps.onError) && error) {
-      this.cancelAsync.resolve();
-      onError?.(error);
-    }
-    else if ((preloaded !== prevState.preloaded || onLoad !== prevProps.onLoad) && preloaded) {
-      onLoad?.();
+    if (gameError !== prevState.gameError || onGameError !== prevProps.onGameError) {
+      switch (true) {
+        case !gameError: break;
+        case onGameError::is.func(): onGameError(gameError); break;
+        default: throw gameError;
+      }
     }
   }
 
-  componentWillUnmount() {
-    super.componentWillUnmount();
-    this.cancelAsync.resolve();
-  }
-
-  renderContainer(ready) {
-    const {
-      container: { className: containerClass },
-      nateSprite: { className: nateClass }
-    } = nateCss;
+  renderContainer(preloaded) {
     const { nate: { ref: nateRef }, bounds: { ref: groundRef } } = this.world;
+    const { className: containerClass } = containerCss;
+    const { className: nateClass } = nateSpriteCss;
 
-    const attachGame = ready ? this.attachGame : null;
-    const className = [containerClass, "nate-container"];
-    if (!ready) className.push("loading");
+    const attachGame = preloaded ? this.attachGame : null;
+    const className = [containerClass, !preloaded && "loading"].filter(Boolean).join(" ");
     
     return (
-      <div ref={attachGame} className={className.join(" ")}>
-        <div className={`${containerClass} buffer top`} />
-        <div ref={groundRef} className={`${containerClass} ground-plane`} />
-        <div className={`${containerClass} buffer bottom`} />
-        <div ref={nateRef} className={`${nateClass} nate-sprite despawned`} />
+      <div ref={attachGame} className={className}>
+        <div className="buffer top" />
+        <div ref={groundRef} className="ground-plane" />
+        <div className="buffer bottom" />
+        <div ref={nateRef} className={`${nateClass} despawned`} />
         {this.renderBullets()}
       </div>
     );
   }
 
   renderBullets() {
-    const { className } = nateCss.bulletSprite;
-    return this.world.bullets.flatMap((bullet, x) => bullet.nodes.map((node, y) => {
+    const { className } = bulletSpriteCss;
+    return this.world.bullets::flatMap((bullet, x) => bullet.nodes.map((node, y) => {
       return <div key={`${x}.${y}`} ref={node.ref} className={`${className} node-${y + 1} despawned`} />;
     }));
   }
 
   renderImages() {
     return (
-      <Preloader onLoad={this.onImagesReady} onError={this.onImagesFailed} display={false} once>
-        <SpriteNate /><SpriteBullet /><SpriteBulletBurst />
+      <Preloader onLoad={this.onImagesReady} onError={this.onImagesFailed} display="never" once>
+        <ImgNate important /><ImgBullet important /><ImgBulletBurst important />
       </Preloader>
     );
   }
@@ -373,7 +374,7 @@ class Nate extends Preloadable {
   renderSounds() {
     const { nate, bullets } = this.world;
     return (
-      <Preloader onLoad={this.onSoundsReady} onError={this.onSoundsFailed} display={false} once>
+      <Preloader onLoad={this.onSoundsReady} onError={this.onSoundsFailed} display="never" once>
         <Audio audioRef={nate.sounds[tracks.bark].ref}><OggBowWow /><Mp3BowWow /></Audio>
         <Audio audioRef={nate.sounds[tracks.aroo].ref}><OggAroo /><Mp3Aroo /></Audio>
         <Audio audioRef={nate.sounds[tracks.land].ref}><OggLand /><Mp3Land /></Audio>
@@ -389,22 +390,20 @@ class Nate extends Preloadable {
   }
 
   render() {
-    const { imagesReady, soundsReady, error } = this.state;
-    const { container, nateSprite, bulletSprite } = nateCss;
+    const { preloaded, error, gameError } = this.state;
 
-    if (error) return null;
-
-    const ready = imagesReady && soundsReady;
+    if (error || gameError) return null;
 
     return (
-      <div className={`${container.className} root`}>
-        <LoadingSpinner size="2x" fadeTime={fadeTime} show={!ready} background />
-        {this.renderContainer(ready)}
+      <div className={componentCss.className}>
+        <LoadingSpinner size="2x" fadeTime={fadeTime} show={!preloaded} background />
+        {this.renderContainer(preloaded)}
         {this.renderImages()}
         {this.renderSounds()}
-        {nateSprite.styles}
-        {bulletSprite.styles}
-        {container.styles}
+        {componentCss.styles}
+        {nateSpriteCss.styles}
+        {bulletSpriteCss.styles}
+        {containerCss.styles}
       </div>
     );
   }
@@ -450,183 +449,6 @@ const supported = dew(() => {
       supported = detectRequestAnimationFrame() && detectAnimation() && detectTransform() && detectSet();
     return supported;
   };
-});
-
-const nateCss = dew(() => {
-  const nateSize = [52, 52];
-  const nateOffset = [-26, 5];
-  const bulletSize = [9, 9];
-  const bulletBurstSize = [17, 17];
-  const [margin, marginUnit] = numeric(styleVars.size["element-margin"]);
-
-  const spriteRendering = `
-    image-rendering: -moz-crisp-edges;
-    image-rendering: -o-crisp-edges;
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
-    -ms-interpolation-mode: nearest-neighbor;
-  `;
-
-  const frame = ([width, height], frameX, frameY) =>
-    `background-position: ${frameX * -width}px ${frameY * -height}px;`;
-
-  const row = ([, height], row) =>
-    `background-position-y: ${height * -row}px;`;
-
-  const col = ([width,], col) =>
-    `background-position-x: ${width * -col}px;`;
-
-  const size = ([width, height]) =>
-    `width: ${width}px; height: ${height}px;`;
-
-  const translateOffset = ([offX, offY]) =>
-    `translate(${offX}px, ${offY}px)`;
-
-  const translateCenter = ([width, height]) =>
-    translateOffset([-Math.ceil(width * 0.5), Math.ceil(height * 0.5)]);
-
-  const container = css.resolve`
-    .root {
-      position: relative;
-      margin: ${-margin}${marginUnit} ${-margin}${marginUnit} 0${marginUnit};
-    }
-
-    .nate-container {
-      overflow: visible !important;
-      position: relative;
-      z-index: 0;
-      opacity: 1;
-      transition: opacity ${fadeTime}ms ease-in-out;
-    }
-
-    .nate-container.loading {
-      opacity: 0;
-    }
-
-    .buffer {
-      visibility: hidden;
-      width: 100%;
-    }
-
-    .buffer.top { height: ${3 * margin}${marginUnit}; }
-    .buffer.bottom { height: ${margin}${marginUnit}; }
-
-    .ground-plane {
-      width: 100%;
-      height: 24px;
-
-      z-index: 0;
-      border: 1px solid #004A7F;
-      background-color: #0094FF;
-    }
-  `;
-
-  const nateSprite = css.resolve`
-    @keyframes run-cycle {
-      0% { ${col(nateSize, 0)} }
-      100% { ${col(nateSize, 6)} }
-    }
-
-    @keyframes jump-cycle {
-      0% { ${col(nateSize, 0)} }
-      100% { ${col(nateSize, 1)} }
-    }
-
-    @keyframes fall-cycle {
-      0% { ${col(nateSize, 3)} }
-      100% { ${col(nateSize, 4)} }
-    }
-
-    .nate-sprite {
-      ${spriteRendering}
-      ${size(nateSize)}
-      position: absolute;
-      z-index: 3;
-      background: url('${SpriteNate.src}');
-      transform: ${translateOffset(nateOffset)};
-    }
-
-    .idle { ${frame(nateSize, 0, 0)} }
-    .idle.look-up { ${frame(nateSize, 1, 0)} }
-
-    .idle.shoot-up { ${frame(nateSize, 4, 0)} }
-    .idle.shoot-up.recoil { ${frame(nateSize, 5, 0)} }
-
-    .idle.shoot-side { ${frame(nateSize, 2, 0)} }
-    .idle.shoot-side.recoil { ${frame(nateSize, 3, 0)} }
-
-    .idle.land { ${frame(nateSize, 5, 4)} }
-    .idle.land.shoot-side { ${frame(nateSize, 5, 5)} }
-    .idle.land.shoot-up { ${frame(nateSize, 5, 6)} }
-    .idle.land.shoot-down { ${frame(nateSize, 5, 7)} }
-
-    .run {
-      animation: run-cycle 0.75s steps(6) infinite;
-      ${row(nateSize, 1)}
-    }
-
-    .run.shoot-side { ${row(nateSize, 2)} }
-    .run.shoot-up { ${row(nateSize, 3)} }
-
-    .jump {
-      animation: jump-cycle 0.125s steps(1) 1 forwards;
-      ${row(nateSize, 4)}
-    }
-
-    .jump.apex {
-      animation: none;
-      ${col(nateSize, 2)}
-    }
-
-    .jump.fall { animation: fall-cycle 0.125s steps(1) 1 forwards; }
-
-    .jump.shoot-side { ${row(nateSize, 5)} }
-    .jump.shoot-up { ${row(nateSize, 6)} }
-    .jump.shoot-down { ${row(nateSize, 7)} }
-
-    .mirror { transform: ${translateOffset(nateOffset)} scale(-1.0, 1.0); }
-
-    .despawned { display: none; }
-  `;
-
-  const bulletSprite = css.resolve`
-    @keyframes bullet-flight {
-      0% { ${col(bulletSize, 0)} }
-      100% { ${col(bulletSize, 2)} }
-    }
-
-    @keyframes bullet-burst {
-      0% { ${row(bulletBurstSize, 0)} }
-      100% { ${row(bulletBurstSize, 1)} }
-    }
-
-    .bullet-sprite {
-      ${spriteRendering}
-      ${size(bulletSize)}
-      position: absolute;
-      background: url('${SpriteBullet.src}');
-      transform: ${translateCenter(bulletSize)};
-      animation: bullet-flight 0.2s steps(2) infinite;
-    }
-
-    .node-1 { z-index: 7; }
-    .node-2 { z-index: 6; ${row(bulletSize, 1)} }
-    .node-3 { z-index: 5; ${row(bulletSize, 2)} }
-
-    .bullet-burst-sprite {
-      ${spriteRendering}
-      ${size(bulletBurstSize)}
-      position: absolute;
-      z-index: 4;
-      background: url('${SpriteBulletBurst.src}');
-      transform: ${translateCenter(bulletBurstSize)};
-      animation: bullet-burst 0.075s steps(1) 1 forwards;
-    }
-
-    .despawned { display: none; }
-  `;
-
-  return { container, nateSprite, bulletSprite };
 });
 
 // Helper function for IE11, which lacks support for the second argument

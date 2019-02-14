@@ -1,30 +1,49 @@
-import Modal from "react-modal";
-import { timespan } from "tools/css";
-import styleVars from "styles/vars.json";
+import React from "react";
+import PropTypes from "prop-types";
+import { dew } from "tools/common";
+import { memoize } from "tools/functions";
+import ModalContext from "lib/ModalContext";
 
-const modalTransition = timespan(styleVars.duration.modal);
+class ModalPopup extends React.PureComponent {
 
-const overlayClasses = {
-  base: "modal-overlay",
-  afterOpen: "after-open",
-  beforeClose: "before-close"
-};
+  static contextType = ModalContext;
 
-const contentClasses = {
-  base: "modal-content",
-  afterOpen: "after-open",
-  beforeClose: "before-close"
-};
+  static propTypes = {
+    isOpen: PropTypes.bool
+  };
 
-const ModalPopup = (props) => (
-  <Modal
-    parentSelector={() => document.getElementById("__next")}
-    {...props}
-    portalClassName="modal-popup"
-    overlayClassName={overlayClasses}
-    className={contentClasses}
-    closeTimeoutMS={modalTransition}
-  />
-);
+  static defaultProps = {
+    isOpen: false
+  };
+
+  getModalProps = dew(() => {
+    // eslint-disable-next-line no-unused-vars
+    const _getter = memoize(({isOpen, ...modalProps}) => modalProps);
+    return () => _getter(this.props);
+  });
+
+  componentDidMount() {
+    if (this.props.isOpen)
+      this.context.open(this.getModalProps());
+  }
+
+  componentDidUpdate(prevProps) {
+    const { isOpen } = this.props;
+
+    if (isOpen !== prevProps.isOpen) {
+      if (isOpen) this.context.open(this.getModalProps());
+      else this.context.close();
+    }
+  }
+
+  componentWillUnmount() {
+    if (this.props.isOpen) this.context.close();
+  }
+
+  render() {
+    return null;
+  }
+
+}
 
 export default ModalPopup;

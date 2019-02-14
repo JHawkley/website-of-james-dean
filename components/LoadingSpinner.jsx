@@ -3,48 +3,52 @@ import PropTypes from "prop-types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons/faSpinner";
 import { dew, is } from "tools/common";
-import { color } from "tools/css";
-import { extensions as asyncEx, CallSync, wait } from "tools/async";
+import { memoize } from "tools/functions";
+import { AbortedError, Task, wait, frameSync } from "tools/async";
 import { extensions as propTypesEx } from "tools/propTypes";
-import styleVars from "styles/vars.json";
+import { values, mainCss, resolvePositionCss } from "styles/jsx/components/LoadingSpinner";
 
-const bgColor = color(styleVars.palette.bg).transparentize(0.15).asRgba();
-
-const $left = "left";
-const $center = "center";
-const $right = "right";
-const $top = "top";
-const $middle = "middle";
-const $bottom = "bottom";
+const $componentUnmounted = "component unmounted";
 
 const mustBePositive = (v) => v >= 0 ? true : "must be a positive number";
+const mustBeFinite = (v) => v::is.finite() ? true : "must be a finite number";
 
 class LoadingSpinner extends React.PureComponent {
 
   static propTypes = {
     fixed: PropTypes.bool,
-    hPos: PropTypes.oneOf([$center, $left, $right]),
+    hPos: PropTypes.oneOf(Object.values(values.hPos)),
     hOffset: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-    vPos: PropTypes.oneOf([$middle, $top, $bottom]),
+    vPos: PropTypes.oneOf(Object.values(values.vPos)),
     vOffset: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     className: PropTypes.string,
     style: PropTypes.object,
     size: PropTypes.oneOf(["xs", "sm", "lg", "1x", "2x", "3x", "4x", "5x", "6x", "7x", "8x", "9x", "10x"]),
     background: PropTypes.bool,
-    delay: PropTypes.number::propTypesEx.predicate(mustBePositive),
-    fadeTime: PropTypes.number::propTypesEx.predicate(mustBePositive),
-    show: PropTypes.bool
+    delay: PropTypes.oneOfType([
+      PropTypes.bool,
+      PropTypes.number
+        ::propTypesEx.predicate(mustBePositive)
+        ::propTypesEx.predicate(mustBeFinite)
+    ]),
+    fadeTime:
+      PropTypes.number
+      ::propTypesEx.predicate(mustBePositive)
+      ::propTypesEx.predicate(mustBeFinite),
+    show: PropTypes.bool,
+    onShown: PropTypes.func,
+    onHidden: PropTypes.func
   };
 
   static defaultProps = {
     fixed: false,
-    hPos: $center,
+    hPos: values.hPos.center,
     hOffset: "2rem",
-    vPos: $middle,
+    vPos: values.vPos.middle,
     vOffset: "2rem",
     size: "1x",
     background: false,
-    delay: 0,
+    delay: true,
     fadeTime: 0,
     show: true
   };
@@ -53,135 +57,142 @@ class LoadingSpinner extends React.PureComponent {
     return !props.show && state.shown ? { shown: false, vanishing: true } : null;
   }
 
-  cancelAsync = new CallSync();
+  state = {
+    shown: !this.props.delay && this.props.show,
+    vanishing: false,
+    error: null
+  };
 
-  constructor(props) {
-    super(props);
+  didUnmount = false;
 
-    this.state = {
-      shown: props.delay === 0 ? props.show : false,
-      vanishing: false
+  showTask = dew(() => {
+    const showSpinner = async (stopSignal) => {
+      if (this.state.vanishing) {
+        // Abort the vanishing.
+        await this.promiseState({ shown: true, vanishing: false });
+      }
+      else {
+        // Wait for the delay, then show.
+        const { delay } = this.props;
+        if (delay === true) await frameSync(stopSignal);
+        else if (delay::is.number() && delay > 0) await wait(delay, stopSignal);
+        await this.promiseState({ shown: true });
+      }
     };
+
+    return new Task(showSpinner, () => this.vanishTask.whenStarted);
+  });
+
+  vanishTask = dew(() => {
+    const clearVanish = async (stopSignal) => {
+      // Wait for the spinner to fade, then clear the flag.
+      const { fadeTime } = this.props;
+      if (fadeTime > 0) await wait(fadeTime, stopSignal);
+      await this.promiseState({ vanishing: false });
+    };
+
+    return new Task(clearVanish, () => this.showTask.whenStarted);
+  });
+
+  captureAsyncError = (error) => {
+    if (this.didUnmount) return;
+    if (error instanceof AbortedError) return;
+    this.setState({ error });
   }
 
-  async delayShow() {
+  memoizedPositionCss = memoize(resolvePositionCss);
+
+  beginShow() {
     if (this.state.shown) return;
-    
-    if (this.state.vanishing) {
-      this.cancelAsync.resolve();
-      this.setState({ shown: true, vanishing: false });
-    }
-    else {
-      const waited = await wait(this.props.delay, this.cancelAsync.sync);
-      if (waited::asyncEx.isAborted()) return;
-      if (this.state.shown) return;
-      this.setState({ shown: true });
-    }
+    this.showTask.restart().catch(this.captureAsyncError);
   }
 
-  async clearVanish() {
+  beginVanish() {
     if (!this.state.vanishing) return;
-    if (this.props.fadeTime > 0) {
-      const waited = await wait(this.props.fadeTime, this.cancelAsync.sync);
-      if (waited::asyncEx.isAborted()) return;
-      if (!this.state.vanishing) return;
-    }
-    this.setState({ vanishing: false });
+    this.vanishTask.restart().catch(this.captureAsyncError);
+  }
+
+  promiseState(newState) {
+    return new Promise((resolve, reject) => {
+      if (this.didUnmount) return reject(new AbortedError($componentUnmounted));
+      this.setState(newState, resolve);
+    });
   }
 
   componentDidMount() {
-    this.delayShow();
+    if (this.props.show) this.beginShow();
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { props: { show, delay }, state: { shown, vanishing } } = this;
-    let doShow = show !== prevProps.show && show && !shown;
+    const {
+      props: { show, delay, fadeTime },
+      state: { shown, vanishing, error }
+    } = this;
 
-    if (delay !== prevProps.delay) {
-      this.cancelAsync.resolve();
-      doShow = doShow || (show && !shown);
+    let doShow = false, doVanish = false;
+
+    if (error !== prevState.error && error)
+      throw error;
+
+    if (show !== prevProps.show && show)
+      if (!shown)
+        doShow = true;
+
+    if (shown !== prevState.shown && shown)
+      if (!prevState.vanishing)
+        this.props.onShown?.();
+
+    if (vanishing !== prevState.vanishing) {
+      if (vanishing) doVanish = true;
+      else if (!show && !shown) this.props.onHidden?.();
     }
 
-    if (vanishing !== prevState.vanishing && vanishing) this.clearVanish();
-    if (doShow) this.delayShow();
+    // Refresh the delay.
+    if (delay !== prevProps.delay)
+      doShow = show && !shown;
+
+    // Refresh the fade-out.
+    if (fadeTime !== prevProps.fadeTime)
+      doVanish = vanishing;
+
+    if (doShow) this.beginShow();
+    else if (doVanish) this.beginVanish();
   }
 
   componentWillUnmount() {
-    // Cancel asynchronous activities.
-    this.cancelAsync.resolve();
+    // Cancel asynchronous operations.
+    this.didUnmount = true;
+    this.showTask.stop($componentUnmounted);
+    this.vanishTask.stop($componentUnmounted);
   }
 
   render() {
     const {
-      props: { className: customClass, style: customStyle, size, fixed, background, fadeTime, show },
-      state: { shown, vanishing }
+      props: {
+        className: customClass, style, size, background, show,
+        fixed, fadeTime, hPos, hOffset, vPos, vOffset
+      },
+      state: { shown, vanishing, error }
     } = this;
 
-    const className = ["root"];
-    if (customClass) className.push(customClass);
-    if (background) className.push("bg");
+    if (error) return null;
 
-    const style = {
-      ...customStyle,
-      opacity: shown ? 1 : 0,
-      display: show || shown || vanishing ? "block" : "none"
-    };
-
-    const transform = dew(() => {
-      const { hPos, vPos } = this.props;
-      if (hPos !== $center && vPos !== $middle) return "none";
-      const xTrans = hPos === $center ? "-50%" : "0%";
-      const yTrans = vPos === $middle ? "-50%" : "0%";
-      return `translate(${xTrans}, ${yTrans})`;
-    });
-
-    const [horizAttr, horizVal] = dew(() => {
-      const { hPos, hOffset } = this.props;
-      const offset = hOffset::is.string() ? hOffset : `${hOffset}px`;
-      switch (hPos) {
-        case $left: return [$left, offset];
-        case $right: return [$right, offset];
-        default: return [$left, "50%"];
-      }
-    });
-
-    const [vertAttr, vertVal] = dew(() => {
-      const { vPos, vOffset } = this.props;
-      const offset = vOffset::is.string() ? vOffset : `${vOffset}px`;
-      switch (vPos) {
-        case $top: return [$top, offset];
-        case $bottom: return [$bottom, offset];
-        default: return [$top, "50%"];
-      }
-    });
+    const isDisplayed = show || shown || vanishing;
+    const positionCss = this.memoizedPositionCss(fixed, fadeTime, hPos, hOffset, vPos, vOffset);
+    const className = [
+      customClass,
+      mainCss.className,
+      positionCss.className,
+      background && "bg",
+      shown && "is-shown",
+      isDisplayed && "is-displayed"
+    ].filter(Boolean).join(" ");
 
     return (
-      <div className={className.join(" ")} style={style}>
+      <div className={className} style={style}>
         <FontAwesomeIcon icon={faSpinner} size={size === "1x" ? null : size} spin />
-        <style jsx>
-          {`
-            .root {
-              pointer-events: none;
-              opacity: 0;
-            }
-            .bg {
-              border-radius: 4px;
-              padding: 1.5rem;
-              background-color: ${bgColor};
-            }
-          `}
-        </style>
-        <style jsx>
-          {`
-            .root {
-              position: ${fixed ? "fixed" : "absolute"};
-              ${fadeTime > 0 ? `transition: opacity ${fadeTime}ms ease-in-out;` : ""}
-              transform: ${transform};
-              ${horizAttr}: ${horizVal};
-              ${vertAttr}: ${vertVal};
-            }
-          `}
-        </style>
+        {mainCss.styles}
+        {positionCss.styles}
       </div>
     );
   }

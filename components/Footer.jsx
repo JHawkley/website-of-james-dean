@@ -1,16 +1,22 @@
 import PropTypes from "prop-types";
-import Jump from "./Jump";
 
-const Footer = ({timeout}) => (
-  <footer id="footer" style={timeout ? {display: 'none'} : null}>
-    <p className="copyright">Template: &copy; <Jump href="https://github.com/codebushi/nextjs-starter-dimension" icon="none">Next.js Starter - Dimension</Jump>.  Content: &copy; James Dean</p>
-    <p className="copyright">Design: <Jump href="https://html5up.net" icon="none">HTML5 UP</Jump>.  Built with: <Jump href="https://github.com/zeit/next.js" icon="none">Next.js</Jump></p>
-  </footer>
-);
+/**
+ * A footer for the front-page of the application.
+ * 
+ * @export
+ * @param {Object} props The props for the component.
+ * @param {*} [props.children] The component's children.
+ * @param {string} [props.className] A custom class for the root `footer#footer` element.
+ * @param {Object} [props.style] A style to apply to the root `footer#footer` element.
+ * @returns A DOM-tree fragment.
+ */
+const Footer = ({children, className, style}) =>
+  <footer id="footer" className={className} style={style}>{children}</footer>;
 
 Footer.propTypes = {
-  timeout: PropTypes.bool,
-  appContext: PropTypes.object.isRequired
+  children: PropTypes.node,
+  className: PropTypes.string,
+  style: PropTypes.object
 };
 
 export default Footer;

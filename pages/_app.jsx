@@ -1,64 +1,46 @@
-// Polyfills.
-import 'core-js/es6/symbol';
-import 'core-js/es7/symbol';
-import 'core-js/es6/array';
-import 'core-js/es7/array';
-import 'core-js/web/immediate';
-
-import React, { Fragment } from "react";
 import { hashScroll } from "patch/client-router";
 
+import { Fragment } from "react";
 import App, { createUrl } from "next/app";
 import Head from "next/head";
-import { getUrl, loadGetInitialProps, loadGetRenderProps } from "next/dist/lib/utils";
+import { getUrl } from "next-server/dist/lib/utils";
+import { css } from "styled-jsx/css";
+import { config as faConfig } from "@fortawesome/fontawesome-svg-core";
 
-import Modal from "react-modal";
-import { config as faConfig, dom as faDom } from "@fortawesome/fontawesome-svg-core";
-import { dew, is } from "tools/common";
+import { dew } from "tools/common";
+import { timespan } from "tools/css";
+import { iterExtensions as asyncIterEx } from "tools/async";
+import { Task, wait } from "tools/async";
 import { extensions as maybe } from "tools/maybe";
+import { memoize } from "tools/functions";
+import { canScrollRestore as transitionsSupported } from "tools/scrollRestoration";
+import styleVars from "styles/vars.json";
+
+import RouterContext, { create as createRouterContext } from "lib/RouterContext";
+import PreloadContext from "lib/PreloadContext";
+
+import PreloadSync from "components/Preloader/PreloadSync";
+import Transition from "components/Transition";
+import AppRoot from "components/AppRoot";
+import Wrapper from "components/Wrapper";
+import LoadingSpinner from "components/LoadingSpinner";
+import Page from "components/Page";
 
 faConfig.autoAddCss = false;
 
-const updateHistoryState = (fn) => {
-  const { url = getUrl(), as = url, options: oldOptions = {} } = window.history.state ?? {};
-  const newOptions = fn(oldOptions) ?? oldOptions;
-  if (newOptions === oldOptions) return;
-  window.history.replaceState({ url, as, options: newOptions }, null, as);
-};
+const scrollRestoreSupported = process.browser && transitionsSupported;
 
-const getHistoryState = (key) => window.history.state?.options?.[key];
+class ScrollRestoringApp extends App {
 
-export const canScrollRestore = dew(() => {
-  if (typeof window === "undefined") return false;
-  if (typeof window.sessionStorage === "undefined") return false;
-  return window.history.scrollRestoration::is.string();
-});
+  // Callbacks.
 
-export default class ScrollRestoringApp extends App {
-
-  static async getInitialProps({ Component, ctx }) {
-    const initialPageProps = await loadGetInitialProps(Component, ctx);
-    return { initialPageProps };
+  onPageHidden = () => {
+    this.setState({ pageHidden: true });
   }
 
-  static async getRenderProps(props, { Component, ctx }, ssr) {
-    const { initialPageProps: oldProps } = props;
-    const newProps = await loadGetRenderProps(Component, oldProps, ctx, ssr);
-    if (oldProps === newProps) return props;
-    return { ...props, initialPageProps: newProps };
-  }
-
-  originalScrollRestorationValue = "auto";
-
-  scrollRestoreData = null;
-
-  scrollRestoreEntry = 0;
-
-  hashBlockID = null;
-
-  constructor(props) {
-    super(props);
-    this.state = { pageProps: props.initialPageProps ?? {} };
+  onPageShown = () => {
+    this.setState({ pageHidden: false });
+    this.restoreScrollPosition();
   }
 
   optionsForEntryId = (oldOptions) => {
@@ -78,42 +60,22 @@ export default class ScrollRestoringApp extends App {
     return Object.assign({}, oldOptions, { didEntryScroll: true });
   }
 
-  restoreScrollPosition = () => {
-    if (canScrollRestore) {
-      let scrollPosition = this.scrollRestoreData[this.scrollRestoreEntry];
-      if (scrollPosition == null) {
-        if (this.scrollToHash()) return;
-        scrollPosition = [0, 0];
-      }
-      
-      const [scrollX, scrollY] = scrollPosition;
-      window.scrollTo(scrollX, scrollY);
-    }
-    else if (!getHistoryState("didEntryScroll")) {
-      updateHistoryState(this.optionsForEntryScroll);
-      if (this.scrollToHash()) return;
-      window.scrollTo(0, 0);
-    }
-  }
-
   onBeforeMajorChange = () => {
-    if (!canScrollRestore) return;
+    if (!scrollRestoreSupported) return;
     this.updateScrollPosition();
     this.persistScrollRestoreData();
   }
 
-  onRouteChangeStart = () => {
-    this.onBeforeMajorChange();
-    const { props: { Component }, state: { pageProps: oldProps } } = this;
-    const newProps = Component.getRouteChangeProps?.(oldProps) ?? oldProps;
-    if (newProps !== oldProps)
-      this.setState({ pageProps: newProps });
-  }
-
-  onRouteChangeComplete = () => {
-    if (!canScrollRestore) return;
+  onAfterMajorChange = () => {
+    if (!scrollRestoreSupported) return;
     updateHistoryState(this.optionsForEntryId);
     this.persistScrollRestoreData();
+  }
+
+  onRouteChangeStart = () => {
+    if (this.state.routeChanging) return;
+    this.onBeforeMajorChange();
+    this.setState({ routeChanging: true });
   }
 
   scrollToHash = () => {
@@ -136,38 +98,94 @@ export default class ScrollRestoringApp extends App {
     return false;
   }
 
-  componentDidMount() {
-    const { router } = this.props;
-    if (canScrollRestore) {
+  // Properties.
+
+  state = {
+    loading: true,
+    routeChanging: false,
+    pageHidden: transitionsSupported
+  };
+
+  originalScrollRestorationValue = "auto";
+
+  scrollRestoreData = null;
+
+  scrollRestoreEntry = 0;
+
+  hashBlockID = null;
+
+  routerContext = createRouterContext(this.props.router, this.onRouteChangeStart);
+
+  preloadContext = new PreloadSync();
+
+  doLoadingTask = dew(() => {
+    const doLoading = async (stopSignal) => {
+      try {
+        const { preloadContext: preloadSync } = this;
+        const $$preloaded = PreloadSync.states.preloaded;
+
+        // Tell the preloadSync we've rendered the page.  If nothing registered for preloading,
+        // this will tell it to advance to the `$$preloaded` state.
+        preloadSync.rendered();
+
+        // Wait for preloading to finish...
+        const preloadPromise = preloadSync.updates::asyncIterEx.first($$preloaded, stopSignal);
+        // ...or at least wait some amount of time before we load anyways.
+        // Things registered with the app's preloadSync are considered low-priority.
+        const timerPromise = wait(Page.transition.exitDelay * 5, stopSignal);
+
+        await Promise.race([preloadPromise, timerPromise]);
+      }
+      finally {
+        this.setState({ loading: false });
+      }
+    };
+
+    return new Task(doLoading);
+  });
+
+  buildPage = memoize((Component, pageProps, router, routeChanging) => {
+    if (!Component)
+      throw new Error("`next-js` should always provide a component to the app");
+
+    if (transitionsSupported && routeChanging)
+      return null;
+  
+    return {
+      ...Page.transition, ...Component.transition, Component,
+      props: { url: createUrl(router), ...pageProps }
+    };
+  });
+
+  // Constructor.
+
+  constructor(props) {
+    super(props);
+
+    if (scrollRestoreSupported) {
       this.originalScrollRestorationValue = window.history.scrollRestoration;
       window.history.scrollRestoration = "manual";
       this.recallScrollRestoreData();
     }
-    
-    this.hashBlockID = hashScroll.block();
-    window.addEventListener("beforeunload", this.onBeforeMajorChange);
-    router.events.on("routeChangeStart", this.onRouteChangeStart);
-    router.events.on("routeChangeComplete", this.onRouteChangeComplete);
-    router.events.on("hashChangeComplete", this.scrollToHash);
-
-    this.onRouteChangeComplete();
   }
 
-  componentDidUpdate(prevProps) {
-    if (this.props.initialPageProps !== prevProps.initialPageProps)
-      this.setState({ pageProps: this.props.initialPageProps });
-  }
+  // Methods.
 
-  componentWillUnmount() {
-    const { router } = this.props;
-    window.removeEventListener("beforeunload", this.onBeforeMajorChange);
-    router.events.off("routeChangeStart", this.onRouteChangeStart);
-    router.events.off("routeChangeComplete", this.onRouteChangeComplete);
-    router.events.off("hashChangeComplete", this.scrollToHash);
-    if (this.hashBlockID != null) hashScroll.release(this.hashBlockID);
-    if (canScrollRestore) {
-      this.persistScrollRestoreData();
-      window.history.scrollRestoration = this.originalScrollRestorationValue;
+  restoreScrollPosition() {
+    if (scrollRestoreSupported) {
+      let scrollPosition = this.scrollRestoreData[this.scrollRestoreEntry];
+      if (scrollPosition == null) {
+        if (this.scrollToHash()) return;
+        scrollPosition = [0, 0];
+      }
+      
+      const [scrollX, scrollY] = scrollPosition;
+      window.scrollTo(scrollX, scrollY);
+    }
+    else if (!getHistoryState("didEntryScroll")) {
+      updateHistoryState(this.optionsForEntryScroll);
+      if (this.scrollToHash()) return;
+      window.scrollTo(0, 0);
     }
   }
 
@@ -188,18 +206,151 @@ export default class ScrollRestoringApp extends App {
     this.scrollRestoreEntry = options?.entryId ?? this.scrollRestoreData.length;
   }
 
+  // React life-cycle methods.
+
+  componentDidMount() {
+    // Do not run this method on the server.
+    if (!process.browser) return;
+
+    const { router } = this.props;
+    
+    this.hashBlockID = hashScroll.block();
+    window.addEventListener("beforeunload", this.onBeforeMajorChange);
+    router.events.on("routeChangeStart", this.onRouteChangeStart);
+    router.events.on("hashChangeComplete", this.scrollToHash);
+
+    this.onAfterMajorChange();
+    this.doLoadingTask.start();
+  }
+
+  componentDidUpdate(prevProps) {
+    const { Component } = this.props;
+    if (Component !== prevProps.Component)
+      this.setState({ routeChanging: false }, this.onAfterMajorChange);
+  }
+
+  componentWillUnmount() {
+    // Do not run this method on the server.
+    if (!process.browser) return;
+
+    const { router } = this.props;
+
+    this.doLoadingTask.stop();
+
+    window.removeEventListener("beforeunload", this.onBeforeMajorChange);
+    router.events.off("routeChangeStart", this.onRouteChangeStart);
+    router.events.off("hashChangeComplete", this.scrollToHash);
+    if (this.hashBlockID != null) hashScroll.release(this.hashBlockID);
+
+    if (scrollRestoreSupported) {
+      this.persistScrollRestoreData();
+      window.history.scrollRestoration = this.originalScrollRestorationValue;
+    }
+  }
+
+  renderAppLoader() {
+    const { loading } = this.state;
+
+    return (
+      <LoadingSpinner
+        fadeTime={throbberCss.fadeTime}
+        size="3x"
+        show={loading}
+        className={throbberCss.className}
+        fixed
+      />
+    );
+  }
+
+  renderNoTransitions() {
+    const {
+      props: { Component, pageProps, router },
+      state: { loading, routeChanging }
+    } = this;
+
+    const { render, props, exitDelay } =
+      this.buildPage(Component, pageProps, router, routeChanging);
+
+    return (
+      <AppRoot loading={loading} routeChanging={routeChanging}>
+        <Wrapper>
+          {render(Component, props, exitDelay, "entered")}
+        </Wrapper>
+        {this.renderAppLoader()}
+        <LoadingSpinner
+          delay={exitDelay}
+          fadeTime={throbberCss.fadeTime}
+          hPos="right" vPos="bottom" size="2x"
+          show={loading ? false : routeChanging}
+          className={throbberCss.className}
+          fixed
+        />
+      </AppRoot>
+    );
+  }
+
+  renderWithTransitions() {
+    const {
+      props: { Component, pageProps, router },
+      state: { loading, routeChanging, pageHidden }
+    } = this;
+
+    const page = this.buildPage(Component, pageProps, router, routeChanging);
+
+    return (
+      <AppRoot loading={loading} routeChanging={routeChanging}>
+        <Wrapper>
+          <Transition
+            content={page}
+            onExited={this.onPageHidden}
+            onEntering={this.onPageShown}
+            wait={loading}
+          />
+        </Wrapper>
+        {this.renderAppLoader()}
+        <LoadingSpinner
+          delay={100}
+          fadeTime={throbberCss.fadeTime}
+          size="3x"
+          show={!loading && pageHidden}
+          className={throbberCss.className}
+          background
+          fixed
+        />
+      </AppRoot>
+    );
+  }
+
   render() {
-    const { props: { router, Component }, state: { pageProps } } = this;
     return (
       <Fragment>
-        <Head><style dangerouslySetInnerHTML={{ __html: faDom.css() }} /></Head>
-        <Component {...pageProps}
-          elementRef={Modal.setAppElement}
-          url={createUrl(router)}
-          notifyPageReady={this.restoreScrollPosition}
-        />
+        <Head><title>A Programmer's Place</title></Head>
+        <RouterContext.Provider value={this.routerContext}>
+          <PreloadContext.Provider value={this.preloadContext}>
+            {transitionsSupported ? this.renderWithTransitions() : this.renderNoTransitions()}
+            {throbberCss.styles}
+          </PreloadContext.Provider>
+        </RouterContext.Provider>
       </Fragment>
     );
   }
 
 }
+
+const throbberCss = dew(() => {
+  const fadeTime = timespan(styleVars["duration"]["modal"]);
+  const { className, styles } = css.resolve`* { z-index: 3; }`;
+
+  return { fadeTime, className, styles };
+});
+
+const updateHistoryState = (fn) => {
+  const { url = getUrl(), as = url, options: oldOptions = {} } = window.history.state ?? {};
+  const newOptions = fn(oldOptions) ?? oldOptions;
+  if (newOptions === oldOptions) return;
+  window.history.replaceState({ url, as, options: newOptions }, null, as);
+};
+
+const getHistoryState = (key) => window.history.state?.options?.[key];
+
+export default ScrollRestoringApp;

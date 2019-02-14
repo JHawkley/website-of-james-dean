@@ -1,4 +1,4 @@
-import InnerError from "common/InnerError";
+import InnerError from "lib/InnerError";
 
 class GameUpdateError extends InnerError {
 

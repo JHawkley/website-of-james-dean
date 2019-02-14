@@ -343,8 +343,8 @@ export function flattenBy(levels = 1) {
   return this::arrayFlattenBy(levels);
 }
 
-const arrayFlattenBy = Array.prototype.flatten ?? dew(() => {
-  return function flattenBy(levels) {
+const arrayFlattenBy = Array.prototype.flat ?? Array.prototype.flatten ?? dew(() => {
+  return function flattenByImpl(levels) {
     if (levels <= 0) return this;
     return flattenBy_recursive(this, [], levels);
   }
@@ -357,6 +357,32 @@ const arrayFlattenBy = Array.prototype.flatten ?? dew(() => {
         if (Array.isArray(value)) flattenBy_recursive(value, result, levels - 1);
         else result.push(value);
       }
+    }
+    return result;
+  }
+});
+
+/**
+ * Performs a map on each element of the array, then flattens the result by one level.
+ *
+ * @export
+ * @template T,U
+ * @this {T[]} This array.
+ * @param {FlatMapperFunction<T, U>} xformFn The transformation function.
+ * @returns {U[]} A new array.
+ */
+export function flatMap(xformFn) {
+  return this::arrayFlatMap(xformFn);
+}
+
+const arrayFlatMap = Array.prototype.flatMap ?? dew(() => {
+  return function flatMapImpl(xformFn) {
+    const result = [];
+    for (let i = 0, len = this.length; i < len; i++) {
+      const oldVal = this[i];
+      const newVal = xformFn(oldVal, i, this);
+      if (Array.isArray(newVal)) result.push(...newVal);
+      else result.push(newVal);
     }
     return result;
   }
@@ -388,4 +414,13 @@ const arrayFlattenBy = Array.prototype.flatten ?? dew(() => {
  * @param {number} index The current index into the array.
  * @param {T[]} arr The array being iterated.
  * @returns {boolean} Whether the `currentValue` should belong to the same group as `previousValue`.
+ */
+
+/**
+ * @template T,U
+ * @callback FlatMapperFunction
+ * @param {T} value The current value.
+ * @param {number} index The current index.
+ * @param {T[]} arr The array being iterated.
+ * @return {U|U[]} The transformed value.
  */

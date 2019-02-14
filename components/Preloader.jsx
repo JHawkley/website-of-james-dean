@@ -1,11 +1,11 @@
 import React from "react";
 import PropTypes from "prop-types";
+import PreloadContext from "lib/PreloadContext";
 import PreloadSync from "components/Preloader/PreloadSync";
-import Preloadable from "components/Preloadable";
-import { dew, is, Composition } from "tools/common";
-import { Future, CallSync } from "tools/async";
+import { is, dew, Composition } from "tools/common";
+import { Future, CallSync, AbortedError } from "tools/async";
+import { predicate } from "tools/extensions/propTypes";
 import { extensions as asyncIterEx } from "tools/asyncIterables";
-import { extensions as classEx } from "tools/classes";
 
 const {
   fresh: $$fresh,
@@ -16,6 +16,13 @@ const {
 const $always = "always";
 const $loaded = "loaded";
 const $never = "never";
+const $naked = "naked";
+
+const notNaked = (value, key, props) => {
+  if (!value::is.defined()) return true;
+  if (props.display !== $naked) return true;
+  return `${key} must be unset when \`display\` is set to "naked"`;
+};
 
 class Preloader extends React.PureComponent {
 
@@ -26,12 +33,12 @@ class Preloader extends React.PureComponent {
     onPreload: PropTypes.func,
     onLoad: PropTypes.func,
     onError: PropTypes.func,
-    id: PropTypes.string,
-    className: PropTypes.string,
-    style: PropTypes.object,
+    id: PropTypes.string::predicate(notNaked),
+    className: PropTypes.string::predicate(notNaked),
+    style: PropTypes.object::predicate(notNaked),
     display: PropTypes.oneOfType([
       PropTypes.bool,
-      PropTypes.oneOf([$always, $loaded, $never])
+      PropTypes.oneOf([$always, $loaded, $never, $naked])
     ]),
     wait: PropTypes.bool,
     once: PropTypes.bool
@@ -105,6 +112,7 @@ class Preloader extends React.PureComponent {
   attachToPreloadSync() {
     const { preloadSyncUpdated, cancelAsync, state: { preloadSync } } = this;
     preloadSync.updates::asyncIterEx.forEach(preloadSyncUpdated, cancelAsync.sync).catch((error) => {
+      if (error instanceof AbortedError) return;
       this.setState({ error });
     });
     preloadSync.rendered();
@@ -155,7 +163,7 @@ class Preloader extends React.PureComponent {
       state: { error, preloadSync, preloadState, ownedPreloadSync }
     } = this;
 
-    if (promiseFn !== prevProps.promiseFn) {
+    if (promiseFn !== prevProps.promise) {
       prevProps.promise?.(null);
       promiseFn?.(this.promise);
     }
@@ -201,14 +209,20 @@ class Preloader extends React.PureComponent {
   render() {
     const {
       display,
-      props: { id, style: customStyle, className },
+      props: { children, id, style: customStyle, className },
       state: { mustRender, error, preloadSync, preloadState }
     } = this;
 
     if (!mustRender || error)
       return null;
-
-    const children = processChildren(this.props.children, preloadSync);
+    
+    if (display === $naked) {
+      return (
+        <PreloadContext.Provider value={preloadSync}>
+          {children}
+        </PreloadContext.Provider>
+      );
+    }
 
     const hide = dew(() => {
       switch (display) {
@@ -220,35 +234,13 @@ class Preloader extends React.PureComponent {
 
     const style = Object.assign({}, customStyle, hide ? { display: "none" } : null);
 
-    return <div id={id} className={className} style={style}>{children}</div>;
+    return (
+      <PreloadContext.Provider value={preloadSync}>
+        <div id={id} className={className} style={style}>{children}</div>
+      </PreloadContext.Provider>
+    );
   }
 
 }
-
-const processChildren = (children, preloadSync) => {
-  const processChild = (child) => {
-    if (!child || !child::is.object()) return child;
-
-    if (child.type::is.func()) {
-      if (child.type::classEx.inheritsFrom(Preloader))
-        return child;
-      if (Preloadable.test(child.type))
-        return React.cloneElement(child, { preloadSync });
-    }
-
-    const oldChildren = child.props?.children;
-    const newChildren = processChildren(oldChildren);
-    if (oldChildren === newChildren) return child;
-    return React.cloneElement(child, null, newChildren);
-  };
-
-  const processChildren = (children) => {
-    const newChildren = React.Children.toArray(children).map(processChild);
-    if (!newChildren || newChildren.length === 0) return children;
-    return newChildren;
-  };
-  
-  return processChildren(children);
-};
 
 export default Preloader;

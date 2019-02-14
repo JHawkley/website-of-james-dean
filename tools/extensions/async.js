@@ -1,9 +1,17 @@
-import { is } from "tools/common";
-import { abortable } from "tools/async";
+import { identityFn, is } from "tools/common";
+import { abortable, AbortedError } from "tools/async";
 
 const alwaysTrue = () => true;
 const alwaysFalse = () => false;
 const alwaysUndefined = () => void 0;
+const abortToTrue = (error) => error instanceof AbortedError ? true : throw error;
+const abortToVoid = (error) => error instanceof AbortedError ? void 0 : throw error;
+
+const asPromise = (value) => {
+  if (value.then::is.func() && value.catch::is.func()) return value;
+  if (value::is.error()) return Promise.reject(value);
+  return Promise.resolve(value);
+}
 
 /**
  * Creates a promise that will resolve with a boolean value, indicating whether this promise resolved or rejected.
@@ -13,7 +21,11 @@ const alwaysUndefined = () => void 0;
  * @returns {Promise<boolean>} A new promise that will resolve with `true` if the promise resolved successfully.
  */
 export function didComplete() {
-  return this.then(alwaysTrue, alwaysFalse);
+  switch (true) {
+    case this?.then::is.func(): return this.then(alwaysTrue, alwaysFalse);
+    case this::is.error(): return Promise.resolve(false);
+    default: return Promise.resolve(true);
+  }
 }
 
 /**
@@ -22,10 +34,100 @@ export function didComplete() {
  * @export
  * @template T
  * @this {Promise<T>} This promise.
- * @returns {Promise<T|undefined} A promise that cannot reject, but may produce `undefined`.
+ * @returns {Promise<T|undefined>} A promise that cannot reject, but may produce `undefined`.
  */
 export function orUndefined() {
-  return this.catch(alwaysUndefined);
+  switch (true) {
+    case this?.then::is.func(): return this.then(identityFn, alwaysUndefined);
+    case this::is.error(): return Promise.resolve(void 0);
+    default: return Promise.resolve(this);
+  }
+}
+
+/**
+ * Creates a promise that will resolve with a boolean value, indicating if this promise had been aborted.
+ * This is handy if you don't otherwise care about the value the promise resolved to but do care if the promise
+ * aborted.
+ *
+ * @export
+ * @template T
+ * @this {T|Promise<T>} This value or promise.
+ * @returns {Promise<boolean>}
+ */
+export function didAbort() {
+  if (this instanceof AbortedError)
+    return Promise.resolve(true);
+  return asPromise(this).then(alwaysFalse, abortToTrue);
+}
+
+/**
+ * Creates a promise that resolves to `undefined` in the case of an abortion.
+ *
+ * @export
+ * @template T
+ * @this {T|Promise<T>} This value or promise.
+ * @returns {Promise<T>}
+ */
+export function voidOnAbort() {
+  return asPromise(this).catch(abortToVoid);
+}
+
+/**
+ * Creates a promise that will:
+ * * call `onResolved` if the promise resolves.
+ * * call `onError` if the promise rejects and that error is not an abortion.
+ * * call `onError` if no `onAbort` was provided.
+ * * call `onAbort` if the promise aborts.
+ * * rethrow the error in any other case.
+ *
+ * @export
+ * @template T
+ * @this {T|Promise<T>} This value or promise.
+ * @param {function(T): void} onResolved The function to call if the promise resolves.
+ * @param {function(*): void} onError The function to call if the promise rejects.
+ * @param {function(AbortedError): void} onAborted The function to call if the promise aborts.
+ * @returns {Promise<T>}
+ */
+export function thenSplit(onResolved, onError, onAborted) {
+  const promise = asPromise(this);
+  
+  if (!onAborted) return promise.then(onResolved, onError);
+
+  return promise.then(onResolved, (error) => {
+    if (error instanceof AbortedError)
+      return onAborted(error);
+    else if (onError)
+      return onError(error);
+    else
+      throw error;
+  });
+}
+
+/**
+ * Creates a promise that will call the given function if this promise aborts.
+ *
+ * @export
+ * @template T
+ * @this {T|Promise<T>} This value or promise.
+ * @param {function(AbortedError): void} onAborted The function to call if the promise aborts.
+ * @returns {Promise<T>}
+ */
+export function whenAborted(onAborted) {
+  return asPromise(this).catch((error) => {
+    if (error instanceof AbortedError) onAborted(error);
+    throw error;
+  });
+}
+
+/**
+ * Determines if this object is an `AbortedError`.
+ *
+ * @export
+ * @this {*} This value.
+ * @returns {boolean}
+ */
+export function isAborted() {
+  return this instanceof AbortedError;
 }
 
 /**
@@ -36,22 +138,33 @@ export function orUndefined() {
  * @export
  * @template T
  * @this {Promise<T>} This promise.
- * @param {Promise} signalPromise The promise to use as a signal to abort when it completes.
+ * @param {module:tools/async.AbortionSignal} signal An object to use as an abortion signal.
  * @returns {Promise<T|Symbol>} An abortable promise.
  */
-export function abortOn(signalPromise) {
-  return abortable(this, signalPromise);
+export function abortOn(signal) {
+  return abortable(this, signal);
 }
 
 /**
- * Determines if this object is the "abort" signal.
+ * Associates abortion reasoning information with this promise.  Calling this extension-method with no arguments
+ * is the same as calling it as `promise::abortionReason(null, true)`.
  *
  * @export
- * @this {*} This object.
- * @returns {boolean}
+ * @this {Promise} This promise.
+ * @param {string} [givenReason] The reason behind the abortion.
+ * @param {boolean} [providesReason] Whether to try to use the resolution result as a reason.
+ * @returns {this}
  */
-export function isAborted() {
-  return this === abortable.signal;
+export function abortionReason(givenReason, providesReason) {
+  if (givenReason != null || providesReason != null) {
+    if (givenReason != null)
+      this.reason = givenReason.toString();
+    this.givesReason = providesReason === true;
+  }
+  else {
+    this.givesReason = true;
+  }
+  return this;
 }
 
 /**

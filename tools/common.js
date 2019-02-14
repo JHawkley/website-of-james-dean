@@ -11,6 +11,11 @@ export { is };
 export const global = Function('return this')();
 
 /**
+ * An empty, immutable object.  Useful as `options` defaults.
+ */
+export const nil = Object.freeze({});
+
+/**
  * Compares the own-properties of two objects.
  *
  * @export
@@ -25,11 +30,12 @@ export function compareOwnProps(left, right) {
     throw new Error("the `left` value must be an object reference");
   if (!right::is.object())
     throw new Error("the `right` value must be an object reference");
+  
   if (left === right) return true;
 
   const keys = new Set([...Object.keys(left), ...Object.keys(right)]);
   for (const key of keys)
-    if (left[key] !== right[key])
+    if (!Object.is(left[key], right[key]))
       return false;
   return true;
 }
@@ -117,6 +123,29 @@ export function identityFn(v) { return v; }
 export function singleton(factory) {
   let instance = void 0;
   return () => instance::is.undefined() ? (instance = factory()) : instance;
+}
+
+/**
+ * Compares all the arguments provided to this function, returning whether they are all equivalent, according
+ * to `Object.is`.  Has short-circuits up to arity-3.
+ *
+ * @export
+ * @param {...*} arguments The arguments to compare.
+ * @returns {boolean} Whether the arguments were all equivalent.
+ * @throws When no arguments were provided.
+ */
+export function allEq() {
+  switch (arguments.length) {
+    case 0: throw new Error("no arguments to compare were provided");
+    case 1: return true;
+    case 2: return Object.is(arguments[0], arguments[1]);
+    case 3: return Object.is(arguments[0], arguments[1]) && Object.is(arguments[1], arguments[2]);
+    default:
+      for (let i = 1, len = arguments.length; i < len; i++)
+        if (!Object.is(arguments[i - 1], arguments[i]))
+          return false;
+      return true;
+  }
 }
 
 /**
