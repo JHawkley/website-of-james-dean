@@ -139,12 +139,14 @@ export function allEq() {
     case 0: throw new Error("no arguments to compare were provided");
     case 1: return true;
     case 2: return Object.is(arguments[0], arguments[1]);
-    case 3: return Object.is(arguments[0], arguments[1]) && Object.is(arguments[1], arguments[2]);
-    default:
+    case 3: return Object.is(arguments[0], arguments[1]) && Object.is(arguments[0], arguments[2]);
+    default: {
+      const value = arguments[0];
       for (let i = 1, len = arguments.length; i < len; i++)
-        if (!Object.is(arguments[i - 1], arguments[i]))
+        if (!Object.is(value, arguments[i]))
           return false;
       return true;
+    }
   }
 }
 
