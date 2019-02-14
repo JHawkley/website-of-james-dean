@@ -1,7 +1,7 @@
 import { css } from "styled-jsx/css";
 import { memoize } from "tools/functions";
 import { timespan } from "tools/css";
-import { resolvedEmpty } from "styles/jsx/common";
+import resolvedEmpty from "styles/jsx/lib/resolvedEmpty";
 import styleVars from "styles/vars.json";
 
 const exitDelay = timespan(styleVars["duration"]["article"]);

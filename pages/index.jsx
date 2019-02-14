@@ -8,7 +8,7 @@ import Background from "components/Background";
 import Header from "components/Header";
 import Footer from "components/Footer";
 import Jump from "components/Jump";
-import { resolvedEmpty } from "styles/jsx/common";
+import resolvedEmpty from "styles/jsx/lib/resolvedEmpty";
 import styleVars from "styles/vars.json";
 
 import $intro from "pages/intro?route";
