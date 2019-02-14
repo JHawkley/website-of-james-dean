@@ -8,15 +8,15 @@ import { exitDelay, resolveDelayCss } from "styles/jsx/page";
 const Page = (props) => {
   const {
     id, style, children,
-    className: customClass, transitionClass
+    className: articleClass, transitionClass
   } = props;
 
-  const className = [customClass, transitionClass].filter(Boolean).join(" ");
+  const className = transitionClass ? `page ${transitionClass}` : "page";
 
   return (
     <Fragment>
-      <div key="content" className="page">
-        <article id={id} className={className || null} style={style}>
+      <div key="content" className={className}>
+        <article id={id} className={articleClass} style={style}>
           <RouterContext.Consumer>
             {renderRouterContext}
           </RouterContext.Consumer>

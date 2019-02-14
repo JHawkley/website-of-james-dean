@@ -9,7 +9,7 @@ const exitDelay = timespan(styleVars["duration"]["article"]);
 const resolveDelayCss = memoize((exitDelay) => {
   if (!exitDelay || exitDelay <= 0) return resolvedEmpty;
   return css.resolve`
-    article {
+    * > :global(article) {
       transition:
         opacity ${exitDelay}ms ease-in-out,
         transform ${exitDelay}ms ease-in-out;

@@ -18,7 +18,7 @@
     z-index: 3;
     display: flex;
 
-    article {
+    & > article {
       @include padding(2.5rem, 2.5rem, (2rem, 0, 1rem, 0));
       position: relative;
       width: 40rem;
@@ -85,13 +85,15 @@
 
     /* Transitions */
 
-    article {
-      &.is-exiting, &.is-hidden {
+    &.is-exiting, &.is-hidden {
+      & > article {
         @include vendor('transform', 'translateY(0.25rem)');
         opacity: 0;
       }
+    }
 
-      &.is-hidden, .app-loading & {
+    &.is-hidden, .app-loading & {
+      & > article {
         opacity: 0;
         visibility: hidden;
       }
@@ -100,7 +102,7 @@
     /* Breakpoints */
 
     @include breakpoint(small) {
-      article {
+      & > article {
         @include padding(2rem, 2rem, (1.5rem, 0, 0.5rem, 0));
         .back, .close {
           &:before {
@@ -115,7 +117,7 @@
     }
 
     @include breakpoint(xsmall) {
-      article {
+      & > article {
         @include padding(2rem, 1.5rem, (1rem, 0, 0.5rem, 0));
       }
     }
