@@ -146,7 +146,7 @@ class ScrollRestoringApp extends App {
 
   buildPage = memoize((Component, pageProps, router, routeChanging) => {
     if (!Component)
-      throw new Error("`next-js` should always provide a component to the app");
+      throw new TypeError("a page-component was not provided to the app");
 
     if (transitionsSupported && routeChanging)
       return null;
