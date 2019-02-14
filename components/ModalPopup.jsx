@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { dew } from "tools/common";
 import { memoize } from "tools/functions";
-import ModalContext from "common/ModalContext";
+import ModalContext from "lib/ModalContext";
 
 class ModalPopup extends React.PureComponent {
 

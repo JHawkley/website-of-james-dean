@@ -1,8 +1,8 @@
 import React from "react";
 import PropTypes from "prop-types";
-import ModalContext from "common/ModalContext";
-import LightboxContext from "common/LightboxContext";
-import ScrollLockedContext from "common/ScrollLockedContext";
+import ModalContext from "lib/ModalContext";
+import LightboxContext from "lib/LightboxContext";
+import ScrollLockedContext from "lib/ScrollLockedContext";
 import ModalDisplayer from "components/AppRoot/ModalDisplayer";
 import LightboxDisplayer from "components/AppRoot/LightboxDisplayer";
 

@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import PreloadContext from "common/PreloadContext";
+import PreloadContext from "lib/PreloadContext";
 import { is } from "tools/common";
 import { inheritsFrom } from "tools/extensions/classes";
 

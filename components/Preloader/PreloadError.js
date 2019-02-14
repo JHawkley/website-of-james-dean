@@ -1,5 +1,5 @@
 import { is } from "tools/common";
-import InnerError from "common/InnerError";
+import InnerError from "lib/InnerError";
 
 class PreloadError extends InnerError {
 

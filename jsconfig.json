@@ -5,13 +5,13 @@
       "allowSyntheticDefaultImports": true,
       "baseUrl": "./",
       "paths": {
-          "~/*": ["./*"],
-          "common/*": ["./common/*"],
+          "lib/*": ["./lib/*"],
           "components/*": ["./components/*"],
           "pages/*": ["./pages/*"],
           "tools/*": ["./tools/*"],
           "styles/*": ["./styles/*"],
-          "static/*": ["./static/*"]
+          "static/*": ["./static/*"],
+          "~/*": ["./*"]
       }
   },
   "exclude": [

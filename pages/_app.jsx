@@ -16,8 +16,8 @@ import { memoize } from "tools/functions";
 import { canScrollRestore as transitionsSupported } from "tools/scrollRestoration";
 import styleVars from "styles/vars.json";
 
-import RouterContext, { create as createRouterContext } from "common/RouterContext";
-import PreloadContext from "common/PreloadContext";
+import RouterContext, { create as createRouterContext } from "lib/RouterContext";
+import PreloadContext from "lib/PreloadContext";
 
 import PreloadSync from "components/Preloader/PreloadSync";
 import Transition from "components/Transition";

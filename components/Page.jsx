@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import PropTypes from "prop-types";
 import { memoize } from "tools/functions";
-import RouterContext from "common/RouterContext";
+import RouterContext from "lib/RouterContext";
 import Background from "components/Background";
 import { exitDelay, resolveDelayCss } from "styles/jsx/components/Page";
 

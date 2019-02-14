@@ -1,5 +1,5 @@
 import React from "react";
-import GalleryContext from "common/GalleryContext";
+import GalleryContext from "lib/GalleryContext";
 import Gallery from "components/Gallery";
 import Page from "components/Page";
 import Jump from "components/Jump";

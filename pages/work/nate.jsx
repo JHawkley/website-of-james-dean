@@ -1,6 +1,6 @@
 import React, { Fragment } from "react";
 import { dew } from "tools/common";
-import GalleryContext from "common/GalleryContext";
+import GalleryContext from "lib/GalleryContext";
 import Gallery from "components/Gallery";
 import Page from "components/Page";
 import Jump from "components/Jump";

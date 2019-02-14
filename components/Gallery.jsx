@@ -1,8 +1,8 @@
 import PropTypes from "prop-types";
 import { faImages } from "@fortawesome/free-solid-svg-icons/faImages";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import LightboxContext from "common/LightboxContext";
-import GalleryContext from "common/GalleryContext";
+import LightboxContext from "lib/LightboxContext";
+import GalleryContext from "lib/GalleryContext";
 
 const manage = (Component) => {
   const managed = (props) => (
