@@ -1,19 +1,24 @@
 import { memoize as memoizeFn } from "tools/functions";
 
 /**
- * Creates a function that memoizes the last result of this function.  If the arguments are not identical
- * to the last call, this function will be called again and its arguments and result stored.
+ * Creates a new function that memoizes the last result of the given function.  If the arguments or
+ * `this` binding are not identical to the last call, the function will be called again and its
+ * arguments and result stored.  The function `fn` is invoked with the `this` binding of the returned,
+ * memoized function.
+ * 
+ * The last return value can be accessed via the function's `lastResult` property.  It will be `undefined`
+ * until the function has been called at least once.
  *
  * @export
  * @this {Function} The function to have its result memoized.
- * @returns {Function} The new memoized function.
+ * @returns {Function} The new, memoized function.
  */
 export function memoize() {
   return memoizeFn(this);
 }
 
 /**
- * Creates a function that memoizes all the result of this function.  If `resolver` is provided, it determines the
+ * Creates a function that memoizes all the results of this function.  If `resolver` is provided, it determines the
  * cache key for storing the result based on the arguments provided to the memoized function.  By default, the
  * first argument provided to the memoized function is used as the map cache key. The function being memoized is
  * invoked with the `this` binding of the memoized function.
@@ -23,7 +28,7 @@ export function memoize() {
  * @export
  * @this {Function} The function to have its result memoized.
  * @param {Function} [resolver] The function to resolve the cache key.
- * @returns {Function} The new memoized function.
+ * @returns {Function} The new, memoized function.
  */
 export function memoizeEach(resolver) {
   return memoize.each(this, resolver);

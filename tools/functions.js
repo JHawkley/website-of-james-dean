@@ -40,7 +40,7 @@ export const trial = (fn) => {
  *
  * @export
  * @param {Function} fn The function to have its result memoized.
- * @returns {Function} The memoized function.
+ * @returns {Function} The new, memoized function.
  */
 export const memoize = (fn) => {
   if (!fn::is.func())
@@ -99,7 +99,7 @@ export const memoize = (fn) => {
  * @export
  * @this {Function} The function to have its result memoized.
  * @param {Function} resolver The function to resolve the cache key.
- * @returns {Function} The new memoized function.
+ * @returns {Function} The new, memoized function.
  */
 memoize.each = (fn, resolver) => {
   if (!fn::is.func())
@@ -123,7 +123,7 @@ memoize.each = (fn, resolver) => {
   }
 
   Object.defineProperties(memoizedFn, {
-    name: { value: fn.name ? `memoiziest of ${fn.name}` : "memoiziest of anonymous" },
+    name: { value: fn.name ? `memoize.each of ${fn.name}` : "memoize.each of anonymous" },
     cache: { value: new Map() }
   });
 
