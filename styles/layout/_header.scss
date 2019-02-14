@@ -21,16 +21,16 @@
 
     > * {
       position: relative;
-      margin-top: 3.5rem;
+      margin-top: _size(header-spacing);
 
       &:before {
         content: '';
         display: block;
         position: absolute;
-        top: calc(-3.5rem - 1px);
-        left: calc(50% - #{_size(border-width) * 0.5});
+        top: calc(#{-1 * _size(header-spacing)} - 1px);
+        left: calc(50% - #{0.5 * _size(border-width)});
         width: _size(border-width);
-        height: calc(3.5rem + 1px);
+        height: calc(#{_size(header-spacing)} + 1px);
         background: _palette(border);
       }
     }

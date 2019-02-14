@@ -1,14 +1,15 @@
 import PropTypes from "prop-types";
 import { Fragment } from "react";
 import { css } from "styled-jsx/css";
+import { memoize } from "tools/functions";
 import { color } from "tools/css";
 import { faCode } from "@fortawesome/free-solid-svg-icons/faCode";
 import Background from "components/Background";
 import Header from "components/Header";
 import Footer from "components/Footer";
 import Jump from "components/Jump";
+import { resolvedEmpty } from "styles/jsx/common";
 import styleVars from "styles/vars.json";
-import { resolveDelayCss } from "styles/jsx/index-page";
 
 import $intro from "pages/intro?route";
 import $work from "pages/work/index?route";
@@ -80,8 +81,23 @@ Index.transition = {
   }
 };
 
+const resolveDelayCss = memoize((exitDelay) => {
+  if (!exitDelay || exitDelay <= 0) return resolvedEmpty;
+  return css.resolve`
+    * {
+      transition:
+        transform ${exitDelay}ms ease-in-out,
+        filter ${exitDelay}ms ease-in-out,
+        opacity ${exitDelay}ms ease-in-out;
+    }
+  `;
+});
+
+/**
+ * Personal site customization.
+ * Remove when adapting your work for PR to the original repo.
+ */
 const customHeaderCss = css.resolve`
-  /* Personal site customization. */
   * {
     border-radius: 4px;
     padding: 1.5rem;
