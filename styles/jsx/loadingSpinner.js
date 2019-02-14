@@ -25,15 +25,15 @@ const mainCss = css.resolve`
     display: none;
   }
 
-  .is-shown {
+  *.is-shown {
     opacity: 1;
   }
 
-  .is-displayed {
+  *.is-displayed {
     display: block;
   }
 
-  .bg {
+  *.bg {
     border-radius: 4px;
     padding: 1.5rem;
     background-color: ${bgColor};

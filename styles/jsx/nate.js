@@ -113,47 +113,47 @@ const nateSpriteCss = css.resolve`
     transform: ${translateOffset(nateOffset)};
   }
 
-  .idle { ${frame(nateSize, 0, 0)} }
-  .idle.look-up { ${frame(nateSize, 1, 0)} }
+  *.idle { ${frame(nateSize, 0, 0)} }
+  *.idle.look-up { ${frame(nateSize, 1, 0)} }
 
-  .idle.shoot-up { ${frame(nateSize, 4, 0)} }
-  .idle.shoot-up.recoil { ${frame(nateSize, 5, 0)} }
+  *.idle.shoot-up { ${frame(nateSize, 4, 0)} }
+  *.idle.shoot-up.recoil { ${frame(nateSize, 5, 0)} }
 
-  .idle.shoot-side { ${frame(nateSize, 2, 0)} }
-  .idle.shoot-side.recoil { ${frame(nateSize, 3, 0)} }
+  *.idle.shoot-side { ${frame(nateSize, 2, 0)} }
+  *.idle.shoot-side.recoil { ${frame(nateSize, 3, 0)} }
 
-  .idle.land { ${frame(nateSize, 5, 4)} }
-  .idle.land.shoot-side { ${frame(nateSize, 5, 5)} }
-  .idle.land.shoot-up { ${frame(nateSize, 5, 6)} }
-  .idle.land.shoot-down { ${frame(nateSize, 5, 7)} }
+  *.idle.land { ${frame(nateSize, 5, 4)} }
+  *.idle.land.shoot-side { ${frame(nateSize, 5, 5)} }
+  *.idle.land.shoot-up { ${frame(nateSize, 5, 6)} }
+  *.idle.land.shoot-down { ${frame(nateSize, 5, 7)} }
 
-  .run {
+  *.run {
     animation: run-cycle 0.75s steps(6) infinite;
     ${row(nateSize, 1)}
   }
 
-  .run.shoot-side { ${row(nateSize, 2)} }
-  .run.shoot-up { ${row(nateSize, 3)} }
+  *.run.shoot-side { ${row(nateSize, 2)} }
+  *.run.shoot-up { ${row(nateSize, 3)} }
 
-  .jump {
+  *.jump {
     animation: jump-cycle 0.125s steps(1) 1 forwards;
     ${row(nateSize, 4)}
   }
 
-  .jump.apex {
+  *.jump.apex {
     animation: none;
     ${col(nateSize, 2)}
   }
 
-  .jump.fall { animation: fall-cycle 0.125s steps(1) 1 forwards; }
+  *.jump.fall { animation: fall-cycle 0.125s steps(1) 1 forwards; }
 
-  .jump.shoot-side { ${row(nateSize, 5)} }
-  .jump.shoot-up { ${row(nateSize, 6)} }
-  .jump.shoot-down { ${row(nateSize, 7)} }
+  *.jump.shoot-side { ${row(nateSize, 5)} }
+  *.jump.shoot-up { ${row(nateSize, 6)} }
+  *.jump.shoot-down { ${row(nateSize, 7)} }
 
-  .mirror { transform: ${translateOffset(nateOffset)} scale(-1.0, 1.0); }
+  *.mirror { transform: ${translateOffset(nateOffset)} scale(-1.0, 1.0); }
 
-  .despawned { display: none; }
+  *.despawned { display: none; }
 `;
 
 const bulletSpriteCss = css.resolve`
@@ -167,7 +167,7 @@ const bulletSpriteCss = css.resolve`
     100% { ${row(bulletBurstSize, 1)} }
   }
 
-  .bullet {
+  *.bullet {
     ${spriteRendering}
     ${size(bulletSize)}
     position: absolute;
@@ -176,11 +176,11 @@ const bulletSpriteCss = css.resolve`
     animation: bullet-flight 0.2s steps(2) infinite;
   }
 
-  .node-1 { z-index: 7; }
-  .node-2 { z-index: 6; ${row(bulletSize, 1)} }
-  .node-3 { z-index: 5; ${row(bulletSize, 2)} }
+  *.node-1 { z-index: 7; }
+  *.node-2 { z-index: 6; ${row(bulletSize, 1)} }
+  *.node-3 { z-index: 5; ${row(bulletSize, 2)} }
 
-  .bullet-burst {
+  *.bullet-burst {
     ${spriteRendering}
     ${size(bulletBurstSize)}
     position: absolute;
@@ -190,7 +190,7 @@ const bulletSpriteCss = css.resolve`
     animation: bullet-burst 0.075s steps(1) 1 forwards;
   }
 
-  .despawned { display: none; }
+  *.despawned { display: none; }
 `;
 
 export { ImgNate, ImgBullet, ImgBulletBurst }
