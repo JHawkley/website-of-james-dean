@@ -16,7 +16,7 @@ import { isEmpty } from "../helpers/isEmpty";
 import { interpolate, AppliedInterpolation } from "./interpolate";
 
 const $emptyPlaceholder = "a placeholder in the template-literal contained `null` or `undefined`";
-const $badInterpolator = "arrays used in the template-literal cannot contain an interpolation";
+const $badInterpolator = "arrays used as placeholders in the template-literal cannot contain an interpolation";
 const $noParser = "no parser could be located for a placeholder in the template-literal";
 
 const preservedEmpty = Symbol("template:preserved-empty");
@@ -29,22 +29,33 @@ const wrap = (parser) => Object.assign((state) => parser(state), parser);
 
 const isAnInterpolation = (parser) => parser === interpolate || parser instanceof AppliedInterpolation;
 
-const prepareParser = (parser) => {
-  if (parser == null) throw new BadArgumentError($emptyPlaceholder, "parser", parser);
+const coerceToParser = (placeholder) => {
+  if (placeholder == null)
+    throw new BadArgumentError($emptyPlaceholder, "placeholder", placeholder);
+
   // Ignore the interpolation placeholders.  We'll deal with them later.
-  if (isAnInterpolation(parser)) return parser;
+  if (isAnInterpolation(placeholder))
+    return placeholder;
+
   // Wrap functional parsers so we can attach our marker to it safely.
-  if (typeof parser === "function") return mark(wrap(parser));
+  if (typeof placeholder === "function")
+    return mark(wrap(placeholder));
+
   // Otherwise, build the standard parsers.
-  if (typeof parser === "string") return mark(str(parser));
-  if (parser instanceof RegExp) return mark(regex(parser));
+  if (typeof placeholder === "string")
+    return mark(str(placeholder));
+
+  if (placeholder instanceof RegExp)
+    return mark(regex(placeholder));
+
   // Treat an array as a `oneOf` combinator.
-  if (Array.isArray(parser)) {
-    if (parser.some(isAnInterpolation))
-      throw new BadArgumentError($badInterpolator, "parser", parser);
-    return oneOf(...parser.map(prepareParser));
+  if (Array.isArray(placeholder)) {
+    if (placeholder.some(isAnInterpolation))
+      throw new BadArgumentError($badInterpolator, "placeholder", placeholder);
+    return oneOf(...placeholder.map(coerceToParser));
   }
-  throw new BadArgumentError($noParser, "parser", parser);
+
+  throw new BadArgumentError($noParser, "placeholder", placeholder);
 };
 
 const processParser = (cur, next) => {
@@ -76,13 +87,13 @@ const processParser = (cur, next) => {
  * 
  * @export
  * @param {string[]} strings The string-fragments between placeholders.
- * @param {string|RegExp|Parser} parsers The parsers to use to extract values.
+ * @param {string|RegExp|Parser} placeholders The parsers to use to extract values.
  * @returns {Parser<Array>} A parser constructed from a string template literal.
  */
-export const parser = (strings, ...parsers) => {
+export const parser = (strings, ...placeholders) => {
   const combined = fold(
     strings.map(emptyToVoid),
-    parsers.map(prepareParser)
+    placeholders.map(coerceToParser)
   )::arrEx.reject(isUndefined);
 
   // Start from the end, and work back.
