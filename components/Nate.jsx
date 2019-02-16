@@ -11,7 +11,7 @@ import Preloadable from "components/Preloadable";
 import Preloader from "components/Preloader";
 import Audio from "components/Audio";
 import LoadingSpinner from "components/LoadingSpinner";
-import NotSupportedError from "components/Nate/NotSupportedError";
+import NotSupportedError from "components/Nate/BrowserUnsupportedError";
 import GameUpdateError from "components/Nate/GameUpdateError";
 
 import { fadeTime, componentCss, containerCss, nateSpriteCss, bulletSpriteCss } from "styles/jsx/components/Nate";

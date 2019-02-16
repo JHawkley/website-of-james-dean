@@ -6,7 +6,7 @@ import Page from "components/Page";
 import Jump from "components/Jump";
 import Preloader from "components/Preloader";
 import NateWidget from "components/Nate";
-import NotSupportedError from "components/Nate/NotSupportedError";
+import BrowserUnsupportedError from "components/Nate/BrowserUnsupportedError";
 import GameUpdateError from "components/Nate/GameUpdateError";
 
 import ImgHeader from "static/images/nate-game/header.png";
@@ -46,7 +46,7 @@ class Nate extends React.PureComponent {
   renderError(error) {
     const message = dew(() => {
       switch (true) {
-        case error instanceof NotSupportedError: return (
+        case error instanceof BrowserUnsupportedError: return (
           <p>Unfortunately, your browser does not support the features of the interactive component.  Please revisit this page with a different browser if you would like to play with Nate.</p>
         );
         case error instanceof GameUpdateError: return (
