@@ -1,3 +1,5 @@
+import BadBindingError from "lib/BadBindingError";
+import BadArgumentError from "lib/BadArgumentError";
 import { dew } from "tools/common";
 import { tolerantCompare as q } from "tools/extensions/numbers";
 
@@ -47,7 +49,7 @@ export function length() {
 }
 
 export function makeLength(len) {
-  if (len < 0) throw new Error('length must not be less than 0');
+  if (len < 0) throw new BadArgumentError("must not be less than 0", "len", len);
   if (len === 0) return this::setXY(0, 0);
   if (this.x === 0 && this.y === 0) return this::setXY(0, len);
   return this::mul(len / this::length());
@@ -75,13 +77,13 @@ export function unit() {
 
 export function normalizeOnX() {
   if (this.x === 0)
-    throw new Error('cannot normalize on `x` if it is zero');
+    throw new BadBindingError("cannot normalize on `x` if it is zero", this);
   return this::mul(1 / abs(this.x));
 }
 
 export function normalizeOnY() {
   if (this.y === 0)
-    throw new Error('cannot normalize on `y` if it is zero');
+    throw new BadBindingError("cannot normalize on `y` if it is zero", this);
   return this::mul(1 / abs(this.y));
 }
 

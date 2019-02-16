@@ -1,3 +1,4 @@
+import BadArgumentError from "lib/BadArgumentError";
 import { emptyResult } from "../core/emptyResult";
 import { tag } from "./tag";
 
@@ -20,7 +21,7 @@ export const str = (pattern) => str_impl(pattern, pattern);
 str.skip = (pattern) => str_impl(pattern, emptyResult);
 
 const str_impl = (pattern, result) => {
-  if (!pattern) throw new Error("an empty-string cannot be matched");
+  if (!pattern) throw new BadArgumentError("an empty-string cannot be matched", "pattern", pattern);
 
   return tag(pattern, (state) => {
     const { input, position } = state;

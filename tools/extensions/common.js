@@ -1,8 +1,11 @@
+import BadBindingError from "lib/BadBindingError";
+import BadArgumentError from "lib/BadArgumentError";
+
 function newObjectBasedOn(original) {
   switch (Object.getPrototypeOf(original)) {
     case Object.prototype: return {};
     case null: return Object.create(null);
-    default: throw new Error(`cannot base a new object on \`${original}\`; it is not a simple object`);
+    default: throw new BadArgumentError("must be a simple object", "original", original);
   }
 }
 
@@ -101,7 +104,7 @@ export function collectProps(fn) {
 export function copyOwn() {
   'use strict'; // Allows binding to `null`.
   if (typeof this !== "object")
-    throw new Error("the bound value must be an object reference");
+    throw new BadBindingError("must be an object reference", this);
   
   if (this == null) return this;
   return Object.assign(newObjectBasedOn(this), this);

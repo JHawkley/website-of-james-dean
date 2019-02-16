@@ -1,3 +1,4 @@
+import BadArgumentError from "lib/BadArgumentError";
 import { dew } from "tools/common";
 
 const isIterable = (obj) => typeof obj[Symbol.iterator] === 'function';
@@ -5,14 +6,14 @@ const isIterable = (obj) => typeof obj[Symbol.iterator] === 'function';
 export const CoercionMethods = {
   arrayLike(obj) {
     if (typeof this.length !== "number")
-      throw new Error(`cannot coerce to an iterable; \`${obj}\` has no \`length\` property`);
+      throw new BadArgumentError(`cannot coerce to an iterable; a numeric \`length\` property is required`, "obj", obj);
     return dew(function* () {
       for (let i = 0, len = this.length; i <= len; i++) yield obj[i];
     });
   },
   countable(obj) {
     if (typeof this.count !== "number")
-      throw new Error(`cannot coerce to an iterable; \`${obj}\` has no \`count\` property`);
+    throw new BadArgumentError(`cannot coerce to an iterable; a numeric \`count\` property is required`, "obj", obj);
     return dew(function* () {
       for (let i = 0, len = this.count; i <= len; i++) yield obj[i];
     });
@@ -33,7 +34,7 @@ export function coerce(coercionMethod = CoercionMethods.arrayLike) {
   if (isIterable(this)) return this;
   const result = coercionMethod(this);
   if (isIterable(result)) return result;
-  throw new Error(`the given \`coercionMethod\` could not produce an iterator from \`${this}\``);
+  throw new BadArgumentError("could not produce an iterable for the bound object", "coercionMethod", coercionMethod);
 }
 
 /**

@@ -1,3 +1,4 @@
+import BadArgumentError from "lib/BadArgumentError";
 import { dew, is } from "tools/common";
 import { extensions as numEx} from "tools/numbers";
 import * as parsing from "tools/parsing";
@@ -184,7 +185,7 @@ class Color {
 
   constructor(rgbaArr) {
     if (!rgbaArr::is.array() || (rgbaArr.length !== 3 && rgbaArr.length !== 4))
-      throw new Error(`could not construct color from \`${rgbaArr}\``);
+      throw new BadArgumentError("must be an array of 3 to 4 numeric elements", "rgbaArr", rgbaArr);
     const [r, g, b, a = 1.0] = rgbaArr;
     this._rgb = [r, g, b];
     this._alpha = a;
@@ -260,6 +261,7 @@ class Color {
 // Setup below.
 
 const {
+  ParsingError,
   atomic: { regex },
   parsers: { rest },
   combinators: { seq, oneOf },
@@ -295,7 +297,7 @@ const timeParser = dew(() => {
   return seq(numParser, unitParser);
 });
 
-const timeError = (valueStr) => new Error(`failed to parse \`${valueStr}\` as a CSS timespan`);
+const timeError = (valueStr) => new ParsingError(`failed to parse \`${valueStr}\` as a CSS timespan`);
 
 const hslToRgb = ([h, s, l]) => {
   let r, g, b;
@@ -378,14 +380,14 @@ const stringParser = dew(() => {
   return oneOf(quote, doubleQuote);
 });
 
-const colorError = (valueStr) => new Error(`failed to parse \`${valueStr}\` as a CSS color`);
+const colorError = (valueStr) => new ParsingError(`failed to parse \`${valueStr}\` as a CSS color`);
 
 const mapRgb = (n) => n::numEx.mapClamp(0.0, 1.0, 0, 255)::numEx.round();
 const mapDeg = (n) => n::numEx.mapReflow(0.0, 1.0, 0, 360)::numEx.round();
 const mapPerc = (n) => n::numEx.mapClamp(0.0, 1.0, 0, 100)::numEx.round();
 
 const numericError = (valueStr, expectedUnit) => {
-  if (expectedUnit)
-    return new Error(`failed to parse \`${valueStr}\` as a numerical value with unit \`${expectedUnit.toString()}\``);
-  return new Error(`failed to parse \`${valueStr}\` as a numerical value`);
+  const msg = [`failed to parse \`${valueStr}\` as a numerical value`];
+  if (expectedUnit) msg.push(`with unit \`${expectedUnit.toString()}\``);
+  return new ParsingError(msg.join(" "));
 }

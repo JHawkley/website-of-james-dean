@@ -1,3 +1,4 @@
+import BadArgumentError from "lib/BadArgumentError";
 import { emptyResult } from "../core/emptyResult";
 import { isUndefined } from "./isUndefined";
 
@@ -11,8 +12,14 @@ import { isUndefined } from "./isUndefined";
  * @throws When `obj` is `undefined`.
  */
 export const emptyFor = (obj) => {
-  if (isUndefined(obj)) throw new Error("cannot get an empty value for `undefined`");
-  if (typeof obj === "string") return "";
-  if (Array.isArray(obj)) return [];
+  if (isUndefined(obj))
+    throw new BadArgumentError("cannot get an empty value for `undefined`", "obj", obj);
+
+  if (typeof obj === "string")
+    return "";
+
+  if (Array.isArray(obj))
+    return [];
+    
   return emptyResult;
 }

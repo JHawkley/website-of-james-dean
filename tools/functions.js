@@ -1,3 +1,4 @@
+import BadArgumentError from "lib/BadArgumentError";
 import { is, allEq } from "tools/common";
 import { identical } from "tools/array";
 
@@ -44,7 +45,7 @@ export const trial = (fn) => {
  */
 export const memoize = (fn) => {
   if (!fn::is.func())
-    throw new TypeError('expected `fn` to be a function');
+    throw new BadArgumentError("must be a function", "fn", fn);
 
   let oldThis = $$unset;
   let oldArgs = $$unset;
@@ -103,9 +104,9 @@ export const memoize = (fn) => {
  */
 memoize.each = (fn, resolver) => {
   if (!fn::is.func())
-    throw new TypeError('expected `fn` to be a function');
+    throw new BadArgumentError("must be a function", "fn", fn);
   if (resolver::is.defined() && !resolver::is.func())
-    throw new TypeError('expected `resolver` to be a function');
+    throw new BadArgumentError("must be a function or `undefined`", "resolver", resolver);
 
   const memoizedFn = function() {
     const key =

@@ -1,3 +1,4 @@
+import BadArgumentError from "lib/BadArgumentError";
 import { isEmpty } from "tools/extensions/maybe";
 
 // Re-export extension methods.
@@ -32,6 +33,6 @@ export const option = (value) => typeof value !== "undefined" ? value : null;
  */
 export const some = (value) => {
   if (value::isEmpty())
-    throw new Error(`value cannot be \`some\` thing, since it was \`${value}\``);
+    throw new BadArgumentError("was `null` or `undefined`", "value", value);
   return value;
 };

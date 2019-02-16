@@ -1,4 +1,5 @@
 "use strict";
+import BadBindingError from "lib/BadBindingError";
 import { some, option, nothing } from "tools/maybe";
 
 /**
@@ -49,7 +50,7 @@ export function isDefined() {
  */
 export function get() {
   if (this::isEmpty())
-    throw new Error("cannot get a maybe value; it was not defined");
+    throw new BadBindingError("cannot get a value; it was not defined", this);
   return this;
 }
 

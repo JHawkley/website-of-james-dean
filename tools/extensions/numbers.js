@@ -1,3 +1,5 @@
+import BadArgumentError from "lib/BadArgumentError";
+
 const { PI, abs, min, max, round: _round } = Math;
 const PI2 = PI * 2;
 const e = 0.00000001;
@@ -134,12 +136,12 @@ export function clamp(start, end) {
  */
 export function clampBy(arrayLike) {
   if (typeof arrayLike?.length !== "number")
-    throw new Error("cannot clamp the number to the array-like; it has no length property");
+    throw new BadArgumentError("a `length` property is required to clamp the number", "arrayLike", arrayLike);
 
   const len = arrayLike.length;
 
   if (len <= 0)
-    throw new Error("cannot clamp the number to the array-like; it is empty");
+    throw new BadArgumentError("cannot clamp the number to an empty array", "arrayLike", arrayLike);
 
   return this::clamp(0, len - 1);
 }
@@ -187,12 +189,12 @@ export function reflowRange(start, end) {
  */
 export function reflowBy(arrayLike) {
   if (typeof arrayLike?.length !== "number")
-    throw new Error("cannot reflow the number to the array-like; it has no length property");
+    throw new BadArgumentError("a `length` property is required to reflow the number", "arrayLike", arrayLike);
 
   const len = arrayLike.length;
 
   if (len <= 0)
-    throw new Error("cannot reflow the number to the array-like; it is empty");
+    throw new BadArgumentError("cannot reflow the number to an empty array", "arrayLike", arrayLike);
 
   return this::reflowRange(0, len - 1);
 }

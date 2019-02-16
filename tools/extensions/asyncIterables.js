@@ -1,3 +1,5 @@
+import BadBindingError from "lib/BadBindingError";
+import PredicateFailedError from "lib/PredicateFailedError";
 import { dew, is } from "tools/common";
 import { Future, abortable } from "tools/async";
 import { abortionReason } from "tools/extensions/async";
@@ -16,7 +18,7 @@ import { abortionReason } from "tools/extensions/async";
  */
 export function forEach(iteratorFn, abortSignal) {
   const getIterator = this[Symbol.asyncIterator] ?? this[Symbol.iterator];
-  if (!getIterator::is.func()) throw new TypeError("bound object is not iterable");
+  if (!getIterator::is.func()) throw new BadBindingError("was not iterable", this);
 
   if (abortSignal)
     return iterateWithAbort(getIterator(), abortSignal, iteratorFn);
@@ -48,7 +50,7 @@ export function first(valueOrPredicate, abortSignal) {
     try {
       await this::forEach(iteratorFn, properAbortSignal::abortionReason("the predicate found a match"));
       if (!future.isCompleted)
-        future.reject(new Error("no value matched the given predicate"));
+        future.reject(new PredicateFailedError("no value matched the given predicate"));
     }
     catch (error) {
       if (!future.isCompleted)

@@ -1,5 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
+import BadBindingError from "lib/BadBindingError";
+import BadArgumentError from "lib/BadArgumentError";
 import { is } from "tools/common";
 import { extensions as arrEx, fold } from "tools/array";
 import { makeValidator } from "tools/propTypes";
@@ -20,10 +22,10 @@ import { run } from "tools/parsing";
  */
 export function predicate(predicate) {
   if (!this::is.func())
-    throw new TypeError("expected to be bound to a prop-type validator function");
+    throw new BadBindingError("must be a prop-type validator function", this);
 
   if (!predicate::is.func())
-    throw new TypeError("invalid argument for `predicate`; expected a function");
+    throw new BadArgumentError("must be a function", "predicate", predicate);
 
   const validationFn = (value, key, props) => {
     const result = predicate(value, key, props);
@@ -52,7 +54,7 @@ export function predicate(predicate) {
  */
 export function match(failureText) {
   if (!this::is.instanceOf(RegExp))
-    throw new TypeError("expected to be bound to a regular-expression");
+    throw new BadBindingError("must be a regular-expression", this);
   
   const validationFn = (value) => {
     const matched = this.test(value);
@@ -76,7 +78,7 @@ export function match(failureText) {
  */
 export function parse(failureText) {
   if (!this::is.func())
-    throw new TypeError("expected to be bound to a function, to be treated as a parser");
+    throw new BadBindingError("must be a parsing function", this);
   
   const validationFn = (value) => {
     const result = run(this, value);
@@ -111,21 +113,21 @@ export function parse(failureText) {
  */
 export function dependsOn(propKeys, strictOther = true, strictSelf) {
   if (!this::is.func())
-    throw new TypeError("expected to be bound to a prop-type validator function");
+    throw new BadBindingError("must be a prop-type validator function", this);
   
   if (propKeys::is.string())
     propKeys = [propKeys];
 
   if (!propKeys::is.array())
-    throw new TypeError("invalid argument for `propKeys`; expected either a string or an array-of-strings");
+    throw new BadArgumentError("must be either a string or an array-of-strings", "propKeys", propKeys);
   else if (!propKeys.every(v => v::is.string()))
-    throw new TypeError("invalid argument for `propKeys`; when an array, it can only contain strings");
+    throw new BadArgumentError("array can only contain strings", "propKeys", propKeys);
 
   if (strictOther != null && !strictOther::is.boolean())
-    throw new TypeError("invalid argument for `strictOther`; expected a boolean or `null`");
+    throw new BadArgumentError("must be `null`, `undefined`, or a boolean", "strictOther", strictOther);
   
   if (strictSelf != null && !strictSelf::is.boolean())
-    throw new TypeError("invalid argument for `strictSelf`; expected a boolean or `null`");
+    throw new BadArgumentError("must be `null`, `undefined`, or a boolean", "strictSelf", strictSelf);
 
   const makeMsg = (key, exclusiveProps) => {
     const start = `the \`${key}\` property requires the following properties to be`;
@@ -172,21 +174,21 @@ export function dependsOn(propKeys, strictOther = true, strictSelf) {
  */
 export function exclusiveTo(propKeys, strictOther = true, strictSelf) {
   if (!this::is.func())
-    throw new TypeError("expected to be bound to a prop-type validator function");
+    throw new BadBindingError("must be a prop-type validator function", this);
   
   if (propKeys::is.string())
     propKeys = [propKeys];
 
   if (!propKeys::is.array())
-    throw new TypeError("invalid argument for `propKeys`; expected either a string or an array-of-strings");
+    throw new BadArgumentError("must be either a string or an array-of-strings", "propKeys", propKeys);
   else if (!propKeys.every(v => v::is.string()))
-    throw new TypeError("invalid argument for `propKeys`; when an array, it can only contain strings");
+    throw new BadArgumentError("array can only contain strings", "propKeys", propKeys);
 
   if (strictOther != null && !strictOther::is.boolean())
-    throw new TypeError("invalid argument for `strictOther`; expected a boolean or `null`");
+    throw new BadArgumentError("must be `null`, `undefined`, or a boolean", "strictOther", strictOther);
   
   if (strictSelf != null && !strictSelf::is.boolean())
-    throw new TypeError("invalid argument for `strictSelf`; expected a boolean or `null`");
+    throw new BadArgumentError("must be `null`, `undefined`, or a boolean", "strictSelf", strictSelf);
 
   const makeMsg = (key, exclusiveProps) => {
     const start = `the \`${key}\` property requires the following properties to be`;
@@ -221,7 +223,7 @@ export function exclusiveTo(propKeys, strictOther = true, strictSelf) {
  */
 export function notEmpty() {
   if (!this::is.func())
-    throw new TypeError("expected to be bound to a prop-type validator function");
+    throw new BadBindingError("must be a prop-type validator function", this);
   
   const validationFn = (value, key) => {
     if (key === "children" && isEmptyChildren(value)) return "must have at least one child";
@@ -252,7 +254,7 @@ const predicatesFor = (key, value, strict) => {
 
 const name = (strings, fn, ...rest) => {
   if (!fn::is.func())
-    throw new TypeError("expected first template interpolation to be a function");
+    throw new BadArgumentError("first template interpolation must be a function", "fn", fn);
 
   const name = fn.name && fn.name::is.string() ? `\`${fn.name}\``: null;
 

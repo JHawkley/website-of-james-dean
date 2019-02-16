@@ -1,3 +1,4 @@
+import NotSupportedError from "lib/NotSupportedError";
 import { identityFn } from "tools/common";
 
 /**
@@ -86,7 +87,7 @@ export default class Future {
     Object.defineProperty(this, "resolve", {
       value: (value) => {
         if (didComplete)
-          throw new Error("this future has already completed");
+          throw new NotSupportedError("this future has already completed");
 
         didComplete = true;
         resolveFn(value);
@@ -103,7 +104,7 @@ export default class Future {
     Object.defineProperty(this, "reject", {
       value: (reason) => {
         if (didComplete)
-          throw new Error("this future has already completed");
+          throw new NotSupportedError("this future has already completed");
         
         didComplete = true;
         error = reason;

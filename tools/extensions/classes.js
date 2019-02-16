@@ -1,3 +1,5 @@
+import BadBindingError from "lib/BadBindingError";
+import BadArgumentError from "lib/BadArgumentError";
 import { is } from "tools/extensions/common";
 
 /**
@@ -13,9 +15,9 @@ import { is } from "tools/extensions/common";
  */
 export function inheritsFrom(otherClass) {
   if (!this::is.func())
-    throw new Error("bound object was not a function");
+    throw new BadBindingError("was not a function", this);
   if (!otherClass::is.func())
-    throw new Error("value of `otherClass` was not a function");
+    throw new BadArgumentError("was not a function", "otherClass", otherClass);
   
   return this === otherClass || this.prototype instanceof otherClass;
 }

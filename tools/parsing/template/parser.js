@@ -1,3 +1,4 @@
+import BadArgumentError from "lib/BadArgumentError";
 import { fold, extensions as arrEx } from "tools/array";
 import * as iterEx from "tools/extensions/iterables";
 import { any } from "../parsers/any";
@@ -14,6 +15,10 @@ import { isUndefined } from "../helpers/isUndefined";
 import { isEmpty } from "../helpers/isEmpty";
 import { interpolate, AppliedInterpolation } from "./interpolate";
 
+const $emptyPlaceholder = "a placeholder in the template-literal contained `null` or `undefined`";
+const $badInterpolator = "arrays used in the template-literal cannot contain an interpolation";
+const $noParser = "no parser could be located for a placeholder in the template-literal";
+
 const preservedEmpty = Symbol("template:preserved-empty");
 const preserveResult = (result) => isEmpty(result) ? preservedEmpty : result;
 const restoreResult = (result) => result === preservedEmpty ? null : result;
@@ -25,7 +30,7 @@ const wrap = (parser) => Object.assign((state) => parser(state), parser);
 const isAnInterpolation = (parser) => parser === interpolate || parser instanceof AppliedInterpolation;
 
 const prepareParser = (parser) => {
-  if (parser == null) throw new Error("a placeholder in the template-literal contained `null` or `undefined`");
+  if (parser == null) throw new BadArgumentError($emptyPlaceholder, "parser", parser);
   // Ignore the interpolation placeholders.  We'll deal with them later.
   if (isAnInterpolation(parser)) return parser;
   // Wrap functional parsers so we can attach our marker to it safely.
@@ -36,10 +41,10 @@ const prepareParser = (parser) => {
   // Treat an array as a `oneOf` combinator.
   if (Array.isArray(parser)) {
     if (parser.some(isAnInterpolation))
-      throw new Error(`arrays used in the template-literal cannot contain an interpolation`);
+      throw new BadArgumentError($badInterpolator, "parser", parser);
     return oneOf(...parser.map(prepareParser));
   }
-  throw new Error(`no parser could be located for \`${parser}\` in the template-literal`);
+  throw new BadArgumentError($noParser, "parser", parser);
 };
 
 const processParser = (cur, next) => {

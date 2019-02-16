@@ -1,3 +1,4 @@
+import BadArgumentError from "lib/BadArgumentError";
 import { is } from "tools/extensions/common";
 
 // Re-export extension methods.
@@ -27,9 +28,9 @@ export const nil = Object.freeze({});
  */
 export function compareOwnProps(left, right) {
   if (!left::is.object())
-    throw new Error("the `left` value must be an object reference");
+    throw new BadArgumentError("must be an object reference", "left", left);
   if (!right::is.object())
-    throw new Error("the `right` value must be an object reference");
+    throw new BadArgumentError("must be an object reference", "right", right);
   
   if (left === right) return true;
 
@@ -136,7 +137,7 @@ export function singleton(factory) {
  */
 export function allEq() {
   switch (arguments.length) {
-    case 0: throw new Error("no arguments to compare were provided");
+    case 0: throw new BadArgumentError("no arguments to compare were provided");
     case 1: return true;
     case 2: return Object.is(arguments[0], arguments[1]);
     case 3: return Object.is(arguments[0], arguments[1]) && Object.is(arguments[0], arguments[2]);

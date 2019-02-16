@@ -1,9 +1,10 @@
 /** @module tools/propTypes */
 
+import BadArgumentError from "lib/BadArgumentError";
+import AbortedError from "tools/async/AbortedError";
 import { is, nil } from "tools/common";
 import { orUndefined, whenAborted } from "tools/extensions/async";
 import Future from "tools/async/Future";
-import AbortedError from "tools/async/AbortedError";
 
 // Re-export extension methods.
 export * as extensions from "tools/extensions/async";
@@ -57,11 +58,13 @@ export async function awaitAll(promises) {
  * @throws When no promise could be awaited and no `defaultResult` was provided.
  */
 export async function awaitWhile(promiseGetterFn, options) {
-  const defaultResult = options?.defaultResult ?? awaitWhile_noDefault;
   const condition = options?.condition ?? awaitWhile_alwaysContinue;
   let promise = promiseGetterFn();
 
   if (promise == null) {
+    if (!options || !("defaultResult" in options))
+      throw new BadArgumentError($awaitWhile_Nothing, "promiseGetterFn", promiseGetterFn);
+    const defaultResult = options.defaultResult;
     if (defaultResult::is.func()) return defaultResult();
     return defaultResult;
   }
@@ -77,8 +80,7 @@ export async function awaitWhile(promiseGetterFn, options) {
   }
 }
 const awaitWhile_alwaysContinue = () => true;
-const awaitWhile_noDefault = () =>
-  throw new Error("the `promiseGetterFn` materialized nothing that could be awaited");
+const $awaitWhile_Nothing = "produced nothing that could be awaited and no `options.defaultResult` provided";
 
 /**
  * Creates a promise that can be aborted.  The promise will resolve normally if `mainPromise` resolves
@@ -98,7 +100,7 @@ const awaitWhile_noDefault = () =>
  */
 export function abortable(promise, signal) {
   if (!signal::is.object())
-    throw new TypeError("invalid arguments for `signal`; must be a valid object");
+    throw new BadArgumentError("must be a valid object", "signal", signal);
 
   const abortionPromise = createAbortionPromise(promise, signal);
   if (promise == null) return abortionPromise;
@@ -110,7 +112,7 @@ const createAbortionPromise = (promise, signal) => {
   const aborter
     = signal.then::is.func() ? signal
     : signal.promise?.then::is.func() ? signal.promise
-    : throw new TypeError("no promise was provided to abort on");
+    : throw new BadArgumentError("was not thenable", "signal", signal);
   
   return new Promise((resolve, reject) => {
     aborter.then(
@@ -204,12 +206,9 @@ export function frameSync(abortSignal) {
  * @returns {Promise<void>} A promise that will complete when the process is aborted.
  */
 export function eachFrame(...args) {
-  const [abortSignal, fn]
-    = args.length === 1 ? [void 0, args[0]]
-    : args.length === 2 ? args
-    : throw new TypeError("too many arguments");
+  const [abortSignal, fn] = args.length >= 2 ? args : [void 0, args[0]];
   
-  if (!fn::is.func()) throw new TypeError("last argument must be a function");
+  if (!fn::is.func()) throw new BadArgumentError("must be a function", "fn", fn);
   
   let handle;
   const whenStoppedFuture = new Future();

@@ -1,3 +1,4 @@
+import BadArgumentError from "lib/BadArgumentError";
 import { isUndefined } from "../helpers/isUndefined";
 
 /**
@@ -12,7 +13,7 @@ import { isUndefined } from "../helpers/isUndefined";
  */
 export const map = (parser, transformationFn) => {
   if (typeof transformationFn !== "function")
-    throw new Error(`expected \`transformationFn\` to be a function; got \`${transformationFn}\` instead.`);
+    throw new BadArgumentError("must be a function", "transformationFn", transformationFn);
   return (state) => {
     const value = parser(state);
     if (isUndefined(value)) return void 0;

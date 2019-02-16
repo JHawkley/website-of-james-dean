@@ -1,3 +1,5 @@
+import BadArgumentError from "lib/BadArgumentError";
+import InnerError from "lib/InnerError";
 import { is } from "tools/common";
 
 /** @module tools/propTypes */
@@ -7,7 +9,7 @@ export * as extensions from "tools/extensions/propTypes";
 
 export function validateAll(propTypes) {
   if (!propTypes::is.array())
-    throw new TypeError("invalid argument for `propTypes`; expected an array");
+    throw new BadArgumentError("must be an array", "propTypes", propTypes);
 
   const validator = (...args) => {
     for (const ptFn of propTypes) {
@@ -31,8 +33,8 @@ export function validateAll(propTypes) {
 
 export function makeValidator(validationFn, requirement) {
   // Validating `requirement` using a throw-expression.
-  requirement == null || requirement::is.boolean() || requirement::is.func() || throw new TypeError(
-    `invalid argument for \`requirement\`; got ${requirement}`
+  requirement == null || requirement::is.boolean() || requirement::is.func() || throw new BadArgumentError(
+    "must be `null`, `undefined`, a boolean, or a function", "requirement", requirement
   );
 
   const validator = (...args) => {
@@ -102,7 +104,7 @@ export function makeRequiredValidator(validator) {
   }
 }
 
-export class ValidationError extends Error {
+export class ValidationError extends InnerError {
 
   static required(componentName, location, propFullName, ...maybeValue) {
     const msgs = ["this property is marked as required"];
@@ -116,13 +118,12 @@ export class ValidationError extends Error {
     return new ValidationError(componentName, location, propFullName, msgs);
   }
 
-  constructor(componentName, location, propFullName, msg, innerError, ...errorArgs) {
+  constructor(componentName, location, propFullName, msg, innerError) {
     const msgs = [`invalid ${location} \`${propFullName}\` supplied to \`${componentName}\``];
     if (msg::is.array()) msgs.push(...msg);
     else if (msg::is.string()) msgs.push(msg);
 
-    super(msgs.join("; "), ...errorArgs);
-    Error.captureStackTrace?.(this, ValidationError);
+    super(msgs.join("; "), innerError);
     this.innerError = innerError;
   }
 
