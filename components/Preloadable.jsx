@@ -1,9 +1,10 @@
 import React from "react";
 import PropTypes from "prop-types";
+import BadArgumentError from "lib/BadArgumentError";
+import PreloadError from "components/Preloader/PreloadError";
 import PreloadContext from "lib/PreloadContext";
 import { is } from "tools/common";
 import { inheritsFrom } from "tools/extensions/classes";
-import PreloadError from "components/Preloader/PreloadError";
 
 class Preloadable extends React.PureComponent {
 
@@ -71,7 +72,7 @@ class Preloadable extends React.PureComponent {
 
 const wrapped = (Component, options) => {
   if (!Component::is.func())
-    throw new TypeError("expected argument `Component` to be a function");
+    throw new BadArgumentError("must be a function", "Component", Component);
 
   const properName = (options?.name ?? Component.displayName ?? Component.name) || "[anonymous component]";
   const initialProps = options?.initialProps;
@@ -106,7 +107,7 @@ const wrapped = (Component, options) => {
 
 const rendered = (renderFn, options) => {
   if (!renderFn::is.func())
-    throw new TypeError("expected argument `renderFn` to be a function");
+    throw new BadArgumentError("must be a function", "renderFn", renderFn);
   
   const properName = (options?.name ?? renderFn.name) || "[unnamed]";
   const initialProps = options?.initialProps;
@@ -126,7 +127,7 @@ const rendered = (renderFn, options) => {
 
 const promised = (promise, options) => {
   if (!promise::is.defined())
-    throw new TypeError("expected argument `promise` to be defined");
+    throw new BadArgumentError("must be defined", "promise", promise);
 
   const properName = (options?.name ?? promise.name) || "[unnamed]";
   const initialProps = options?.initialProps;

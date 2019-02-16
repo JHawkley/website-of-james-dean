@@ -1,12 +1,13 @@
 import React from "react";
 import PropTypes from "prop-types";
+import BadArgumentError from "lib/BadArgumentError";
+import SoundPreloadError from "components/SoundMedia/SoundPreloadError";
 import { is, dew } from "tools/common";
 import { memoize } from "tools/functions";
 import { extensions as arrEx } from "tools/array";
 import { extensions as propTypeEx, hasOwn as propTypeHasOwn } from "tools/propTypes";
 import Preloadable from "components/Preloadable";
 import SoundMedia from "components/SoundMedia";
-import SoundPreloadError from "components/SoundMedia/SoundPreloadError";
 
 const $$sourceable = Symbol("audio:sourceable");
 
@@ -45,7 +46,7 @@ class Audio extends Preloadable {
 
   static markSourceable(fn) {
     if (!fn::is.func())
-      throw new TypeError("only components (as in functions) can be marked as sourceable");
+      throw new BadArgumentError("only components (as in functions) can be marked as sourceable", "fn", fn);
     fn[$$sourceable] = true;
     return fn;
   }

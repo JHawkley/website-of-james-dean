@@ -7,6 +7,10 @@ import { getUrl } from "next-server/dist/lib/utils";
 import { css } from "styled-jsx/css";
 import { config as faConfig } from "@fortawesome/fontawesome-svg-core";
 
+import BadArgumentError from "lib/BadArgumentError";
+import RouterContext, { create as createRouterContext } from "lib/RouterContext";
+import PreloadContext from "lib/PreloadContext";
+
 import { dew } from "tools/common";
 import { timespan } from "tools/css";
 import { iterExtensions as asyncIterEx } from "tools/async";
@@ -15,9 +19,6 @@ import { extensions as maybe } from "tools/maybe";
 import { memoize } from "tools/functions";
 import { canScrollRestore as transitionsSupported } from "tools/scrollRestoration";
 import styleVars from "styles/vars.json";
-
-import RouterContext, { create as createRouterContext } from "lib/RouterContext";
-import PreloadContext from "lib/PreloadContext";
 
 import PreloadSync from "components/Preloader/PreloadSync";
 import Transition from "components/Transition";
@@ -146,7 +147,7 @@ class ScrollRestoringApp extends App {
 
   buildPage = memoize((Component, pageProps, router, routeChanging) => {
     if (!Component)
-      throw new TypeError("a page-component was not provided to the app");
+      throw new BadArgumentError("a page-component was not provided to the app", "Component", Component);
 
     if (transitionsSupported && routeChanging)
       return null;
