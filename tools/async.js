@@ -199,8 +199,8 @@ export function frameSync(abortSignal) {
  * `requestAnimationFrame`.
  * 
  * @export
- * @param {function(number): boolean} fn The function that will run each frame.
  * @param {Promise} abortSignal The promise to use as a signal to abort when it completes.
+ * @param {function(number): boolean} fn The function that will run each frame.
  * @returns {Promise<void>} A promise that will complete when the process is aborted.
  */
 export function eachFrame(...args) {
