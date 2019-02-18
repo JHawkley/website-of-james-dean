@@ -85,7 +85,9 @@
 
     /* Transitions */
 
-    &.is-exiting, &.is-hidden {
+    &.is-exiting,
+    &.is-hidden,
+    .app-loading & {
       & > article {
         @include vendor('transform', 'translateY(0.25rem)');
         opacity: 0;
@@ -94,7 +96,6 @@
 
     &.is-hidden, .app-loading & {
       & > article {
-        opacity: 0;
         visibility: hidden;
       }
     }
