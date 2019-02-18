@@ -33,6 +33,77 @@ const scrollRestoreSupported = process.browser && transitionsSupported;
 
 class ScrollRestoringApp extends App {
 
+  // Properties.
+
+  state = {
+    loading: true,
+    routeChanging: false,
+    pageHidden: transitionsSupported
+  };
+
+  originalScrollRestorationValue = "auto";
+
+  scrollRestoreData = null;
+
+  scrollRestoreEntry = 0;
+
+  hashBlockID = null;
+
+  routerContext = createRouterContext(this.props.router, () => this.onRouteChangeStart());
+
+  preloadContext = new PreloadSync();
+
+  doLoadingTask = dew(() => {
+    const doLoading = async (stopSignal) => {
+      try {
+        const { preloadContext: preloadSync } = this;
+        const $$preloaded = PreloadSync.states.preloaded;
+
+        // Tell the preloadSync we've rendered the page.  If nothing registered for preloading,
+        // this will tell it to advance to the `$$preloaded` state.
+        preloadSync.rendered();
+
+        // Wait for preloading to finish...
+        const preloadPromise = preloadSync.updates::asyncIterEx.first($$preloaded, stopSignal);
+        // ...or at least wait some amount of time before we load anyways.
+        // Things registered with the app's preloadSync are considered low-priority.
+        const timerPromise = wait(Page.transition.exitDelay * 5, stopSignal);
+
+        await Promise.race([preloadPromise, timerPromise]);
+      }
+      finally {
+        this.setState({ loading: false });
+      }
+    };
+
+    return new Task(doLoading);
+  });
+
+  buildPage = memoize((Component, pageProps, router, routeChanging) => {
+    if (!Component)
+      throw new BadArgumentError("a page-component was not provided to the app", "Component", Component);
+
+    if (transitionsSupported && routeChanging)
+      return null;
+  
+    return {
+      ...Page.transition, ...Component.transition, Component,
+      props: { url: createUrl(router), ...pageProps }
+    };
+  });
+
+  // Constructor.
+
+  constructor(props) {
+    super(props);
+
+    if (scrollRestoreSupported) {
+      this.originalScrollRestorationValue = window.history.scrollRestoration;
+      window.history.scrollRestoration = "manual";
+      this.recallScrollRestoreData();
+    }
+  }
+
   // Callbacks.
 
   onPageHidden = () => {
@@ -97,77 +168,6 @@ class ScrollRestoringApp extends App {
     }
 
     return false;
-  }
-
-  // Properties.
-
-  state = {
-    loading: true,
-    routeChanging: false,
-    pageHidden: transitionsSupported
-  };
-
-  originalScrollRestorationValue = "auto";
-
-  scrollRestoreData = null;
-
-  scrollRestoreEntry = 0;
-
-  hashBlockID = null;
-
-  routerContext = createRouterContext(this.props.router, this.onRouteChangeStart);
-
-  preloadContext = new PreloadSync();
-
-  doLoadingTask = dew(() => {
-    const doLoading = async (stopSignal) => {
-      try {
-        const { preloadContext: preloadSync } = this;
-        const $$preloaded = PreloadSync.states.preloaded;
-
-        // Tell the preloadSync we've rendered the page.  If nothing registered for preloading,
-        // this will tell it to advance to the `$$preloaded` state.
-        preloadSync.rendered();
-
-        // Wait for preloading to finish...
-        const preloadPromise = preloadSync.updates::asyncIterEx.first($$preloaded, stopSignal);
-        // ...or at least wait some amount of time before we load anyways.
-        // Things registered with the app's preloadSync are considered low-priority.
-        const timerPromise = wait(Page.transition.exitDelay * 5, stopSignal);
-
-        await Promise.race([preloadPromise, timerPromise]);
-      }
-      finally {
-        this.setState({ loading: false });
-      }
-    };
-
-    return new Task(doLoading);
-  });
-
-  buildPage = memoize((Component, pageProps, router, routeChanging) => {
-    if (!Component)
-      throw new BadArgumentError("a page-component was not provided to the app", "Component", Component);
-
-    if (transitionsSupported && routeChanging)
-      return null;
-  
-    return {
-      ...Page.transition, ...Component.transition, Component,
-      props: { url: createUrl(router), ...pageProps }
-    };
-  });
-
-  // Constructor.
-
-  constructor(props) {
-    super(props);
-
-    if (scrollRestoreSupported) {
-      this.originalScrollRestorationValue = window.history.scrollRestoration;
-      window.history.scrollRestoration = "manual";
-      this.recallScrollRestoreData();
-    }
   }
 
   // Methods.
