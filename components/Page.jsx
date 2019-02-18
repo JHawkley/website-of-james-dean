@@ -15,15 +15,15 @@ const Page = (props) => {
 
   return (
     <Fragment>
-      <div key="content" className={className}>
+      <div className={className}>
         <article id={id} className={articleClass} style={style}>
           <RouterContext.Consumer>
             {renderRouterContext}
           </RouterContext.Consumer>
           {children}
         </article>
+        <Background.Controller className="blur" />
       </div>
-      <Background key="background" className="blur" />
     </Fragment>
   );
 }

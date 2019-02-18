@@ -59,7 +59,11 @@
       @include vendor('filter', 'blur(0.2rem)');
     }
    
-    .app-loading &:before {
-      background-color:	_palette(bg-alt);
+    &.bg-loading,
+    &.bg-error,
+    .app-loading & {
+      &:before {
+        background-color:	_palette(bg-alt);
+      }
     }
   }

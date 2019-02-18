@@ -8,7 +8,8 @@ import { css } from "styled-jsx/css";
 import { config as faConfig } from "@fortawesome/fontawesome-svg-core";
 
 import BadArgumentError from "lib/BadArgumentError";
-import RouterContext, { create as createRouterContext } from "lib/RouterContext";
+import RouterContext, { create as createRouter } from "lib/RouterContext";
+import BackgroundContext, { create as createBackground } from "lib/BackgroundContext";
 import PreloadContext from "lib/PreloadContext";
 
 import { dew } from "tools/common";
@@ -26,6 +27,7 @@ import AppRoot from "components/AppRoot";
 import Wrapper from "components/Wrapper";
 import LoadingSpinner from "components/LoadingSpinner";
 import Page from "components/Page";
+import Background from "components/Background";
 
 faConfig.autoAddCss = false;
 
@@ -38,7 +40,8 @@ class ScrollRestoringApp extends App {
   state = {
     loading: true,
     routeChanging: false,
-    pageHidden: transitionsSupported
+    pageHidden: transitionsSupported,
+    bgClassName: null
   };
 
   originalScrollRestorationValue = "auto";
@@ -49,7 +52,11 @@ class ScrollRestoringApp extends App {
 
   hashBlockID = null;
 
-  routerContext = createRouterContext(this.props.router, () => this.onRouteChangeStart());
+  routerContext = createRouter(this.props.router, () => this.onRouteChangeStart());
+
+  backgroundContext = createBackground({
+    onUpdated: ({ className: bgClassName }) => this.setState({ bgClassName })
+  });
 
   preloadContext = new PreloadSync();
 
@@ -249,17 +256,20 @@ class ScrollRestoringApp extends App {
     }
   }
 
-  renderAppLoader() {
-    const { loading } = this.state;
+  renderAppComponents() {
+    const { loading, bgClassName } = this.state;
 
     return (
-      <LoadingSpinner
-        fadeTime={throbberCss.fadeTime}
-        size="3x"
-        show={loading}
-        className={throbberCss.className}
-        fixed
-      />
+      <Fragment>
+        <Background className={bgClassName} />
+        <LoadingSpinner
+          fadeTime={throbberCss.fadeTime}
+          size="3x"
+          show={loading}
+          className={throbberCss.className}
+          fixed
+        />
+      </Fragment>
     );
   }
 
@@ -277,7 +287,7 @@ class ScrollRestoringApp extends App {
         <Wrapper>
           {render(Component, props, exitDelay, "entered")}
         </Wrapper>
-        {this.renderAppLoader()}
+        {this.renderAppComponents()}
         <LoadingSpinner
           delay={exitDelay}
           fadeTime={throbberCss.fadeTime}
@@ -308,7 +318,7 @@ class ScrollRestoringApp extends App {
             wait={loading}
           />
         </Wrapper>
-        {this.renderAppLoader()}
+        {this.renderAppComponents()}
         <LoadingSpinner
           delay={100}
           fadeTime={throbberCss.fadeTime}
@@ -327,10 +337,12 @@ class ScrollRestoringApp extends App {
       <Fragment>
         <Head><title>A Programmer's Place</title></Head>
         <RouterContext.Provider value={this.routerContext}>
-          <PreloadContext.Provider value={this.preloadContext}>
-            {transitionsSupported ? this.renderWithTransitions() : this.renderNoTransitions()}
-            {throbberCss.styles}
-          </PreloadContext.Provider>
+          <BackgroundContext.Provider value={this.backgroundContext}>
+            <PreloadContext.Provider value={this.preloadContext}>
+              {transitionsSupported ? this.renderWithTransitions() : this.renderNoTransitions()}
+              {throbberCss.styles}
+            </PreloadContext.Provider>
+          </BackgroundContext.Provider>
         </RouterContext.Provider>
       </Fragment>
     );

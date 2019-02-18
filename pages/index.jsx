@@ -25,30 +25,28 @@ const Index = ({transitionClass, blurBackground}) => {
 
   return (
     <Fragment>
-      <Fragment key="content">
-        <Header className={headerClass} logo={faCode}>
-          <Header.Content>
-            <h1>A Programmer's Place</h1>
-            <p>My name is James Dean; this is a place to get to know me<br />
-            and get more information on the works I've done.</p>
-          </Header.Content>
-          <Header.Nav>
-            <Jump href={$intro}>Intro</Jump>
-            <Jump href={$work}>Work</Jump>
-            <Jump href={$questions}>Q&amp;A</Jump>
-            <Jump href={$contact}>Contact</Jump>
-          </Header.Nav>
-        </Header>
-        <Footer className={footerClass}>
-          <p className="copyright">Template: &copy; <Jump href="https://github.com/codebushi/nextjs-starter-dimension" icon="none">Next.js Starter - Dimension</Jump>.  Content: &copy; James Dean</p>
-          <p className="copyright">Design: <Jump href="https://html5up.net" icon="none">HTML5 UP</Jump>.  Built with: <Jump href="https://github.com/zeit/next.js" icon="none">Next.js</Jump></p>
-        </Footer>
-        {customHeaderCss.styles}
-      </Fragment>
-      <Background key="background" className={bgClass} />
+      <Header className={headerClass} logo={faCode}>
+        <Header.Content>
+          <h1>A Programmer's Place</h1>
+          <p>My name is James Dean; this is a place to get to know me<br />
+          and get more information on the works I've done.</p>
+        </Header.Content>
+        <Header.Nav>
+          <Jump href={$intro}>Intro</Jump>
+          <Jump href={$work}>Work</Jump>
+          <Jump href={$questions}>Q&amp;A</Jump>
+          <Jump href={$contact}>Contact</Jump>
+        </Header.Nav>
+      </Header>
+      <Footer className={footerClass}>
+        <p className="copyright">Template: &copy; <Jump href="https://github.com/codebushi/nextjs-starter-dimension" icon="none">Next.js Starter - Dimension</Jump>.  Content: &copy; James Dean</p>
+        <p className="copyright">Design: <Jump href="https://html5up.net" icon="none">HTML5 UP</Jump>.  Built with: <Jump href="https://github.com/zeit/next.js" icon="none">Next.js</Jump></p>
+      </Footer>
+      <Background.Controller className={bgClass} />
+      {customHeaderCss.styles}
     </Fragment>
   );
-}
+};
 
 Index.propTypes = {
   transitionClass: PropTypes.string,
