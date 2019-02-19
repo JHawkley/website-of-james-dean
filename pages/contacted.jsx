@@ -1,6 +1,6 @@
 import Page from "components/Page";
 
-const Contacted = (props) => (
+const ContactedPage = (props) => (
   <Page {...props}>
     <h2 className="major">Thank You</h2>
     <p>Your message was sent successfully.  I'll try to reply to your inquiry when I can.</p>
@@ -8,4 +8,4 @@ const Contacted = (props) => (
   </Page>
 );
 
-export default Contacted;
+export default ContactedPage;

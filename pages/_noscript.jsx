@@ -8,7 +8,7 @@ import styleVars from "styles/vars.json";
 const [translateVal, translateUnit] = numeric(styleVars["size"]["page-translate"]);
 
 // Special component for rendering a page when no JavaScript is detected.
-const NoJavaScript = ({transitionClass}) => (
+const NoJavaScriptPage = ({transitionClass}) => (
   <Page transitionClass={transitionClass}>
     <h2 className="major">JavaScript Disabled</h2>
     <p>JavaScript appears to be disabled during this visit.</p>
@@ -20,11 +20,11 @@ const NoJavaScript = ({transitionClass}) => (
   </Page>
 );
 
-NoJavaScript.propTypes = {
+NoJavaScriptPage.propTypes = {
   transitionClass: PropTypes.string
 };
 
-NoJavaScript.transition = {
+NoJavaScriptPage.transition = {
   // eslint-disable-next-line react/display-name
   render(Component, props, exitDelay, stage) {
     const isHidden = stage === "exited" || stage === "entering";
@@ -63,4 +63,4 @@ const resolveTransitionCss = (exitDelay, isHidden) => {
   `;
 }
 
-export default NoJavaScript;
+export default NoJavaScriptPage;

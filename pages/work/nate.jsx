@@ -28,7 +28,7 @@ const gallery = [
   { i: $gallery$4, d: "These early concept sketches of enemies show that Chie had some fun looking playmates for her \"pet\" in mind.  This artwork was done by my partner on this project, Tderek99." }
 ];
 
-class Nate extends React.PureComponent {
+class NatePage extends React.PureComponent {
 
   state = { nateWidgetError: null };
 
@@ -134,4 +134,4 @@ class Nate extends React.PureComponent {
 
 }
 
-export default Nate;
+export default NatePage;

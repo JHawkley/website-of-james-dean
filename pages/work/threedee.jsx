@@ -20,7 +20,7 @@ const gallery = [
   { i: $gallery$icecave, d: "Everyone tells me this render would be right at home in a Myst-like game.  The internal reflections from the ice and the metal are quite neat.  I really love the atmosphere here." },
 ];
 
-const ThreeDee = (props) => (
+const ThreeDeePage = (props) => (
   <Page {...props}>
     <GalleryContext.Provider value={gallery}>
       <h2 className="major">Miscellaneous 3D</h2>
@@ -78,4 +78,4 @@ const ThreeDee = (props) => (
   </Page>
 );
 
-export default ThreeDee;
+export default ThreeDeePage;

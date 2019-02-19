@@ -2,7 +2,7 @@ import Page from "components/Page";
 import Jump from "components/Jump";
 import styleVars from "styles/vars.json";
 
-const Questions = (props) => (
+const QuestionsPage = (props) => (
   <Page {...props}>
     <h2 className="major">Questions &amp; Answers</h2>
     <p>Below I'll answer some questions that I suspect might be pretty common.</p>
@@ -36,4 +36,4 @@ const Questions = (props) => (
   </Page>
 );
 
-export default Questions;
+export default QuestionsPage;

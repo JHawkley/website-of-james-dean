@@ -18,7 +18,7 @@ import $contact from "pages/contact?route";
 
 const backgroundColor = color(styleVars["palette"]["bg"]).transparentize(0.15).asRgba();
 
-const Index = ({transitionClass, blurBackground}) => {
+const IndexPage = ({transitionClass, blurBackground}) => {
   const bgClass = blurBackground ? "blur" : null;
   const headerClass = [transitionClass, customHeaderCss.className].filter(Boolean).join(" ");
   const footerClass = transitionClass;
@@ -48,12 +48,12 @@ const Index = ({transitionClass, blurBackground}) => {
   );
 };
 
-Index.propTypes = {
+IndexPage.propTypes = {
   transitionClass: PropTypes.string,
   blurBackground: PropTypes.bool
 };
 
-Index.transition = {
+IndexPage.transition = {
   // eslint-disable-next-line react/display-name
   render(Component, props, exitDelay, stage) {
     const isExiting = stage === "exiting" || stage === "exited";
@@ -103,4 +103,4 @@ const customHeaderCss = css.resolve`
   }
 `;
 
-export default Index;
+export default IndexPage;

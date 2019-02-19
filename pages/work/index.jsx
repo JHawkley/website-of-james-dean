@@ -28,7 +28,7 @@ WorkItem.propTypes = {
   href: PropTypes.string,
 };
 
-const Work = (props) => (
+const WorkPage = (props) => (
   <Page {...props}>
     <h2 className="major">Work</h2>
     <span className="image main"><ImgHeader alt="Variety of Work" fluid /></span>
@@ -92,4 +92,4 @@ const workItemCss = css.resolve`
   }
 `;
 
-export default Work;
+export default WorkPage;

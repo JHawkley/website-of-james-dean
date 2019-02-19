@@ -3,7 +3,7 @@ import Jump from "components/Jump";
 
 import ImgHeader from "static/images/miscprogramming/header.png";
 
-const MiscProgramming = (props) => (
+const MiscProgrammingPage = (props) => (
   <Page {...props}>
     <h2 className="major">Misc Programming</h2>
     <span className="image main"><ImgHeader alt="Misc Programming" fluid /></span>
@@ -31,4 +31,4 @@ const MiscProgramming = (props) => (
   </Page>
 );
 
-export default MiscProgramming;
+export default MiscProgrammingPage;

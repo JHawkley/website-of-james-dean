@@ -21,7 +21,7 @@ const gallery = [
   { i: $gallery$5, d: "A render of the plate I designed.  A 3D printing company was used to produce a prototype, which we used internally to test the application." }
 ];
 
-const LithologicPhoto = (props) => (
+const LithologicPhotoPage = (props) => (
   <Page {...props}>
     <GalleryContext.Provider value={gallery}>
       <h2 className="major">Lithologic Photo</h2>
@@ -59,4 +59,4 @@ const LithologicPhoto = (props) => (
   </Page>
 );
 
-export default LithologicPhoto;
+export default LithologicPhotoPage;

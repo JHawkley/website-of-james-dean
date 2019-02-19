@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faLinkedin } from "@fortawesome/free-brands-svg-icons/faLinkedin";
 import { faGithub } from "@fortawesome/free-brands-svg-icons/faGithub";
 
-const Contact = (props) => (
+const ContactPage = (props) => (
   <Page {...props}>
     <h2 className="major">Contact</h2>
     <ContactForm />
@@ -20,4 +20,4 @@ const Contact = (props) => (
   </Page>
 );
 
-export default Contact;
+export default ContactPage;

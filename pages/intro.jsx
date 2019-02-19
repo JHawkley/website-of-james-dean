@@ -5,7 +5,7 @@ import ImgPlaceholderPhoto from "static/images/placeholder_photo.jpg";
 
 import $work from "pages/work/index?route";
 
-const Intro = (props) => (
+const IntroPage = (props) => (
   <Page {...props}>
     <h2 className="major">Intro</h2>
     <span className="image right">
@@ -65,4 +65,4 @@ const Intro = (props) => (
   </Page>
 );
 
-export default Intro;
+export default IntroPage;

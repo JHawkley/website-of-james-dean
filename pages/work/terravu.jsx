@@ -15,7 +15,7 @@ const gallery = [
   { i: $gallery$3, d: "The LAS loader is by far the most worked on component of this software.  My latest update to TerraVu was even a small bug-fix to the data-loader." }
 ];
 
-const TerraVu = (props) => (
+const TerraVuPage = (props) => (
   <Page {...props}>
     <GalleryContext.Provider value={gallery}>
       <h2 className="major">TerraVu 2</h2>
@@ -43,4 +43,4 @@ const TerraVu = (props) => (
   </Page>
 );
 
-export default TerraVu;
+export default TerraVuPage;
