@@ -1,7 +1,11 @@
 import { Fragment } from "react";
 import PropTypes from "prop-types";
 import { css } from "styled-jsx/css";
+import { numeric } from "tools/css";
 import Page from "components/Page";
+import styleVars from "styles/vars.json";
+
+const [translateVal, translateUnit] = numeric(styleVars["size"]["page-translate"]);
 
 // Special component for rendering a page when no JavaScript is detected.
 const NoJavaScript = ({transitionClass}) => (
@@ -41,8 +45,15 @@ const resolveTransitionCss = (exitDelay, isHidden) => {
 
   return css.resolve`
     @keyframes main {
-      0% { opacity: 0; }
-      100% { opacity: 1; }
+      0% {
+        opacity: 0;
+        transform: translateY(${translateVal}${translateUnit});
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateY(0${translateUnit});
+      }
     }
 
     * {
