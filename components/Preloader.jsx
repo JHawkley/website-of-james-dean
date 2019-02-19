@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import PreloadContext from "lib/PreloadContext";
 import PreloadSync from "components/Preloader/PreloadSync";
-import { is, dew, Composition } from "tools/common";
+import { is, dew } from "tools/common";
 import { Future, CallSync, AbortedError } from "tools/async";
 import { predicate } from "tools/extensions/propTypes";
 import { extensions as asyncIterEx } from "tools/asyncIterables";
@@ -28,7 +28,6 @@ class Preloader extends React.PureComponent {
 
   static propTypes = {
     children: PropTypes.node.isRequired,
-    preloadSync: PropTypes.instanceOf(PreloadSync),
     promise: PropTypes.func,
     onPreload: PropTypes.func,
     onLoad: PropTypes.func,
@@ -50,27 +49,17 @@ class Preloader extends React.PureComponent {
     once: false
   };
 
-  static getDerivedStateFromProps(props, state) {
-    const newState = new Composition();
-
-    if (props.preloadSync && props.preloadSync !== state.preloadSync)
-      newState.compose({ preloadSync: props.preloadSync, ownedPreloadSync: false });
-    else if (!state.preloadSync)
-      newState.compose({ preloadSync: new PreloadSync(), ownedPreloadSync: true });
-
-    if (!state.mustRender && !props.wait)
-      newState.compose({ mustRender: true });
-
-    return newState.composed ? newState.result : null;
-  }
-
   preloadedFuture = null;
 
   cancelAsync = new CallSync();
 
+  preloadSync = new PreloadSync((error) => {
+    const { onError } = this.props;
+    if (!onError) return false;
+    return onError(error, false);
+  });
+
   state = {
-    ownedPreloadSync: false,
-    preloadSync: null,
     preloadState: $$fresh,
     preloadedOnce: false,
     mustRender: !this.props.wait,
@@ -110,7 +99,7 @@ class Preloader extends React.PureComponent {
   }
 
   attachToPreloadSync() {
-    const { preloadSyncUpdated, cancelAsync, state: { preloadSync } } = this;
+    const { preloadSync, preloadSyncUpdated, cancelAsync } = this;
     preloadSync.updates::asyncIterEx.forEach(preloadSyncUpdated, cancelAsync.sync).catch((error) => {
       if (error instanceof AbortedError) return;
       this.setState({ error });
@@ -118,39 +107,36 @@ class Preloader extends React.PureComponent {
     preloadSync.rendered();
   }
 
-  handleBeginPreload() {
+  handleBeginPreload(didAnnounce) {
     const { promise: promiseFn, onPreload } = this.props;
     promiseFn?.(this.promise);
-    onPreload?.();
+    if (!didAnnounce) onPreload?.();
   }
 
-  handleEndPreload(success) {
+  handleEndPreload(didAnnounce, success) {
     if (this.preloadedFuture) {
       this.preloadedFuture.resolve(success);
       this.preloadedFuture = null;
       this.props.promise?.(null);
     }
 
-    if (success) this.props.onLoad?.();
+    if (!didAnnounce && success) this.props.onLoad?.();
   }
 
   handlePreloadError(error) {
     const { onError } = this.props;
-    let announcedError = false;
+
+    // If an `onError` is defined, the error was already announced.
+    let didAnnounce = Boolean(onError);
 
     if (this.preloadedFuture) {
       this.preloadedFuture.reject(error);
       this.preloadedFuture = null;
       this.props.promise?.(null);
-      announcedError = true;
-    }
-
-    if (onError) {
-      onError(error);
-      announcedError = true;
+      didAnnounce = true;
     }
     
-    if (!announcedError) throw error;
+    if (!didAnnounce) throw error;
   }
 
   componentDidMount() {
@@ -159,8 +145,9 @@ class Preloader extends React.PureComponent {
 
   componentDidUpdate(prevProps, prevState) {
     const {
-      props: { once, promise: promiseFn },
-      state: { error, preloadSync, preloadState, ownedPreloadSync }
+      preloadSync,
+      props: { promise: promiseFn, onPreload, onLoad, onError, once },
+      state: { error, preloadState }
     } = this;
 
     if (promiseFn !== prevProps.promise) {
@@ -169,27 +156,29 @@ class Preloader extends React.PureComponent {
     }
 
     if (error) {
-      if (error !== prevState.error) this.handlePreloadError(error);
+      if (onError !== prevProps.onError)
+        onError?.(error, true);
+      if (error !== prevState.error)
+        this.handlePreloadError(error);
       return;
     }
 
-    if (preloadSync !== prevState.preloadSync) {
-      const prevPreloadState = prevState.preloadSync.state;
-      const curPreloadState = preloadSync.state;
+    let didOnPreload = false;
+    let didOnLoad = false;
 
-      if (ownedPreloadSync) prevState.preloadSync.done();
-      this.cancelAsync.resolve();
-      this.attachToPreloadSync();
+    if (onPreload !== prevProps.onPreload && preloadState !== $$preloaded) {
+      onPreload?.();
+      didOnPreload = true;
+    }
 
-      // Skip the rest if there is a difference between the states of the
-      // new and old `preloadSync.state`.  Another update will come as a
-      // consequence of the `attachToPreloadSync` call.
-      if (prevPreloadState !== curPreloadState) return;
+    if (onLoad !== prevProps.onLoad && preloadState === $$preloaded) {
+      onLoad?.();
+      didOnLoad = true;
     }
     
     if (preloadState !== prevState.preloadState) {
-      if (preloadState === $$preloading) this.handleBeginPreload();
-      else if (preloadState === $$preloaded) this.handleEndPreload(true);
+      if (preloadState === $$preloading) this.handleBeginPreload(didOnPreload);
+      else if (preloadState === $$preloaded) this.handleEndPreload(didOnLoad, true);
     }
 
     if (once !== prevProps.once && !once)
@@ -198,19 +187,18 @@ class Preloader extends React.PureComponent {
   }
 
   componentWillUnmount() {
-    const { preloadState, ownedPreloadSync, error, preloadSync } = this.state;
+    const { preloadSync, state: { preloadState } } = this;
     if (preloadState !== $$preloaded)
-      this.handleEndPreload(false);
-    if (ownedPreloadSync && !error)
-      preloadSync.done();
+      this.handleEndPreload(false, false);
+    preloadSync.done();
     this.cancelAsync.resolve();
   }
 
   render() {
     const {
-      display,
+      display, preloadSync,
       props: { children, id, style: customStyle, className },
-      state: { mustRender, error, preloadSync, preloadState }
+      state: { mustRender, error, preloadState }
     } = this;
 
     if (!mustRender || error)
