@@ -15,10 +15,15 @@ class PreloadSync {
     preloaded: $$preloaded
   };
 
+  errorHandler = null;
   preloading = new Set();
   stream = new Stream();
   updates = this.stream::asyncIterEx.fromLatest();
   state = $$fresh;
+
+  constructor(errorHandler) {
+    this.errorHandler = errorHandler;
+  }
 
   rendered = debounce(() => {
     if (this.stream.isCompleted) return;
@@ -35,19 +40,27 @@ class PreloadSync {
   update(source, preloaded, error) {
     if (this.stream.isCompleted) return;
 
-    if (error) {
-      if (!error::is.instanceOf(PreloadError))
-        error = PreloadError.wrap(error);
+    if (error) this.handleError(source, error);
+    else if (!preloaded) this.mount(source);
+    else this.dismount(source);
+  }
+
+  handleError(source, error) {
+    if (!error::is.instanceOf(PreloadError))
+      error = PreloadError.wrap(error);
+    
+    if (this.errorHandler?.(error) === true) {
+      this.dismount(source);
+    }
+    else {
       this.stream.fail(error);
       this.preloading.clear();
     }
-    else if (!preloaded) {
-      this.preloading.add(source);
-      this.setState($$preloading);
-    }
-    else {
-      this.dismount(source);
-    }
+  }
+
+  mount(source) {
+    this.preloading.add(source);
+    this.setState($$preloading);
   }
 
   dismount(source) {
