@@ -176,6 +176,7 @@ class Nate extends Preloadable {
   onImagesFailed = (error) => {
     if (this.didUnmount) return;
     this.setState({ imagesReady: false, error });
+    return false;
   }
 
   onSoundsReady = () => {
@@ -189,6 +190,7 @@ class Nate extends Preloadable {
     // We can run fine without sounds; just disable them and continue.
     this.soundsEnabled = false;
     this.setState({ soundsReady: true });
+    return false;
   }
 
   attachGame = (container) => {
@@ -366,7 +368,7 @@ class Nate extends Preloadable {
   renderImages() {
     return (
       <Preloader onLoad={this.onImagesReady} onError={this.onImagesFailed} display="never" once>
-        <ImgNate important /><ImgBullet important /><ImgBulletBurst important />
+        <ImgNate /><ImgBullet /><ImgBulletBurst />
       </Preloader>
     );
   }
