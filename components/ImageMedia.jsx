@@ -15,7 +15,6 @@ class ImageMedia extends Preloadable {
     width: PropTypes.number::propTypeEx.dependsOn("height"),
     height: PropTypes.number::propTypeEx.dependsOn("width"),
     fluid: PropTypes.bool::propTypeEx.dependsOn(["width", "height"]),
-    important: PropTypes.bool,
     imgRef: PropTypes.oneOfType([
       PropTypes.func, 
       PropTypes.shape({ current: propTypeHasOwn })
@@ -23,8 +22,7 @@ class ImageMedia extends Preloadable {
   };
 
   static defaultProps = {
-    fluid: false,
-    important: false
+    fluid: false
   };
 
   imgIsComplete = false;
@@ -44,14 +42,9 @@ class ImageMedia extends Preloadable {
   onLoad = this.handlePreloaded;
 
   onError = () => {
-    if (this.props.important) {
-      const { src } = this.state;
-      const msg = ["image failed to load", src].filter(Boolean).join(": ");
-      this.handlePreloadError(new ImagePreloadError(msg));
-    }
-    else {
-      this.handlePreloaded();
-    }
+    const { src } = this.state;
+    const msg = ["image failed to load", src].filter(Boolean).join(": ");
+    this.handlePreloadError(new ImagePreloadError(msg));
   }
 
   memoizedMarginCss = memoize(resolveMarginCss);
@@ -102,12 +95,9 @@ class ImageMedia extends Preloadable {
 
   render() {
     const {
-      props: {
-        className, src, width, height, fluid,
-        important, // eslint-disable-line no-unused-vars
-        ...imgProps
-      }
-    } = this;
+      className, src, width, height, fluid,
+      ...imgProps
+    } = this.props;
 
     if (!src) return null;
     if (fluid) return this.renderFluid(className, src, width, height, imgProps);
