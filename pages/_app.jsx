@@ -121,10 +121,12 @@ class ScrollRestoringApp extends App {
   }
 
   onPageHidden = () => {
+    if (this.didUnmount) return;
     this.setState({ pageHidden: true });
   }
 
   onPageShown = () => {
+    if (this.didUnmount) return;
     this.setState({ pageHidden: false });
     this.restoreScrollPosition();
   }
@@ -159,6 +161,7 @@ class ScrollRestoringApp extends App {
   }
 
   onRouteChangeStart = () => {
+    if (this.didUnmount) return;
     if (this.state.routeChanging) return;
     this.onBeforeMajorChange();
     this.setState({ routeChanging: true });
