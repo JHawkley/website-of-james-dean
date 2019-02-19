@@ -12,13 +12,21 @@ const imgOverlaySrc = dequote(styleVars["misc"]["img-overlay"]);
 class Background extends Preloadable {
 
   static propTypes = {
-    className: PropTypes.string
+    className: PropTypes.string,
+    immediate: PropTypes.bool
+  };
+
+  state = {
+    ...this.state,
+    preloaded: Boolean(this.props.immediate)
   };
 
   whenUnmounted = new Future();
 
   componentDidMount() {
     super.componentDidMount();
+
+    if (this.props.immediate) return;
 
     const options = { abortSignal: this.whenUnmounted.promise };
     const imgPromise = preloadImage(bgImageSrc, options);
@@ -36,7 +44,8 @@ class Background extends Preloadable {
   }
 
   stateClassName() {
-    const { error, preloaded } = this.state;
+    const { props: { immediate }, state: { error, preloaded } } = this;
+    if (immediate) return null;
     if (error) return "bg-error";
     if (!preloaded) return "bg-loading";
     return null;
