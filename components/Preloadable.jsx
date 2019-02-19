@@ -3,8 +3,12 @@ import PropTypes from "prop-types";
 import BadArgumentError from "lib/BadArgumentError";
 import PreloadError from "components/Preloader/PreloadError";
 import PreloadContext from "lib/PreloadContext";
-import { is } from "tools/common";
+import { is, Composition } from "tools/common";
 import { inheritsFrom } from "tools/extensions/classes";
+
+const $badFunction = "must be a function";
+const $notDefined = "must be defined";
+const $badProp = "when provided, must be a non-empty string";
 
 class Preloadable extends React.PureComponent {
 
@@ -72,12 +76,10 @@ class Preloadable extends React.PureComponent {
 
 const wrapped = (Component, options) => {
   if (!Component::is.func())
-    throw new BadArgumentError("must be a function", "Component", Component);
+    throw new BadArgumentError($badFunction, "Component", Component);
 
   const properName = (options?.name ?? Component.displayName ?? Component.name) || "[anonymous component]";
   const initialProps = options?.initialProps;
-  const onLoadedKey = options?.onLoadedKey ?? "onLoaded";
-  const onErrorKey = options?.onErrorKey ?? "onError";
 
   if (Component::inheritsFrom(Preloadable)) {
     if (!initialProps) return Component;
@@ -87,19 +89,34 @@ const wrapped = (Component, options) => {
     return Wrapped;
   }
 
+  const canPreload = Boolean(options?.onPreloadProp);
+  const onPreloadProp = options?.onPreloadProp ?? "onPreload";
+  const onLoadProp = options?.onLoadProp ?? "onLoad";
+  const onErrorProp = options?.onErrorProp ?? "onError";
+
+  if (!onPreloadProp::is.string() || !onPreloadProp)
+    throw new BadArgumentError($badProp, "options.onPreloadProp", options.onPreloadProp);
+  if (!onLoadProp::is.string() || !onLoadProp)
+    throw new BadArgumentError($badProp, "options.onLoadProp", options.onLoadProp);
+  if (!onErrorProp::is.string() || !onErrorProp)
+    throw new BadArgumentError($badProp, "options.onErrorProp", options.onErrorProp);
+
   return class extends Preloadable {
 
     static displayName = `Preloadable.wrapped(${properName})`;
 
     render() {
-      const { handlePreloaded, handlePreloadError, props: givenProps } = this;
-      const props = {
-        ...initialProps,
-        ...givenProps,
-        [onLoadedKey]: handlePreloaded,
-        [onErrorKey]: handlePreloadError
-      };
-      return <Component {...props} />;
+      const { handlePreloaded, handlePreloadError, handleResetPreload, props: givenProps } = this;
+
+      const props = new Composition();
+      props.compose(initialProps);
+      props.compose(givenProps);
+
+      if (canPreload) props.add(onPreloadProp, handleResetPreload);
+      props.add(onLoadProp, handlePreloaded);
+      props.add(onErrorProp, handlePreloadError);
+
+      return <Component {...props.result} />;
     }
     
   };
@@ -107,7 +124,7 @@ const wrapped = (Component, options) => {
 
 const rendered = (renderFn, options) => {
   if (!renderFn::is.func())
-    throw new BadArgumentError("must be a function", "renderFn", renderFn);
+    throw new BadArgumentError($badFunction, "renderFn", renderFn);
   
   const properName = (options?.name ?? renderFn.name) || "[unnamed]";
   const initialProps = options?.initialProps;
@@ -127,7 +144,7 @@ const rendered = (renderFn, options) => {
 
 const promised = (promise, options) => {
   if (!promise::is.defined())
-    throw new BadArgumentError("must be defined", "promise", promise);
+    throw new BadArgumentError($notDefined, "promise", promise);
 
   const properName = (options?.name ?? promise.name) || "[unnamed]";
   const initialProps = options?.initialProps;
