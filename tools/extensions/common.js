@@ -135,6 +135,7 @@ export function times(count) {
  * @returns {U} The result of the transformation.
  */
 export function map(transformationFn) {
+  "use strict";
   return transformationFn(this);
 }
 
