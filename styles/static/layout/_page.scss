@@ -89,7 +89,7 @@
     &.is-hidden,
     .app-loading & {
       & > article {
-        @include vendor('transform', 'translateY(0.25rem)');
+        @include vendor('transform', 'translateY(#{_size(page-translate)})');
         opacity: 0;
       }
     }
