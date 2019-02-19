@@ -7,21 +7,20 @@ import { getUrl } from "next-server/dist/lib/utils";
 import { css } from "styled-jsx/css";
 import { config as faConfig } from "@fortawesome/fontawesome-svg-core";
 
+import ImagePreloadError from "components/ImageMedia/ImagePreloadError";
 import BadArgumentError from "lib/BadArgumentError";
 import RouterContext, { create as createRouter } from "lib/RouterContext";
 import BackgroundContext, { create as createBackground } from "lib/BackgroundContext";
-import PreloadContext from "lib/PreloadContext";
 
-import { dew } from "tools/common";
+import { is, dew } from "tools/common";
 import { timespan } from "tools/css";
-import { iterExtensions as asyncIterEx } from "tools/async";
 import { Task, wait } from "tools/async";
 import { extensions as maybe } from "tools/maybe";
 import { memoize } from "tools/functions";
 import { canScrollRestore as transitionsSupported } from "tools/scrollRestoration";
 import styleVars from "styles/vars.json";
 
-import PreloadSync from "components/Preloader/PreloadSync";
+import Preloader from "components/Preloader";
 import Transition from "components/Transition";
 import AppRoot from "components/AppRoot";
 import Wrapper from "components/Wrapper";
@@ -63,26 +62,17 @@ class ScrollRestoringApp extends App {
     }
   });
 
-  preloadContext = new PreloadSync();
-
   doLoadingTask = dew(() => {
-    const doLoading = async (stopSignal) => {
+    const doLoading = async (stopSignal, preloadPromise) => {
       try {
-        const { preloadContext: preloadSync } = this;
-        const $$preloaded = PreloadSync.states.preloaded;
-
-        // Tell the preloadSync we've rendered the page.  If nothing registered for preloading,
-        // this will tell it to advance to the `$$preloaded` state.
-        preloadSync.rendered();
-
         // Wait for preloading to finish...
-        const preloadPromise = preloadSync.updates::asyncIterEx.first($$preloaded, stopSignal);
         // ...or at least wait some amount of time before we load anyways.
         // Things registered with the app's preloadSync are considered low-priority.
         const timerPromise = wait(Page.transition.exitDelay * 5, stopSignal);
 
         await Promise.race([preloadPromise, timerPromise]);
       }
+      // TODO: Add error-handling.
       finally {
         if (!this.didUnmount)
           this.setState({ loading: false });
@@ -118,6 +108,17 @@ class ScrollRestoringApp extends App {
   }
 
   // Callbacks.
+
+  onPreloadPromise = (preloadPromise) => {
+    this.doLoadingTask.stop();
+    if (preloadPromise == null || !this.state.loading) return;
+    this.doLoadingTask.start(preloadPromise);
+  }
+
+  onPreloadError = (preloadError) => {
+    // Ignore image preload errors.
+    return preloadError::is.instanceOf(ImagePreloadError);
+  }
 
   onPageHidden = () => {
     this.setState({ pageHidden: true });
@@ -245,13 +246,11 @@ class ScrollRestoringApp extends App {
 
   componentWillUnmount() {
     this.didUnmount = true;
-    
+
     // Do not run this method on the server.
     if (!process.browser) return;
 
     const { router } = this.props;
-
-    this.doLoadingTask.stop();
 
     window.removeEventListener("beforeunload", this.onBeforeMajorChange);
     router.events.off("routeChangeStart", this.onRouteChangeStart);
@@ -346,10 +345,10 @@ class ScrollRestoringApp extends App {
         <Head><title>A Programmer's Place</title></Head>
         <RouterContext.Provider value={this.routerContext}>
           <BackgroundContext.Provider value={this.backgroundContext}>
-            <PreloadContext.Provider value={this.preloadContext}>
+            <Preloader promise={this.onPreloadPromise} onError={this.onPreloadError} display="naked" once>
               {transitionsSupported ? this.renderWithTransitions() : this.renderNoTransitions()}
               {throbberCss.styles}
-            </PreloadContext.Provider>
+            </Preloader>
           </BackgroundContext.Provider>
         </RouterContext.Provider>
       </Fragment>
