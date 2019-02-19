@@ -8,6 +8,7 @@ import { dom as faDom } from "@fortawesome/fontawesome-svg-core";
 
 import AppRoot from "components/AppRoot";
 import Wrapper from "components/Wrapper";
+import Background from "components/Background";
 import Page from "components/Page";
 import NoScriptPage from "pages/_noscript";
 
@@ -22,6 +23,7 @@ export default class StyledDocument extends Document {
         <Wrapper>
           {render(NoScriptPage, {}, exitDelay, "entered")}
         </Wrapper>
+        <Background className="blur" immediate />
         <style jsx global>{`#__next { display: none !important; }`}</style>
       </AppRoot>
     );
