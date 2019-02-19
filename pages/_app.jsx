@@ -44,6 +44,8 @@ class ScrollRestoringApp extends App {
     bgClassName: null
   };
 
+  didUnmount = false;
+
   originalScrollRestorationValue = "auto";
 
   scrollRestoreData = null;
@@ -55,7 +57,10 @@ class ScrollRestoringApp extends App {
   routerContext = createRouter(this.props.router, () => this.onRouteChangeStart());
 
   backgroundContext = createBackground({
-    onUpdated: ({ className: bgClassName }) => this.setState({ bgClassName })
+    onUpdated: ({ className: bgClassName }) => {
+      if (this.didUnmount) return;
+      this.setState({ bgClassName });
+    }
   });
 
   preloadContext = new PreloadSync();
@@ -79,7 +84,8 @@ class ScrollRestoringApp extends App {
         await Promise.race([preloadPromise, timerPromise]);
       }
       finally {
-        this.setState({ loading: false });
+        if (!this.didUnmount)
+          this.setState({ loading: false });
       }
     };
 
@@ -238,6 +244,8 @@ class ScrollRestoringApp extends App {
   }
 
   componentWillUnmount() {
+    this.didUnmount = true;
+    
     // Do not run this method on the server.
     if (!process.browser) return;
 
