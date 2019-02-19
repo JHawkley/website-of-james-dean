@@ -42,7 +42,7 @@ class ImageMedia extends Preloadable {
   onLoad = this.handlePreloaded;
 
   onError = () => {
-    const { src } = this.state;
+    const { src } = this.props;
     const msg = ["image failed to load", src].filter(Boolean).join(": ");
     this.handlePreloadError(new ImagePreloadError(msg));
   }
