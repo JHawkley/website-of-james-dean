@@ -9,6 +9,8 @@ import NateWidget from "components/Nate";
 import BrowserUnsupportedError from "components/Nate/BrowserUnsupportedError";
 import GameUpdateError from "components/Nate/GameUpdateError";
 
+import { errorBlockQuote } from "styles/jsx/lib/errorBlockQuote";
+
 import ImgHeader from "static/images/nate-game/header.png";
 import ImgTwo from "static/images/nate-game/2.jpg";
 import ImgThreeInset from "static/images/nate-game/3_inset.jpg";
@@ -65,14 +67,9 @@ class NatePage extends React.PureComponent {
     });
 
     return (
-      <blockquote>
+      <blockquote className={errorBlockQuote.className}>
         {message}
-        <style jsx>
-          {`
-            blockquote { border-left-color: red; font-style: normal; }
-            blockquote > :global(p:last-child) { margin-bottom: 0px; }
-          `}
-        </style>
+        {errorBlockQuote.styles}
       </blockquote>
     );
   }
