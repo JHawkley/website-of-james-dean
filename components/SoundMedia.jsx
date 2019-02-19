@@ -1,6 +1,5 @@
-import PropTypes from "prop-types";
 import { is, Composition } from "tools/common";
-import { extensions as propTypeEx, hasOwn as propTypeHasOwn } from "tools/propTypes";
+import PropTypes, { extensions as propTypeEx } from "tools/propTypes";
 import Preloadable from "components/Preloadable";
 import Audio from "components/Audio";
 import SoundPreloadError from "components/SoundMedia/SoundPreloadError";
@@ -11,7 +10,7 @@ class SoundMedia extends Preloadable {
     src: PropTypes.string::propTypeEx.notEmpty().isRequired,
     audioRef: PropTypes.oneOfType([
       PropTypes.func, 
-      PropTypes.shape({ current: propTypeHasOwn })
+      PropTypes.shape({ current: PropTypes.hasOwn })
     ])
   };
 

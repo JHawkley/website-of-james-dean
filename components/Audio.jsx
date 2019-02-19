@@ -1,11 +1,10 @@
 import React from "react";
-import PropTypes from "prop-types";
 import BadArgumentError from "lib/BadArgumentError";
 import SoundPreloadError from "components/SoundMedia/SoundPreloadError";
 import { is, dew } from "tools/common";
 import { memoize } from "tools/functions";
 import { extensions as arrEx } from "tools/array";
-import { extensions as propTypeEx, hasOwn as propTypeHasOwn } from "tools/propTypes";
+import PropTypes, { extensions as propTypeEx } from "tools/propTypes";
 import Preloadable from "components/Preloadable";
 import SoundMedia from "components/SoundMedia";
 
@@ -72,7 +71,7 @@ class Audio extends Preloadable {
       ::propTypeEx.exclusiveTo("src", true),
     audioRef: PropTypes.oneOfType([
       PropTypes.func,
-      PropTypes.shape({ current: propTypeHasOwn })
+      PropTypes.shape({ current: PropTypes.hasOwn })
     ])
   };
 

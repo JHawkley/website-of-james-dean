@@ -1,3 +1,4 @@
+import OriginalPropTypes from "prop-types";
 import BadArgumentError from "lib/BadArgumentError";
 import InnerError from "lib/InnerError";
 import { is } from "tools/common";
@@ -130,29 +131,53 @@ export class ValidationError extends InnerError {
 }
 
 /**
- * A prop-type that asserts that the property must not be set to anything.
- * 
- * @exports
- * @type {Validator}
+ * An augmented version of the prop-types provided by the `prop-types` module.
  */
-export const unset = makeValidator(
-  (value) => value == null ? null : "this property is not supported",
-  false
-);
-
-/**
- * A prop-type that asserts that the property must be on the object as an own-property, even if it is
- * set to `undefined` or `null`.
- * 
- * @exports
- * @type {Validator}
- */
-export const hasOwn = makeValidator(
-  (value, key, props) => {
-    if (Object.prototype.hasOwnProperty.call(props, key)) return null;
-    return "this property must be provided, even if it is set to `undefined` or `null`";
-  },
-  false
+export default Object.assign(
+  {}, OriginalPropTypes, {
+    /**
+     * A prop-type that asserts that the property must not be set to anything; only accepts `null`
+     * and `undefined`.  Handy when extending a component and you want to make clear the property
+     * is not supported.
+     * 
+     * @type {Validator}
+     */
+    unset: makeValidator(
+      (value) => value == null ? null : "this property is not supported",
+      false
+    ),
+    /**
+     * A prop-type that asserts that the property must be on the `props` object as an own-property,
+     * even if it is set to `undefined` or `null`.
+     * 
+     * @type {Validator}
+     */
+    hasOwn: makeValidator(
+      (value, key, props) => {
+        if (Object.prototype.hasOwnProperty.call(props, key)) return null;
+        return "this property must be provided, even if it is set to `undefined` or `null`";
+      },
+      false
+    ),
+    /**
+     * A prop-type that asserts that a property is set to an exact value.  Best used with value-types
+     * and `Symbol`.  The comparison is carried out with `Object.is`.
+     * 
+     * @param {*} value The value required.
+     * @returns {Validator}
+     * @throws When no arguments were provided.
+     * @throws When more than one argument was provided.
+     */
+    exactly(value) {
+      if (arguments.length !== 1)
+        throw new BadArgumentError("must provide exactly one argument", "value", void 0);
+      
+      return makeValidator(
+        (propValue) => Object.is(value, propValue) ? null : `must be the exact value: \`${value}\``,
+        false
+      )
+    }
+  }
 );
 
 /**

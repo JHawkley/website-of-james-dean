@@ -1,8 +1,7 @@
-import PropTypes from "prop-types";
 import { is, Composition } from "tools/common";
 import { preloadImage } from "tools/async";
 import { memoize } from "tools/functions";
-import { extensions as propTypeEx, hasOwn as propTypeHasOwn } from "tools/propTypes";
+import PropTypes, { extensions as propTypeEx } from "tools/propTypes";
 import Preloadable from "components/Preloadable";
 import ImagePreloadError from "components/ImageMedia/ImagePreloadError";
 import { fluidCss, resolveMarginCss } from "styles/jsx/components/ImageMedia";
@@ -17,7 +16,7 @@ class ImageMedia extends Preloadable {
     fluid: PropTypes.bool::propTypeEx.dependsOn(["width", "height"]),
     imgRef: PropTypes.oneOfType([
       PropTypes.func, 
-      PropTypes.shape({ current: propTypeHasOwn })
+      PropTypes.shape({ current: PropTypes.hasOwn })
     ])
   };
 
