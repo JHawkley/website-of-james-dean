@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { withRouter } from "next/router";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -8,14 +9,20 @@ import { faImages } from "@fortawesome/free-solid-svg-icons/faImages";
 import { extensions as objEx, dew } from "tools/common";
 import { extensions as maybe } from "tools/maybe";
 
+const $none = "none";
+const $image = "image";
+const $images = "images";
+const $movie = "movie";
+const $link = "link";
+
 const buildIcon = (props) => {
   const icon = dew(() => {
     switch (props.icon) {
-      case "none": return null;
-      case "image": return faImage;
-      case "images": return faImages;
-      case "movie": return faFilm;
-      case "link": return faExternalLinkAlt;
+      case $none: return null;
+      case $image: return faImage;
+      case $images: return faImages;
+      case $movie: return faFilm;
+      case $link: return faExternalLinkAlt;
       default: return faExternalLinkAlt::maybe.when(props.target === "_blank");
     }
   });
@@ -51,6 +58,14 @@ const Jump = (props) => {
       </a>
     </Link>
   );
+};
+
+Jump.propTypes = {
+  children: PropTypes.node,
+  scroll: PropTypes.bool,
+  icon: PropTypes.oneOf([$none, $image, $images, $movie, $link]),
+  href: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired,
+  router: PropTypes.any.isRequired
 };
 
 Jump.defaultProps = {
