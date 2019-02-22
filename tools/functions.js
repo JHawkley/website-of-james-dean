@@ -130,3 +130,21 @@ memoize.each = (fn, resolver) => {
 
   return memoizedFn;
 };
+
+/**
+ * Creates a function that runs the given arity-1 side-effecting function once for each unique
+ * argument provided to it.
+ *
+ * @export
+ * @param {function(*): void} arity1SideEffectFn The function to wrap.
+ * @returns {function(*): void}
+ */
+export const onceEach = (arity1SideEffectFn) => {
+  const argsGiven = new Set();
+
+  return (arg) => {
+    if (argsGiven.has(arg)) return;
+    argsGiven.add(arg);
+    arity1SideEffectFn(arg);
+  };
+};
