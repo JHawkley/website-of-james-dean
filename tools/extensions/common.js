@@ -1,6 +1,14 @@
 import BadBindingError from "lib/BadBindingError";
 import BadArgumentError from "lib/BadArgumentError";
 
+function isSimpleObject(obj) {
+  switch (Object.getPrototypeOf(obj)) {
+    case Object.prototype: return true;
+    case null: return true;
+    default: return false;
+  }
+}
+
 function newObjectBasedOn(original) {
   switch (Object.getPrototypeOf(original)) {
     case Object.prototype: return {};
@@ -168,6 +176,7 @@ export const is = {
   finite() { "use strict"; return Number.isFinite(this); },
   NaN() { "use strict"; return typeof this !== "number" || Number.isNaN(this); },
   object() { "use strict"; return this != null && typeof this === "object"; },
+  dict() { "use strict"; return this != null && isSimpleObject(this); },
   error() { "use strict"; return this instanceof Error },
   instanceOf(klass) { "use strict"; return this instanceof klass; },
   that(other) { "use strict"; return Object.is(this, other); }
