@@ -98,7 +98,6 @@ export const memoize = (fn) => {
  * Note: based on the `memoize` function of lodash.
  *
  * @export
- * @this {Function} The function to have its result memoized.
  * @param {Function} resolver The function to resolve the cache key.
  * @returns {Function} The new, memoized function.
  */
