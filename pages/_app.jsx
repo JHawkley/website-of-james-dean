@@ -53,7 +53,7 @@ class ScrollRestoringApp extends App {
 
   hashBlockID = null;
 
-  routerContext = createRouter(this.props.router, () => this.onRouteChangeStart());
+  routerContext = createRouter(this.props.router);
 
   backgroundContext = createBackground({
     onUpdated: ({ className: bgClassName }) => {
