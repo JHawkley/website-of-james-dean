@@ -1,5 +1,6 @@
 import BadBindingError from "lib/BadBindingError";
 import BadArgumentError from "lib/BadArgumentError";
+import { nil } from "tools/common";
 
 function isSimpleObject(obj) {
   switch (Object.getPrototypeOf(obj)) {
@@ -27,13 +28,9 @@ function newObjectBasedOn(original) {
  * @returns {boolean}
  */
 export function isEmpty() {
-  switch (Object.getPrototypeOf(this)) {
-    case Object.prototype:
-    case null:
-      return Object.keys(this).length === 0;
-    default:
-      return false;
-  }
+  if (this === nil) return true;
+  if (isSimpleObject(this)) return Object.keys(this).length === 0;
+  return false;
 }
 
 /**
