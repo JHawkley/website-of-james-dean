@@ -3,16 +3,19 @@ import BadArgumentError from "lib/BadArgumentError";
 
 /**
  * Converts an object to an error.
+ * If the object is `null` or `undefined`, no conversion is performed.
  * If the object is already an error, it simply returns it.
- * Otherwise, `toString` is called on the object, and that is used as the error's message.
+ * Otherwise, the string-representation of the object will be used to create a new `Error` instance.
  * 
  * @export
  * @this {*} This object.
  * @returns {Error}
  */
 export function asError() {
+  if (!this::is.defined()) return this;
   if (this::is.error()) return this;
   if (this::is.string()) return new Error(this);
+  if (this::is.dict()) return new Error(JSON.stringify(this));
   return new Error(this.toString());
 }
 
