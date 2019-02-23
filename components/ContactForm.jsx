@@ -58,7 +58,7 @@ class ContactForm extends React.Component {
 
     return (
       <Fragment>
-        <SpreeForm validate={this.validate} method="post" action={$target} next={$contacted}>
+        <SpreeForm validate={this.validate} method="post" action={$target} next={$contacted} hidden>
           <div className="field half first">
             <label htmlFor="name">Name</label>
             <input type="text" name="name" id="name" ref={this.nameRef} />

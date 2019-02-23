@@ -69,7 +69,7 @@ function outs(str) {
 const FormContext = React.createContext(null);
 
 const processNext = (next) => {
-  if (!process.browser) return next;
+  if (!process.browser) return null;
   if (!next) return null;
   return resolve(location.origin, next);
 };
@@ -78,20 +78,21 @@ class SpreeForm extends React.PureComponent {
 
   static propTypes = {
     children: PropTypes.node,
-    action: PropTypes.string.isRequired,
     next: PropTypes.string,
-    validate: PropTypes.func
+    validate: PropTypes.func,
+    action: PropTypes.string.isRequired,
+    hidden: PropTypes.bool
   };
 
   formRef = React.createRef();
 
   send = () => {
-    const { formRef: { current: formEl }, props: { validate, action } } = this;
+    const { formRef: { current: formEl }, props: { validate, action, hidden } } = this;
 
     if (!formEl) return;
     if (validate && validate() !== true) return;
 
-    formEl.action = outs(action);
+    formEl.action = hidden ? outs(action) : action;
     formEl.submit();
     formEl.action = "#";
   }
