@@ -19,6 +19,7 @@ import { src as $gallery$2 } from "static/images/nate-game/2.jpg";
 import { src as $gallery$3 } from "static/images/nate-game/3.jpg";
 import { src as $gallery$4 } from "static/images/nate-game/4.jpg";
 
+import $work from "pages/work/index?route";
 import $miscprogramming from "pages/work/miscprogramming?route";
 
 const isDev = process.env.NODE_ENV !== 'production';
@@ -78,7 +79,7 @@ class NatePage extends React.PureComponent {
     const { handleNateError, state: { nateWidgetError } } = this;
 
     return (
-      <Page {...this.props}>
+      <Page {...this.props} navLeft={$work}>
         <GalleryContext.Provider value={gallery}>
           <h2 className="major">Nate Game</h2>
           <Gallery.Span className="image main">

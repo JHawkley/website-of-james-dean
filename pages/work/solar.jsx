@@ -13,6 +13,8 @@ import { src as $gallery$br3 } from "static/images/3drenders/br3.jpg";
 import { src as $gallery$br4 } from "static/images/3drenders/br4.jpg";
 import { src as $gallery$br5 } from "static/images/3drenders/br5.png";
 
+import $work from "pages/work/index?route";
+
 const gallery = [
   { i: $gallery$br1, d: "A glory shot of the solar bio-reactor with a sprawling Tibet-inspired mountain landscape behind it." },
   { i: $gallery$br2, d: "An overview of the rendered installation.  The control script had a low chance to keep some of the mirrors unaimed so as to make them appear as if they were being cleaned and maintained." },
@@ -22,7 +24,7 @@ const gallery = [
 ];
 
 const SolarPage = (props) => (
-  <Page {...props}>
+  <Page {...props} navLeft={$work}>
     <GalleryContext.Provider value={gallery}>
       <h2 className="major">Solar Bio-Reactor</h2>
       <Gallery.Span className="image main">

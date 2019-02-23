@@ -9,7 +9,7 @@ const [translateVal, translateUnit] = numeric(styleVars["size"]["page-translate"
 
 // Special component for rendering a page when no JavaScript is detected.
 const NoJavaScriptPage = ({transitionClass}) => (
-  <Page transitionClass={transitionClass}>
+  <Page transitionClass={transitionClass} navLeft="none" navRight="none">
     <h2 className="major">JavaScript Disabled</h2>
     <p>JavaScript appears to be disabled during this visit.</p>
     <p>This site is a single-page web application and requires JavaScript to render properly.  If you wish to experience this web page, please add this domain as an exception to your browser's JavaScript blocker and then refresh the page.</p>

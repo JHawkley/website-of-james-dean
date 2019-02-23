@@ -234,6 +234,31 @@ export function notEmpty() {
   return makeValidator(validationFn, this);
 }
 
+/**
+ * Adds an expectation to this validator that the prop's value cannot be one of the provided `rejects`.
+ *
+ * @export
+ * @this {module:tools/propTypes.Validator}
+ * @param {Array} rejects The values to reject.
+ * @returns {module:tools/propTypes.Validator} A prop-type validator function.
+ */
+export function reject(rejects) {
+  if (!this::is.func())
+    throw new BadBindingError("must be a prop-type validator function", this);
+  if (!rejects::is.array())
+    throw new BadArgumentError("must be an array", "rejects", rejects);
+  
+  const validationFn = (value) => {
+    const rejected = rejects.find(reject => Object.is(value, reject));
+    if (rejected::is.string())
+      return `cannot be the string \`${rejected}\``;
+    else if (rejected)
+      return `the provided value is illegal`;
+  }
+
+  return makeValidator(validationFn, this);
+}
+
 const isUnset = (v) => v == null;
 const isFalse = (v) => v === false;
 const isEmptyString = (v) => v === "";

@@ -14,6 +14,8 @@ import { src as $gallery$landscape1 } from "static/images/3drenders/landscape1.j
 import { src as $gallery$landscape2 } from "static/images/3drenders/landscape2.jpg";
 import { src as $gallery$icecave } from "static/images/3drenders/icecave.jpg";
 
+import $work from "pages/work/index?route";
+
 const gallery = [
   { i: $gallery$landscape1, d: "The far LOD portion of the blackhole strike scene.  The procedural generation includes both trees and buildings of a small city far in the distance." },
   { i: $gallery$landscape2, d: "The unfinished near LOD portion of the blackhole strike scene.  These trees were hard to render; I believe I was searching for ways to make them render faster, while still being high quality for the near shot.  These would have burst into flames the moment of the bright blast beyond the distant mountain." },
@@ -21,7 +23,7 @@ const gallery = [
 ];
 
 const ThreeDeePage = (props) => (
-  <Page {...props}>
+  <Page {...props} navLeft={$work}>
     <GalleryContext.Provider value={gallery}>
       <h2 className="major">Miscellaneous 3D</h2>
       <Gallery.Span className="image main">

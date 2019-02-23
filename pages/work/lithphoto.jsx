@@ -13,6 +13,8 @@ import { src as $gallery$3 } from "static/images/lithologic-photo/3.png";
 import { src as $gallery$4 } from "static/images/lithologic-photo/4.jpg";
 import { src as $gallery$5 } from "static/images/lithologic-photo/5.jpg";
 
+import $work from "pages/work/index?route";
+
 const gallery = [
   { i: $gallery$1, d: "The administrative interface.  Along with managing users, wells could be shared between organizations." },
   { i: $gallery$2, d: "A couple of example samples in a small example well.  The image processor automatically cropped out and squared off the sample area of the image, ensuring visual consistency between samples." },
@@ -22,7 +24,7 @@ const gallery = [
 ];
 
 const LithologicPhotoPage = (props) => (
-  <Page {...props}>
+  <Page {...props} navLeft={$work}>
     <GalleryContext.Provider value={gallery}>
       <h2 className="major">Lithologic Photo</h2>
       <Gallery.Span className="image main">
