@@ -33,5 +33,13 @@
       }
     ]
   ],
+  "env": {
+    "production": {
+      "plugins": [
+        "closure-elimination",
+        "@babel/plugin-transform-react-constant-elements"
+      ]
+    }
+  },
   "ignore": []
 }
