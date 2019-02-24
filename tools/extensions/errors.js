@@ -1,3 +1,4 @@
+"use strict";
 import { is } from "tools/common";
 import BadArgumentError from "lib/BadArgumentError";
 
