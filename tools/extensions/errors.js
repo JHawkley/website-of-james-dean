@@ -20,6 +20,20 @@ export function asError() {
 }
 
 /**
+ * Converts this object into an array of errors.  The resulting array will have this error as the
+ * first element, followed by all nested `innerError` instances discovered.
+ * 
+ * @export
+ * @this {*} This object.
+ * @returns {Error[]}
+ */
+export function toArray() {
+  const errors = [];
+  this::foreach(error => errors.push(error));
+  return errors;
+}
+
+/**
  * Traverses this error, including each `innerError`, and applies the given function.
  *
  * @export
