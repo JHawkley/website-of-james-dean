@@ -215,7 +215,7 @@ export function exclusiveTo(propKeys, strictOther = true, strictSelf) {
 }
 
 /**
- * Adds an expectation that this validator that a value cannot be an empty-string or empty array.
+ * Adds an expectation to this validator that the prop's value cannot be an empty-string or empty array.
  *
  * @export
  * @this {module:tools/propTypes.Validator}
