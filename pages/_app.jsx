@@ -293,7 +293,7 @@ class ScrollRestoringApp extends App {
       this.buildPage(Component, pageProps, router, routeChanging);
 
     return (
-      <AppRoot loading={loading} routeChanging={routeChanging}>
+      <AppRoot className={globalCss.className} loading={loading} routeChanging={routeChanging}>
         <Wrapper>
           {render(Component, props, exitDelay, "entered")}
         </Wrapper>
@@ -319,7 +319,7 @@ class ScrollRestoringApp extends App {
     const page = this.buildPage(Component, pageProps, router, routeChanging);
 
     return (
-      <AppRoot loading={loading} routeChanging={routeChanging}>
+      <AppRoot className={globalCss.className} loading={loading} routeChanging={routeChanging}>
         <Wrapper>
           <Transition
             content={page}
@@ -350,6 +350,7 @@ class ScrollRestoringApp extends App {
           <BackgroundContext.Provider value={this.backgroundContext}>
             <Preloader promise={this.onPreloadPromise} onError={this.onPreloadError} display="naked" once>
               {transitionsSupported ? this.renderWithTransitions() : this.renderNoTransitions()}
+              {globalCss.styles}
               {throbberCss.styles}
             </Preloader>
           </BackgroundContext.Provider>
@@ -359,6 +360,15 @@ class ScrollRestoringApp extends App {
   }
 
 }
+
+const globalCss = css.resolve`
+  * :global(.span-across) {
+    display: inline-block;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 0 ${styleVars["size"]["element-margin"]} 0;
+  }
+`;
 
 const throbberCss = dew(() => {
   const fadeTime = timespan(styleVars["duration"]["modal"]);
