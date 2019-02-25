@@ -10,13 +10,13 @@ function imageToModule(src, width, height, type) {
   const args = [quote(src), width, height];
   if (typeof type === "string") args.push(quote(type));
 
-  return (`
+  return `
     var importWrapper = require("components/ImageMedia").importWrapper;
     module.exports.__esModule = true;
     module.exports.default = importWrapper(${args.join(", ")});
     module.exports.src = "${src}";
     module.exports.toString = function toString() { return "${src}"; };
-  `);
+  `;
 }
 
 function imageMediaLoader(contentBuffer) {

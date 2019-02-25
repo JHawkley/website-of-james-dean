@@ -14,13 +14,13 @@ function soundToModule(src, type, codec) {
     }
   }
 
-  return (`
+  return `
     var importWrapper = require("components/SoundMedia").importWrapper;
     module.exports.__esModule = true;
     module.exports.default = importWrapper(${args.join(", ")});
     module.exports.src = "${src}";
     module.exports.toString = function toString() { return "${src}"; };
-  `);
+  `;
 }
 
 function soundMediaLoader() {

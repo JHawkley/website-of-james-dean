@@ -4,11 +4,11 @@ const sizeOf = require("image-size");
 const loaderUtils = require("loader-utils");
 
 function imageToModule({src, width, height}) {
-  return (`
+  return `
     import { importWrapper } from "components/AsyncImage";
     export default importWrapper("${src}", ${width}, ${height});
     export const toString = () => "${src}";
-  `);
+  `;
 }
 
 function asyncImageLoader() {
