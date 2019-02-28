@@ -14,7 +14,7 @@ import { src as $gallery$landscape1 } from "static/images/3drenders/landscape1.j
 import { src as $gallery$landscape2 } from "static/images/3drenders/landscape2.jpg";
 import { src as $gallery$icecave } from "static/images/3drenders/icecave.jpg";
 
-import $work from "pages/work/index?route";
+import ToWork from "pages/work/index?jump";
 
 const gallery = [
   { i: $gallery$landscape1, d: "The far LOD portion of the blackhole strike scene.  The procedural generation includes both trees and buildings of a small city far in the distance." },
@@ -23,7 +23,7 @@ const gallery = [
 ];
 
 const ThreeDeePage = (props) => (
-  <Page {...props} navLeft={$work}>
+  <Page {...props} navLeft={ToWork}>
     <GalleryContext.Provider value={gallery}>
       <h2 className="major">Miscellaneous 3D</h2>
       <Gallery.Span className="image main">

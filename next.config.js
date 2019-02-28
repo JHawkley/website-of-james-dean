@@ -2,9 +2,8 @@
 
 const path = require('path');
 const glob = require('glob');
-const startsWith = require('lodash/startsWith');
-const fromPairs = require('lodash/fromPairs');
 const jsonImporter = require('node-sass-json-importer');
+const jumpLoader = require('./webpack/jump-loader');
 const imageMediaLoader = require('./webpack/image-media-loader');
 const soundMediaLoader = require('./webpack/sound-media-loader');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
@@ -15,7 +14,7 @@ const jsconfig = require('./jsconfig.json');
 const isProduction = process.env.NODE_ENV === 'production';
 
 module.exports = {
-  webpack: (config, { dir, isServer }) => {
+  webpack(config, { dir, isServer }) {
 
     // Resolver settings.
     mapAliases(jsconfig.compilerOptions.paths, config, dir);
@@ -59,8 +58,9 @@ module.exports = {
       },
       {
         enforce: 'post',
-        resourceQuery: /^\?route$/,
-        loader: 'route-loader'
+        resourceQuery: /^\?jump$/,
+        loader: 'jump-loader',
+        options: { extensions: this.pageExtensions }
       }
     );
 
@@ -92,27 +92,8 @@ module.exports = {
     config.plugins = plugins;
     return config;
   },
-  exportPathMap: function(defaultPathMap, {dir}) {
-    const exts = this.pageExtensions.join('|');
-    const pagesDir = path.join(dir, 'pages');
-    const pagesGlob = `${pagesDir}/**/*.@(${exts})`;
-
-    const kvps =
-      glob.sync(pagesGlob)
-      .map((page) => {
-        const { dir, name } = path.parse(path.relative(pagesDir, page));
-        if (startsWith(name, '_')) return null;
-
-        const routeParts = [''];
-        if (dir) routeParts.push(dir);
-        if (name !== 'index') routeParts.push(name);
-
-        const route = routeParts.join('/') || '/';
-        return [route, { page: route }];
-      })
-      .filter(Boolean);
-    
-    return fromPairs(kvps);
+  async exportPathMap(defaultPathMap, {dir}) {
+    return jumpLoader.derivePathMap(dir, this.pageExtensions);
   },
   pageExtensions: ['jsx', 'js']
 }

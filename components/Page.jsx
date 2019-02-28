@@ -1,4 +1,5 @@
 import React, { Fragment } from "react";
+import { is } from "tools/common";
 import PropTypes, { extensions as propEx } from "tools/propTypes";
 import { memoize } from "tools/functions";
 import RouterContext from "lib/RouterContext";
@@ -11,10 +12,12 @@ import { exitDelay, resolveDelayCss } from "styles/jsx/components/Page";
 
 const $navLeft = "nav-left";
 const $navRight = "nav-right";
-const $index = "index";
-const $back = "back";
-const $reload = "reload";
 const $none = "none";
+const $reload = "reload";
+const $back = "back";
+const $index = "index";
+
+const canNavigate = (value) => Boolean(value?.navigateTo::is.func());
 
 class Page extends React.PureComponent {
 
@@ -25,10 +28,12 @@ class Page extends React.PureComponent {
     style: PropTypes.object,
     transitionClass: PropTypes.string,
     navLeft: PropTypes.oneOfType([
-      PropTypes.oneOf([$none, $back, $reload]),
+      PropTypes.func::propEx.predicate(canNavigate),
+      PropTypes.oneOf([$none, $reload, $back]),
       PropTypes.string::propEx.reject([$index])
     ]),
     navRight: PropTypes.oneOfType([
+      PropTypes.func::propEx.predicate(canNavigate),
       PropTypes.oneOf([$none, $index]),
       PropTypes.string::propEx.reject([$back, $reload])
     ])
@@ -106,21 +111,23 @@ class Page extends React.PureComponent {
    * @param {string} [props.transitionClass]
    *   A class to apply to the container `.page` element, for the purpose of handling transitions.
    *   See `Page.transition` for more information.
-   * @param {("none" | "back" | "reload" | string)} [props.navLeft="none"]
+   * @param {("none" | "reload" | "back" | RouteObject | string)} [props.navLeft="none"]
    *   What to display for the left-hand navigation button.
    * 
    *   Can be one of:
    *   * "none" - Does not render the button.
+   *   * "reload" - Displays a circular arrow and reloads the page when clicked.
    *   * "back" - Displays a left-facing arrow and will navigate the browser back when clicked.
-   *   * "reload" - Displays a circular arrow and reloads the route when clicked.
-   *   * (path) - Displays a left-facing arrow and will request the router to navigate to the provided path when clicked.
-   * @param {("none" | "index" | string)} [props.navRight="index"]
+   *   * (RouteObject) - Displays a left-facing arrow and will navigate to the provided route when clicked.
+   *   * (string) - Displays a left-facing arrow and will navigate to the provided path when clicked.
+   * @param {("none" | "index" | RouteObject | string)} [props.navRight="index"]
    *   What to display for the right-hand navigation button.
    * 
    *   Can be one of:
    *   * "none" - Does not render the button.
-   *   * "index" - Displays a cross and will request the router to navigate to the top-most index.
-   *   * (path) - Displays a cross and will request the router to navigate to the provided path when clicked.
+   *   * "index" - Displays a cross and will navigate to the top-most index.
+   *   * (RouteObject) - Displays a cross and will navigate to the provided route when clicked.
+   *   * (string) - Displays a cross and will navigate to the provided path when clicked.
    * @memberof Page
    */
   constructor(props) {
@@ -164,16 +171,14 @@ const NavButton = ({router, className, target}) => {
   if (!router) return null;
   if (target === $none) return null;
 
+  const onClick = determineOnClick(router, target);
+
+  if (!onClick) return null;
+
   const icon
     = className === $navRight ? faTimes
     : target === $reload ? faRedo
     : faArrowLeft;
-  
-  const onClick
-    = target === $reload ? router.reload
-    : target === $back ? router.back
-    : target === $index ? router.navigateToIndex
-    : () => router.navigateToRoute(target);
   
   return (
     <div onClick={onClick} className={className}>
@@ -186,11 +191,32 @@ const NavButton = ({router, className, target}) => {
 
 NavButton.propTypes = {
   router: PropTypes.any,
-  className: PropTypes.oneOf([$navLeft, $navRight]),
+  className: PropTypes.oneOf([$navLeft, $navRight]).isRequired,
   target: PropTypes.oneOfType([
+    PropTypes.func::propEx.predicate(canNavigate),
     PropTypes.oneOf([$none, $back, $reload, $index]),
-    PropTypes.string::propEx.reject([$index])
-  ])
+    PropTypes.string
+  ]).isRequired
 };
 
+const determineOnClick = (router, target) => {
+  switch (target) {
+    case $reload: return router.reload;
+    case $back: return router.back;
+    case $index: return router.navigateToIndex;
+    default:
+      if (target?.navigateTo::is.func())
+        return () => target.navigateTo(router);
+      else if (target::is.string())
+        return () => router.navigateTo(target);
+      else
+        return null;
+  }
+}
+
 export default Page;
+
+/**
+ * An object produced by `webpack/jump-loader`; represents a route's information.
+ * @typedef {{navigateTo: Function}} RouteObject
+ */

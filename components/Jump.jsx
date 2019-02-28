@@ -1,5 +1,4 @@
 import PropTypes from "prop-types";
-import { withRouter } from "next/router";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faImage } from "@fortawesome/free-regular-svg-icons/faImage";
@@ -83,4 +82,19 @@ Jump.defaultProps = {
   scroll: false
 };
 
-export default withRouter(Jump);
+const importWrapper = (route, exportedAs) => {
+  const ImportedJump = ({anchorTo, ...props}) => {
+    const href = anchorTo ? `${route}#${anchorTo}` : route;
+    const asPath = anchorTo ? `${exportedAs}#${anchorTo}` : exportedAs;
+    return <Jump {...props} href={href} as={asPath} />;
+  };
+
+  ImportedJump.propTypes = { anchorTo: PropTypes.string };
+  ImportedJump.displayName = `jumpTo("${route}")`;
+  ImportedJump.navigateTo = (router) => router.navigateTo(route, exportedAs);
+
+  return ImportedJump;
+}
+
+export default Jump;
+export { importWrapper };

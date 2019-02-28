@@ -9,7 +9,7 @@ import { src as $gallery$1 } from "static/images/lithologic/1.png";
 import { src as $gallery$2 } from "static/images/lithologic/2.png";
 import { src as $gallery$3 } from "static/images/lithologic/3.png";
 
-import $work from "pages/work/index?route";
+import ToWork from "pages/work/index?jump";
 
 const gallery = [
   { i: $gallery$1, d: "A video plays in the screenshot above, demonstrating a test that can determine if a sandstone sample's cementation is calcium-based.  Above the video, the dictionary defines the selected term; below it, a mud-logger focused explanation is provided." },
@@ -18,7 +18,7 @@ const gallery = [
 ];
 
 const LithologicPage = (props) => (
-  <Page {...props} navLeft={$work}>
+  <Page {...props} navLeft={ToWork}>
     <GalleryContext.Provider value={gallery}>
       <h2 className="major">Lithologic</h2>
       <Gallery.Span className="image main">

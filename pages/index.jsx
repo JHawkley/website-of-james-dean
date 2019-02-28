@@ -11,10 +11,10 @@ import Jump from "components/Jump";
 import resolvedEmpty from "styles/jsx/lib/resolvedEmpty";
 import styleVars from "styles/vars.json";
 
-import $intro from "pages/intro?route";
-import $work from "pages/work/index?route";
-import $questions from "pages/questions?route";
-import $contact from "pages/contact?route";
+import ToIntro from "pages/intro?jump";
+import ToWork from "pages/work/index?jump";
+import ToQuestions from "pages/questions?jump";
+import ToContact from "pages/contact?jump";
 
 const backgroundColor = color(styleVars["palette"]["bg"]).transparentize(0.15).asRgba();
 
@@ -32,10 +32,10 @@ const IndexPage = ({transitionClass, blurBackground}) => {
           and get more information on the works I've done.</p>
         </Header.Content>
         <Header.Nav>
-          <Jump href={$intro}>Intro</Jump>
-          <Jump href={$work}>Work</Jump>
-          <Jump href={$questions}>Q&amp;A</Jump>
-          <Jump href={$contact}>Contact</Jump>
+          <ToIntro>Intro</ToIntro>
+          <ToWork>Work</ToWork>
+          <ToQuestions>Q&amp;A</ToQuestions>
+          <ToContact>Contact</ToContact>
         </Header.Nav>
       </Header>
       <Footer className={footerClass}>

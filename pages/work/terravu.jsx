@@ -9,7 +9,7 @@ import { src as $gallery$1 } from "static/images/terravu/1.png";
 import { src as $gallery$2 } from "static/images/terravu/2.png";
 import { src as $gallery$3 } from "static/images/terravu/3.png";
 
-import $work from "pages/work/index?route";
+import ToWork from "pages/work/index?jump";
 
 const gallery = [
   { i: $gallery$1, d: "TerraVu's minimalist interface gives it an unassuming appearance.  Note the help bar at the bottom guiding the user through the software." },
@@ -18,7 +18,7 @@ const gallery = [
 ];
 
 const TerraVuPage = (props) => (
-  <Page {...props} navLeft={$work}>
+  <Page {...props} navLeft={ToWork}>
     <GalleryContext.Provider value={gallery}>
       <h2 className="major">TerraVu 2</h2>
       <Gallery.Span className="image main">

@@ -19,8 +19,8 @@ import { src as $gallery$2 } from "static/images/nate-game/2.jpg";
 import { src as $gallery$3 } from "static/images/nate-game/3.jpg";
 import { src as $gallery$4 } from "static/images/nate-game/4.jpg";
 
-import $work from "pages/work/index?route";
-import $miscprogramming from "pages/work/miscprogramming?route";
+import ToWork from "pages/work/index?jump";
+import ToMiscProgramming from "pages/work/miscprogramming?jump";
 
 const isDev = process.env.NODE_ENV !== 'production';
 
@@ -79,7 +79,7 @@ class NatePage extends React.PureComponent {
     const { handleNateError, state: { nateWidgetError } } = this;
 
     return (
-      <Page {...this.props} navLeft={$work}>
+      <Page {...this.props} navLeft={ToWork}>
         <GalleryContext.Provider value={gallery}>
           <h2 className="major">Nate Game</h2>
           <Gallery.Span className="image main">
@@ -110,7 +110,7 @@ class NatePage extends React.PureComponent {
           <h3>Design</h3>
           <p>This project was my first time utilizing Entity-Component Systems and Action Lists.  Impact did not really have support for ECS entities out of the box, so I integrated an open-source ECS library, which I later ported to CoffeeScript so I could understand how it worked better as well as customize it.</p>
           <p>Unfortunately, I was not satisfied with Box2D's performance for driving the physics of the game.  Nate was using the old &quot;capsule body&quot; trick to make him run smoothly across slopes and other surfaces without getting stuck; this gave him a bit of a slippery feel on the edges of platforms.</p>
-          <p>Most likely, I would have eventually disabled the physical simulation and only used Box2D for collision detection.  I didn't really like the thought of having so much dead weight from Box2D hanging around, though, and it inspired me to instead work on <Jump href={`${$miscprogramming}#platter`}>Platter</Jump>, a collision detection engine specifically for classical feeling 2D games.</p>
+          <p>Most likely, I would have eventually disabled the physical simulation and only used Box2D for collision detection.  I didn't really like the thought of having so much dead weight from Box2D hanging around, though, and it inspired me to instead work on <ToMiscProgramming anchorTo="platter">Platter</ToMiscProgramming>, a collision detection engine specifically for classical feeling 2D games.</p>
           <p>At the time we stopped working on the game, I was still building out the basic gameplay mechanics, figuring out how to handle all the power interactions and abilities, as well as laying the foundation for enemy programming.  Although I had scribbled out thoughts on how I'd try and do all the proc-gen stuff, I never got started on a prototype.</p>
 
           <h3>Interactive Sample</h3>
