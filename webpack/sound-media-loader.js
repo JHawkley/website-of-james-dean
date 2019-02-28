@@ -3,10 +3,11 @@
 const mime = require("mime-types");
 const loaderUtils = require("loader-utils");
 
-const quote = (str) => `"${str}"`;
+const quote = (str) => `"${str.replace('"', '\\"')}"`;
 
 function soundToModule(src, type, codec) {
-  const args = [quote(src)];
+  const qSrc = quote(src);
+  const args = [qSrc];
   if (typeof type === "string") {
     args.push(quote(type));
     if (typeof codec === "string") {
@@ -18,8 +19,8 @@ function soundToModule(src, type, codec) {
     var importWrapper = require("components/SoundMedia").importWrapper;
     module.exports.__esModule = true;
     module.exports.default = importWrapper(${args.join(", ")});
-    module.exports.src = "${src}";
-    module.exports.toString = function toString() { return "${src}"; };
+    module.exports.src = ${qSrc};
+    module.exports.toString = function toString() { return ${qSrc}; };
   `;
 }
 

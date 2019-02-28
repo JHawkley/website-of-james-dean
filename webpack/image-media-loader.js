@@ -4,18 +4,19 @@ const sizeOf = require("image-size");
 const mime = require("mime-types");
 const loaderUtils = require("loader-utils");
 
-const quote = (str) => `"${str}"`;
+const quote = (str) => `"${str.replace('"', '\\"')}"`;
 
 function imageToModule(src, width, height, type) {
-  const args = [quote(src), width, height];
+  const qSrc = quote(src);
+  const args = [qSrc, width, height];
   if (typeof type === "string") args.push(quote(type));
 
   return `
     var importWrapper = require("components/ImageMedia").importWrapper;
     module.exports.__esModule = true;
     module.exports.default = importWrapper(${args.join(", ")});
-    module.exports.src = "${src}";
-    module.exports.toString = function toString() { return "${src}"; };
+    module.exports.src = ${qSrc};
+    module.exports.toString = function toString() { return ${qSrc}; };
   `;
 }
 
