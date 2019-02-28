@@ -9,9 +9,11 @@
     "start": "next start --hostname 0.0.0.0",
     "export": "next build && next export"
   },
-  "sideEffects": [
-    "./patch/*.js"
-  ],
+  "optimization": {
+    "sideEffects": [
+      "./patch/*.js"
+    ]
+  },
   "keywords": [],
   "author": "James Dean",
   "dependencies": {
