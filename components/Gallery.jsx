@@ -3,6 +3,7 @@ import { faImages } from "@fortawesome/free-solid-svg-icons/faImages";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import LightboxContext from "lib/LightboxContext";
 import GalleryContext from "lib/GalleryContext";
+import iconLinksCss from "styles/jsx/lib/iconLinks";
 
 const manage = (Component) => {
   const managed = (props) => (
@@ -50,16 +51,11 @@ const Gallery = ({children, galleryOpener, index = 0}) => {
   return (
     <a className="javascript-link" onClick={openGalleryFn}>
       {children}
-      <span>
+      <span className="link-icon">
         &nbsp;
         <FontAwesomeIcon icon={faImages} size="sm" />
-        <span>&nbsp;</span>
-        <style jsx>
-          {`
-            span { white-space: nowrap; }
-            span > span { width: 0px; display: inline-block; }
-          `}
-        </style>
+        <span className="link-space">&nbsp;</span>
+        <style jsx>{iconLinksCss}</style>
       </span>
     </a>
   );
