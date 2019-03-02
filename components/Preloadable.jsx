@@ -4,7 +4,8 @@ import BadArgumentError from "lib/BadArgumentError";
 import PreloadError from "components/Preloader/PreloadError";
 import PreloadContext from "lib/PreloadContext";
 import { is, Composition } from "tools/common";
-import { inheritsFrom } from "tools/extensions/classes";
+import { memoize } from "tools/functions";
+import { asError } from "tools/extensions/errors";
 
 const $badFunction = "must be a function";
 const $notDefined = "must be defined";
@@ -12,42 +13,27 @@ const $badProp = "when provided, must be a non-empty string";
 
 class Preloadable extends React.PureComponent {
 
-  static contextType = PreloadContext;
-
-  state = {
-    preloadSync: null,
-    preloaded: false,
-    error: null
+  static propTypes = {
+    children: PropTypes.node,
+    preloaded: PropTypes.bool.isRequired,
+    error: PropTypes.any
   };
 
-  didUnmount = false;
+  static contextType = PreloadContext;
 
-  get isCompleted() {
-    return Boolean(this.didUnmount || this.state.preloaded || this.state.error);
-  }
-
-  handleResetPreload = () => {
-    if (this.didUnmount) return;
-    this.setState({ preloaded: false, error: null });
-  }
-
-  handlePreloaded = () => {
-    if (this.isCompleted) return;
-    this.setState({ preloaded: true, error: null });
-  }
-
-  handlePreloadError = (reason) => {
-    if (this.isCompleted) return;
-    const error = reason ?? new PreloadError("preload failed without a reason");
-    this.setState({ preloaded: false, error });
-  }
+  state = { preloadSync: null };
 
   componentDidMount() {
     this.setState({ preloadSync: this.context });
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { context: preloadContext, state: { preloadSync, preloaded, error } } = this;
+    const {
+      context: preloadContext,
+      props: { preloaded, error },
+      state: { preloadSync }
+    } = this;
+
     let forceUpdate = false;
 
     if (preloadContext !== preloadSync) {
@@ -60,7 +46,7 @@ class Preloadable extends React.PureComponent {
       forceUpdate = true;
     }
 
-    if (forceUpdate || preloaded !== prevState.preloaded || error !== prevState.error)
+    if (forceUpdate || preloaded !== prevProps.preloaded || error !== prevProps.error)
       preloadSync?.update?.(this, preloaded, error);
   }
 
@@ -70,7 +56,7 @@ class Preloadable extends React.PureComponent {
     this.didUnmount = true;
   }
 
-  render() { return null; }
+  render() { return this.props.children; }
   
 }
 
@@ -80,14 +66,6 @@ const wrapped = (Component, options) => {
 
   const properName = (options?.name ?? Component.displayName ?? Component.name) || "[anonymous component]";
   const initialProps = options?.initialProps;
-
-  if (Component::inheritsFrom(Preloadable)) {
-    if (!initialProps) return Component;
-    
-    const Wrapped = (givenProps) => <Component {...initialProps} {...givenProps} />;
-    Wrapped.displayName = `Preloadable.wrapped(${properName})`;
-    return Wrapped;
-  }
 
   const canPreload = Boolean(options?.onPreloadProp);
   const onPreloadProp = options?.onPreloadProp ?? "onPreload";
@@ -101,12 +79,50 @@ const wrapped = (Component, options) => {
   if (!onErrorProp::is.string() || !onErrorProp)
     throw new BadArgumentError($badProp, "options.onErrorProp", options.onErrorProp);
 
-  return class extends Preloadable {
+  return class extends React.PureComponent {
 
     static displayName = `Preloadable.wrapped(${properName})`;
 
+    state = {
+      preloaded: PropTypes.bool,
+      error: PropTypes.any
+    };
+
+    didUnmount = false;
+
+    get isCompleted() {
+      const { didUnmount, state: { preloaded, error } } = this;
+      return didUnmount || Boolean(error) || preloaded;
+    }
+
+    handleResetPreload = () => {
+      if (this.didUnmount) return;
+      this.setState({ preloaded: false, error: null });
+    }
+  
+    handlePreloaded = () => {
+      if (this.isCompleted) return;
+      this.setState({ preloaded: true, error: null });
+    }
+  
+    handlePreloadError = (reason) => {
+      if (this.isCompleted) return;
+      const error
+        = !reason ? new PreloadError("preload failed without a reason")
+        : reason::asError();
+      this.setState({ preloaded: false, error });
+    }
+
+    componentWillUnmount() {
+      this.didUnmount = true;
+    }
+
     render() {
-      const { handlePreloaded, handlePreloadError, handleResetPreload, props: givenProps } = this;
+      const {
+        handlePreloaded, handlePreloadError, handleResetPreload,
+        props: givenProps,
+        state: { preloaded, error }
+      } = this;
 
       const props = new Composition();
       props.compose(initialProps);
@@ -116,27 +132,11 @@ const wrapped = (Component, options) => {
       props.add(onLoadProp, handlePreloaded);
       props.add(onErrorProp, handlePreloadError);
 
-      return <Component {...props.result} />;
-    }
-    
-  };
-};
-
-const rendered = (renderFn, options) => {
-  if (!renderFn::is.func())
-    throw new BadArgumentError($badFunction, "renderFn", renderFn);
-  
-  const properName = (options?.name ?? renderFn.name) || "[unnamed]";
-  const initialProps = options?.initialProps;
-
-  return class extends Preloadable {
-
-    static displayName = `Preloadable.rendered(${properName})`;
-
-    render() {
-      const { handlePreloaded, handlePreloadError, handleResetPreload, props: givenProps } = this;
-      const props = initialProps ? {...initialProps, ...givenProps} : givenProps;
-      return renderFn(props, handlePreloaded, handlePreloadError, handleResetPreload);
+      return (
+        <Preloadable preloaded={preloaded} error={error}>
+          <Component {...props.result} />
+        </Preloadable>
+      );
     }
     
   };
@@ -149,14 +149,15 @@ const promised = (promise, options) => {
   const properName = (options?.name ?? promise.name) || "[unnamed]";
   const initialProps = options?.initialProps;
 
-  return class extends Preloadable {
+  return class extends React.PureComponent {
 
     static propTypes = {
       render: PropTypes.oneOfType([
         PropTypes.func,
         PropTypes.shape({
           loaded: PropTypes.func.isRequired,
-          loading: PropTypes.func
+          loading: PropTypes.func,
+          error: PropTypes.func
         })
       ]).isRequired
     };
@@ -164,43 +165,75 @@ const promised = (promise, options) => {
     static displayName = `Preloadable.promised(${properName})`;
 
     state = {
-      ...this.state,
-      value: null
+      promiseCompleted: false,
+      promiseValue: null,
+      error: null
+    };
+
+    didUnmount = false;
+
+    decomposeProps = memoize((ownProps) => {
+      const { render, ...givenProps } = ownProps;
+      const props = initialProps ? {...initialProps, ...givenProps} : givenProps;
+      return { render, props };
+    });
+
+    handlePromiseResolved = (promiseValue) => {
+      if (this.didUnmount) return;
+      this.setState({ promiseValue, promiseCompleted: true });
+    };
+
+    handlePromiseRejected = (reason) => {
+      if (this.didUnmount) return;
+      const error
+        = !reason ? new PreloadError("promise rejected without a reason")
+        : reason::asError();
+      this.setState({ promiseCompleted: true, error });
     };
 
     componentDidMount() {
-      super.componentDidMount();
-      const promiseProper = Promise.resolve(promise::is.func() ? promise() : promise);
-
-      promiseProper.then(
-        (value) => this.isCompleted || this.setState({ value }, this.handlePreloaded),
-        this.handlePreloadError
+      Promise.resolve(promise::is.func() ? promise() : promise).then(
+        this.handlePromiseResolved,
+        this.handlePromiseRejected
       );
     }
 
+    componentWillUnmount() {
+      this.didUnmount = true;
+    }
+
+    renderViaProp(promiseCompleted, promiseValue, error) {
+      const { context: preloadSync } = this;
+      const { render, props } = this.decomposeProps(this.props);
+      const haveError = Boolean(error);
+      const isCompleted = haveError || promiseCompleted;
+
+      switch (true) {
+        case !haveError && render::is.func():
+          return render(promiseValue, props, preloadSync, isCompleted);
+        case haveError && render.error::is.func():
+          return render.error(error, props, preloadSync);
+        case !isCompleted && render.loading::is.func():
+          return render.loading(props, preloadSync);
+        case render.loaded::is.func():
+          return render.loaded(promiseValue, props, preloadSync);
+        default:
+          return null;
+      }
+    }
+
     render() {
-      const {
-        context: preloadSync,
-        props: { render, ...givenProps },
-        state: { value }
-      } = this;
+      const { promiseCompleted, promiseValue, error } = this.state;
 
-      if (!render)
-        return null;
-      
-      const props = initialProps ? {...initialProps, ...givenProps} : givenProps;
-
-      if (render::is.func())
-        return render(value, props, preloadSync, this.isCompleted);
-
-      if (!this.isCompleted)
-        return render.loading?.(props, preloadSync);
-      
-      return render.loaded?.(value, props, preloadSync);
+      return (
+        <Preloadable preloaded={promiseCompleted} error={error}>
+          {this.renderViaProp(promiseCompleted, promiseValue, error)}
+        </Preloadable>
+      );
     }
 
   };
 };
 
 export default Preloadable;
-export { wrapped, rendered, promised };
+export { wrapped, promised };

@@ -1,3 +1,4 @@
+import React from "react";
 import { is, Composition } from "tools/common";
 import { preloadImage } from "tools/async";
 import { memoize } from "tools/functions";
@@ -6,7 +7,7 @@ import Preloadable from "components/Preloadable";
 import ImagePreloadError from "components/ImageMedia/ImagePreloadError";
 import { fluidCss, resolveMarginCss } from "styles/jsx/components/ImageMedia";
 
-class ImageMedia extends Preloadable {
+class ImageMedia extends React.PureComponent {
 
   static propTypes = {
     src: PropTypes.string::propTypeEx.notEmpty().isRequired,
@@ -20,67 +21,78 @@ class ImageMedia extends Preloadable {
     ])
   };
 
-  static defaultProps = {
-    fluid: false
+  state = {
+    preloaded: !this.props.src,
+    error: null
   };
 
-  imgIsComplete = false;
+  didUnmount = false;
+
+  decomposeProps = memoize((ownProps) => {
+    const {
+      className, src, width, height, fluid,
+      ...imgProps
+     } = ownProps;
+
+    return { className, src, width, height, fluid, imgProps };
+  });
 
   checkComplete = (img) => {
+    const { props: { imgRef }, state: { preloaded } } = this;
+
     // Forward the img-ref.
-    const { imgRef } = this.props;
     if (imgRef) {
       if (imgRef::is.func()) imgRef(img);
       else imgRef.current = img;
     }
+
     // Do our logic.
-    this.imgIsComplete = Boolean(img?.complete);
-    if (this.imgIsComplete) this.handlePreloaded();
+    const imgIsComplete = Boolean(img?.complete);
+
+    if (imgIsComplete === preloaded) return;
+    else if (imgIsComplete) this.setState({ preloaded: true });
+    else this.setState({ preloaded: false, error: null });
   }
 
-  onLoad = this.handlePreloaded;
+  onLoad = () => {
+    if (this.didUnmount) return;
+    this.setState({ preloaded: true });
+  }
 
   onError = () => {
     const { src } = this.props;
     const msg = ["image failed to load", src].filter(Boolean).join(": ");
-    this.handlePreloadError(new ImagePreloadError(msg));
+    this.setState({ preloaded: true, error: new ImagePreloadError(msg) });
   }
 
   memoizedMarginCss = memoize(resolveMarginCss);
 
-  componentDidMount() {
-    super.componentDidMount();
-    const { src } = this.props;
-    if (!src) this.handlePreloaded();
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    super.componentDidUpdate(prevProps, prevState);
-    const { src } = this.props;
-    if (src !== prevProps.src) {
-      if (!this.imgIsComplete) this.handleResetPreload();
-      if (!src) this.handlePreloaded();
-    }
+  componentWillUnmount() {
+    this.didUnmount = true;
   }
 
   renderImage(className, src, width, height, imgProps) {
+    const { preloaded, error } = this.state;
+
     return (
-      <img
-        {...imgProps}
-        ref={this.checkComplete}
-        width={width} height={height}
-        src={src}
-        className={className}
-        onLoad={this.onLoad}
-        onError={this.onError}
-      />
+      <Preloadable preloaded={preloaded} error={error}>
+        <img
+          {...imgProps}
+          key={src}
+          ref={this.checkComplete}
+          width={width} height={height}
+          src={src}
+          className={className}
+          onLoad={this.onLoad}
+          onError={this.onError}
+        />
+      </Preloadable>
     );
   }
 
   renderFluid(customClass, src, width, height, imgProps) {
     const marginCss = this.memoizedMarginCss(width, height);
-    const containerClass = [marginCss.className, fluidCss.className].join(" ");
-
+    const containerClass = `${marginCss.className} ${fluidCss.className}`;
     const imgElement = this.renderImage(customClass, src, width, height, imgProps);
 
     return (
@@ -93,10 +105,7 @@ class ImageMedia extends Preloadable {
   }
 
   render() {
-    const {
-      className, src, width, height, fluid,
-      ...imgProps
-    } = this.props;
+    const { className, src, width, height, fluid, imgProps } = this.decomposeProps(this.props);
 
     if (!src) return null;
     if (fluid) return this.renderFluid(className, src, width, height, imgProps);

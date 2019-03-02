@@ -5,21 +5,20 @@ const loaderUtils = require("loader-utils");
 
 const quote = (str) => `"${str.replace('"', '\\"')}"`;
 
-function soundToModule(src, type, codec) {
+function soundToModule(src, mimeType, codec) {
   const qSrc = quote(src);
-  const args = [qSrc];
-  if (typeof type === "string") {
-    args.push(quote(type));
-    if (typeof codec === "string") {
-      args.push(quote(codec));
-    }
-  }
+  const qType
+    = mimeType && codec ? quote(`${mimeType}; codecs=${codec}`)
+    : mimeType ? quote(mimeType)
+    : null;
+  const args = [qSrc, qType];
 
   return `
     var importWrapper = require("components/SoundMedia").importWrapper;
     module.exports.__esModule = true;
     module.exports.default = importWrapper(${args.join(", ")});
     module.exports.src = ${qSrc};
+    module.exports.type = ${qType};
     module.exports.toString = function toString() { return ${qSrc}; };
   `;
 }

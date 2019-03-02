@@ -1,30 +1,50 @@
+import React from "react";
 import Preloader from "components/Preloader";
 import Preloadable from "components/Preloadable";
+import { memoize } from "tools/functions";
 
-class PreloadablePreloader extends Preloadable {
+class PreloadablePreloader extends React.PureComponent {
 
   static propTypes = Preloader.propTypes;
 
+  state = {
+    preloaded: false,
+    error: null
+  };
+
+  didUnmount = false;
+
+  getPreloaderProps = memoize((ownProps) => {
+    const {
+      // eslint-disable-next-line no-unused-vars
+      onPreload, onLoad, onError,
+      ...preloaderProps
+     } = ownProps;
+
+    return preloaderProps;
+  });
+
   handlePreload = () => {
     this.props.onPreload?.();
-    if (this.state.preloaded)
-      this.handleResetPreload();
+    if (!this.didUnmount)
+      if (this.state.preloaded)
+        this.setState({ preloaded: false, error: null });
   }
 
   handleLoad = (complete) => {
     this.props.onLoad?.(complete);
-    this.handlePreloaded();
+    if (!this.didUnmount)
+      this.setState({ preloaded: true });
   }
 
   handleError = (error, final) => {
     if (this.props.onError?.(error, final) === true && !final) return true;
-    this.handlePreloadError(error);
+    if (!this.didUnmount)
+      this.setState({ preloaded: true, error });
     return false;
   }
 
   componentDidUpdate(prevProps) {
-    super.componentDidUpdate(...arguments);
-
     const {
       props: { onPreload, onLoad, onError },
       state: { error, preloaded }
@@ -40,23 +60,26 @@ class PreloadablePreloader extends Preloadable {
       onError?.(error, true);
   }
 
+  componentWillUnmount() {
+    this.didUnmount = true;
+  }
+
   render() {
     const {
       handlePreload, handleLoad, handleError,
-      props: {
-        // eslint-disable-next-line no-unused-vars
-        onPreload, onLoad, onError,
-        ...preloaderProps
-       }
+      state: { preloaded, error }
     } = this;
+    const preloaderProps = this.getPreloaderProps(this.props);
 
     return (
-      <Preloader
-        {...preloaderProps}
-        onPreload={handlePreload}
-        onLoad={handleLoad}
-        onError={handleError}
-      />
+      <Preloadable preloaded={preloaded} error={error}>
+        <Preloader
+          {...preloaderProps}
+          onPreload={handlePreload}
+          onLoad={handleLoad}
+          onError={handleError}
+        />
+      </Preloadable>
     );
   }
   

@@ -1,10 +1,12 @@
-import { is, Composition } from "tools/common";
+import React from "react";
+import { is } from "tools/common";
 import PropTypes, { extensions as propTypeEx } from "tools/propTypes";
+import { memoize } from "tools/functions";
 import Preloadable from "components/Preloadable";
 import Audio from "components/Audio";
 import SoundPreloadError from "components/SoundMedia/SoundPreloadError";
 
-class SoundMedia extends Preloadable {
+class SoundMedia extends React.PureComponent {
 
   static propTypes = {
     src: PropTypes.string::propTypeEx.notEmpty().isRequired,
@@ -14,86 +16,103 @@ class SoundMedia extends Preloadable {
     ])
   };
 
-  audioIsReady = false;
+  state = {
+    preloaded: !this.props.src,
+    error: null
+  };
 
-  checkReadiness = (audio) => {
+  didUnmount = false;
+
+  audioEl = null;
+
+  decomposeProps = memoize((ownProps) => {
+    const {
+        src,
+        audioRef, // eslint-disable-line no-unused-vars
+        ...audioProps
+     } = ownProps;
+
+    return { src, audioProps };
+  });
+
+  checkReadiness = (audioEl) => {
+    const { props: { audioRef }, state: { preloaded } } = this;
+    this.audioEl = audioEl;
+
     // Forward the audio-ref.
-    const { audioRef } = this.props;
     if (audioRef) {
-      if (audioRef::is.func()) audioRef(audio);
-      else audioRef.current = audio;
+      if (audioRef::is.func()) audioRef(audioEl);
+      else audioRef.current = audioEl;
     }
+
     // Do our logic.
-    this.audioIsReady = audio ? audio.readyState === HTMLMediaElement.HAVE_ENOUGH_DATA : false;
-    if (this.audioIsReady) this.handlePreloaded();
+    const audioIsReady = audioEl?.readyState === HTMLMediaElement.HAVE_ENOUGH_DATA;
+
+    if (audioIsReady === preloaded) return;
+    else if (audioIsReady) this.setState({ preloaded: true });
+    else this.setState({ preloaded: false, error: null });
   }
 
-  onCanPlayThrough = this.handlePreloaded;
+  onCanPlayThrough = () => {
+    if (this.didUnmount) return;
+    this.setState({ preloaded: true });
+  };
 
   onError = () => {
+    if (this.didUnmount) return;
     const src = this.props.src;
     const msg = ["sound failed to load", src].filter(Boolean).join(": ");
-    this.handlePreloadError(new SoundPreloadError(msg));
+    this.setState({ preloaded: true, error: new SoundPreloadError(msg) });
   }
 
-  componentDidMount() {
-    super.componentDidMount();
+  componentDidUpdate(prevProps) {
     const { src } = this.props;
-    if (!src) this.handlePreloaded();
+    if (src !== prevProps.src)
+      this.setState({ preloaded: false, error: null }, () => this.audioEl?.load());
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    super.componentDidUpdate(prevProps, prevState);
-    const { src } = this.props;
-    if (src !== prevProps.src) {
-      if (!this.audioIsReady) this.handleResetPreload();
-      if (!src) this.handlePreloaded();
-    }
+  componentWillUnmount() {
+    this.didUnmount = true;
   }
 
   render() {
     const {
       checkReadiness, onCanPlayThrough, onError,
-      props: {
-        src,
-        audioRef, // eslint-disable-line no-unused-vars
-        ...audioProps
-      }
+      state: { preloaded, error }
     } = this;
+    const { src, audioProps } = this.decomposeProps(this.props);
 
     if (!src) return null;
 
     return (
-      <audio
-        {...audioProps}
-        src={src}
-        ref={checkReadiness}
-        onCanPlayThrough={onCanPlayThrough}
-        onError={onError}
-      />
+      <Preloadable preloaded={preloaded} error={error}>
+        <audio
+          {...audioProps}
+          ref={checkReadiness}
+          src={src}
+          onCanPlayThrough={onCanPlayThrough}
+          onError={onError}
+        />
+      </Preloadable>
     );
   }
 
 }
 
-function importWrapper(src, type, codec) {
-  const composition = new Composition({ src });
-  if (type && codec) composition.compose({ type, codec });
-  else if (type) composition.compose({ type });
-
-  const soundData = composition.result;
+function importWrapper(src, type) {
+  const source = <source src={src} type={type} />;
 
   const ImportedSound = ({asSource, ...props}) => {
-    if (asSource) return Audio.sourceFromObj(soundData);
-    if (!type) return <SoundMedia {...props} src={src} />;
-    return <Audio {...props}>{Audio.sourceFromObj(soundData)}</Audio>;
+    if (asSource) return source;
+    if (type) return <Audio {...props}>{source}</Audio>;
+    return <SoundMedia {...props} src={src} />;
   };
 
   ImportedSound.propTypes = { asSource: PropTypes.bool };
-
   ImportedSound.displayName = `importedSound("${src}")`;
+  ImportedSound.isImportedSound = true;
 
-  return Object.assign(Audio.markSourceable(ImportedSound), soundData);
+  return ImportedSound;
 }
 
 export default SoundMedia;

@@ -30,35 +30,22 @@ import Mp3Pop1 from "static/sounds/nate-game/pop1.mp3";
 import OggPop2 from "static/sounds/nate-game/pop2.ogg?codec=vorbis";
 import Mp3Pop2 from "static/sounds/nate-game/pop2.mp3";
 
+const $notSupported = "the `Nate` component is not supported by the current browser";
 const $gameDetached = "game detached from the container";
 const $preloadingFailed = "preloading failed with an error";
 const $gameFailed = "game failed with an error";
 
-class Nate extends Preloadable {
+class Nate extends React.PureComponent {
 
   static propTypes = {
-    onLoad: PropTypes.func,
-    onError: PropTypes.func
+    onGameError: PropTypes.func
   };
 
-  static getDerivedStateFromProps(props, state) {
-    if (state.error) return null;
-    return { preloaded: state.imagesReady && state.soundsReady };
-  }
-
-  static getDerivedStateFromError(error) {
-    return error instanceof GameUpdateError ? { gameError: error } : { error };
-  }
-
   state = {
-    ...this.state,
     imagesReady: false,
     soundsReady: false,
-    error: null,
-    gameError: dew(() => {
-      if (supported()) return null;
-      return new NotSupportedError("the `Nate` component is not supported by the current browser");
-    })
+    preloadError: null,
+    gameError: !supported() ? new NotSupportedError($notSupported) : null
   };
 
   soundsEnabled = false;
@@ -173,9 +160,9 @@ class Nate extends Preloadable {
     this.setState({ imagesReady: true });
   }
 
-  onImagesFailed = (error) => {
+  onImagesFailed = (preloadError) => {
     if (this.didUnmount) return;
-    this.setState({ imagesReady: false, error });
+    this.setState({ imagesReady: false, preloadError });
     return false;
   }
 
@@ -194,8 +181,8 @@ class Nate extends Preloadable {
   }
 
   attachGame = (container) => {
-    const { error, gameError } = this.state;
-    if (error) this.runGameLoopTask.stop($preloadingFailed);
+    const { preloadError, gameError } = this.state;
+    if (preloadError) this.runGameLoopTask.stop($preloadingFailed);
     else if (gameError) this.runGameLoopTask.stop($gameFailed);
     else if (!container) this.runGameLoopTask.stop($gameDetached);
     else this.runGameLoopTask.start(container);
@@ -315,27 +302,24 @@ class Nate extends Preloadable {
     return { play, ref };
   }
 
-  componentDidMount() {
-    super.componentDidMount();
-    const { props: { onGameError }, state: { gameError } } = this;
+  raiseGameError(onGameError, gameError, throwIfNoHandler) {
+    if (onGameError::is.func()) return onGameError(gameError);
+    if (throwIfNoHandler) throw gameError;
+  }
 
-    switch (true) {
-      case !gameError: break;
-      case onGameError::is.func(): onGameError(gameError); break;
-      default: throw gameError;
-    }
+  componentDidMount() {
+    const { props: { onGameError }, state: { gameError } } = this;
+    if (gameError) this.raiseGameError(onGameError, gameError, true);
   }
 
   componentDidUpdate(prevProps, prevState) {
-    super.componentDidUpdate(prevProps, prevState);
     const { props: { onGameError }, state: { gameError } } = this;
 
-    if (gameError !== prevState.gameError || onGameError !== prevProps.onGameError) {
-      switch (true) {
-        case !gameError: break;
-        case onGameError::is.func(): onGameError(gameError); break;
-        default: throw gameError;
-      }
+    if (gameError) {
+      if (gameError !== prevState.gameError)
+        this.raiseGameError(onGameError, gameError, true);
+      else if (onGameError !== prevProps.onGameError)
+        this.raiseGameError(onGameError, gameError, false);
     }
   }
 
@@ -374,28 +358,26 @@ class Nate extends Preloadable {
   }
 
   renderSounds() {
-    const { nate, bullets } = this.world;
+    const { nate: { sounds: nSounds }, bullets } = this.world;
+    const { bark, aroo, land, spawned, hit, timedOut } = tracks;
+
     return (
       <Preloader onLoad={this.onSoundsReady} onError={this.onSoundsFailed} display="never" once>
-        <Audio audioRef={nate.sounds[tracks.bark].ref}><OggBowWow /><Mp3BowWow /></Audio>
-        <Audio audioRef={nate.sounds[tracks.aroo].ref}><OggAroo /><Mp3Aroo /></Audio>
-        <Audio audioRef={nate.sounds[tracks.land].ref}><OggLand /><Mp3Land /></Audio>
-        {bullets.map((bullet, i) => (
+        <Audio audioRef={nSounds[bark].ref}><OggBowWow asSource /><Mp3BowWow asSource /></Audio>
+        <Audio audioRef={nSounds[aroo].ref}><OggAroo asSource /><Mp3Aroo asSource /></Audio>
+        <Audio audioRef={nSounds[land].ref}><OggLand asSource /><Mp3Land asSource /></Audio>
+        {bullets.map(({sounds: bSounds}, i) => (
           <Fragment key={i}>
-            <Audio audioRef={bullet.sounds[tracks.spawned].ref}><OggPew /><Mp3Pew /></Audio>
-            <Audio audioRef={bullet.sounds[tracks.hit].ref}><OggPop1 /><Mp3Pop1 /></Audio>
-            <Audio audioRef={bullet.sounds[tracks.timedOut].ref}><OggPop2 /><Mp3Pop2 /></Audio>
+            <Audio audioRef={bSounds[spawned].ref}><OggPew asSource /><Mp3Pew asSource /></Audio>
+            <Audio audioRef={bSounds[hit].ref}><OggPop1 asSource /><Mp3Pop1 asSource /></Audio>
+            <Audio audioRef={bSounds[timedOut].ref}><OggPop2 asSource /><Mp3Pop2 asSource /></Audio>
           </Fragment>
         ))}
       </Preloader>
     );
   }
 
-  render() {
-    const { preloaded, error, gameError } = this.state;
-
-    if (error || gameError) return null;
-
+  renderGame(preloaded) {
     return (
       <div className={componentCss.className}>
         <LoadingSpinner size="2x" fadeTime={fadeTime} show={!preloaded} background />
@@ -407,6 +389,17 @@ class Nate extends Preloadable {
         {bulletSpriteCss.styles}
         {containerCss.styles}
       </div>
+    );
+  }
+
+  render() {
+    const { imagesReady, soundsReady, preloadError, gameError } = this.state;
+    const preloaded = Boolean(preloadError) || (imagesReady && soundsReady);
+
+    return (
+      <Preloadable preloaded={preloaded} error={preloadError}>
+        {!preloadError && !gameError && this.renderGame(preloaded)}
+      </Preloadable>
     );
   }
 

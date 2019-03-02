@@ -1,177 +1,127 @@
 import React from "react";
-import BadArgumentError from "lib/BadArgumentError";
 import SoundPreloadError from "components/SoundMedia/SoundPreloadError";
-import { is, dew } from "tools/common";
+import { is, compareOwnProps } from "tools/common";
 import { memoize } from "tools/functions";
-import { extensions as arrEx } from "tools/array";
 import PropTypes, { extensions as propTypeEx } from "tools/propTypes";
+import { compareFlatChildren } from "tools/react";
 import Preloadable from "components/Preloadable";
 import SoundMedia from "components/SoundMedia";
 
-const $$sourceable = Symbol("audio:sourceable");
-
-const isSourceable = (obj) => obj::is.func() && obj[$$sourceable] === true;
-
-const isChildrenValid = dew(() => {
-  const isProblemChild = (child, i) => {
-    if (!child) return false;
-    const { type, props } = child;
-    if (type === "source") return false;
-    if (!type::is.string()) {
-      if (isSourceable(type)) return false;
-      if (type?.src::is.string()) return false;
-      if (props?.src::is.string()) return false;
-    }
-
-    if (type::is.func()) {
-      const name = type.displayName ?? type.name;
-      if (name) return `the child component \`${name}\` at position ${i} could not be used as an audio-source`;
-    }
-
-    return `the child with type \`${type}\` at position ${i} could not be used as an audio-source`;
-  }
-
-  return function isChildrenValid(children) {
-    if (React.Children.count(children) === 0)
-      return "the `Audio` component requires at least one child to act as an audio-source";
-    
-    const problemChildren = React.Children.map(isProblemChild).filter(Boolean);
-    if (problemChildren.length > 0) return problemChildren;
-    return true;
-  };
-});
-
-class Audio extends Preloadable {
-
-  static markSourceable(fn) {
-    if (!fn::is.func())
-      throw new BadArgumentError("only components (as in functions) can be marked as sourceable", "fn", fn);
-    fn[$$sourceable] = true;
-    return fn;
-  }
-
-  static isSourceable = isSourceable;
-
-  static sourceFromObj(obj) {
-    if (!obj) return null;
-    const { src, type: baseType, codec } = obj;
-    if (!src) return null;
-    const type = baseType ? (codec ? `${baseType}; codecs=${codec}` : baseType) : null;
-    return <source key={src} src={src} type={type} />;
-  }
+class Audio extends React.Component {
 
   static propTypes = {
+    children: PropTypes.flatChildren([
+        PropTypes.shape({
+          type: PropTypes.exactly("source").isRequired,
+          props: PropTypes.shape({
+            src: PropTypes.string::propTypeEx.notEmpty().isRequired,
+            type: PropTypes.string
+          })
+        }),
+        PropTypes.shape({
+          type: PropTypes.anyShape({ isImportedSound: PropTypes.exactly(true).isRequired }),
+          props: PropTypes.shape({ asSource: PropTypes.exactly(true).isRequired })
+        })
+      ])::propTypeEx.exclusiveTo("src", true),
     src:
       PropTypes.string
       ::propTypeEx.notEmpty().isRequired
       ::propTypeEx.exclusiveTo("children"),
-    children:
-      PropTypes.node
-      ::propTypeEx.predicate(isChildrenValid).isRequired
-      ::propTypeEx.exclusiveTo("src", true),
     audioRef: PropTypes.oneOfType([
       PropTypes.func,
       PropTypes.shape({ current: PropTypes.hasOwn })
     ])
   };
 
-  processChildren = memoize((src, childrenTree) => {
-    if (src) return null;
-  
-    return React.Children.toArray(childrenTree)::arrEx.collect((child) => {
-      if (!child)
-        return void 0;
-      
-      const { type, props } = child;
-      
-      if (type === "source")
-        return child;
-      
-      if (isSourceable(type))
-        return props.asSource ? child : React.cloneElement(child, { asSource: true });
-      
-      const sourceFromType = Audio.sourceFromObj(type);
-      if (sourceFromType) return sourceFromType;
-  
-      const sourceFromProps = Audio.sourceFromObj(props);
-      if (sourceFromProps) return sourceFromProps;
-  
-      return void 0;
-    });
+  state = {
+    preloaded: false,
+    error: null
+  };
+
+  audioEl = null;
+
+  sourcesChanged = false;
+
+  didUnmount = false;
+
+  decomposeProps = memoize((ownProps) => {
+    const { children, src, audioRef, ...audioProps } = ownProps;
+    return { children, src, audioRef, audioProps };
   });
 
-  get haveRenderData() {
-    const { src, children } = this.props;
-    const renderData = this.processChildren(src, children);
-    return renderData && renderData.length > 0;
-  }
+  checkReadiness = (audioEl) => {
+    const { props: { audioRef }, state: { preloaded } } = this;
 
-  audioIsReady = false;
+    this.audioEl = audioEl;
 
-  checkReadiness = (audio) => {
     // Forward the audio-ref.
-    const { audioRef } = this.props;
     if (audioRef) {
-      if (audioRef::is.func()) audioRef(audio);
-      else audioRef.current = audio;
+      if (audioRef::is.func()) audioRef(audioEl);
+      else audioRef.current = audioEl;
     }
+
     // Do our logic.
-    this.audioIsReady = audio ? audio.readyState === HTMLMediaElement.HAVE_ENOUGH_DATA : false;
-    if (this.audioIsReady) this.handlePreloaded();
+    const audioIsReady = audioEl?.readyState === HTMLMediaElement.HAVE_ENOUGH_DATA;
+
+    if (audioIsReady === preloaded) return;
+    else if (audioIsReady) this.setState({ preloaded: true });
+    else this.setState({ preloaded: false, error: null });
   }
 
-  onCanPlayThrough = this.handlePreloaded;
+  onCanPlayThrough = () => {
+    if (this.didUnmount) return;
+    this.setState({ preloaded: true });
+  };
 
   onError = () => {
+    if (this.didUnmount) return;
     const src = getFirstSrc(this.props.children);
     const msg = ["sound failed to load", src].filter(Boolean).join(": ");
-    this.handlePreloadError(new SoundPreloadError(msg));
+    this.setState({ preloaded: true, error: new SoundPreloadError(msg) });
   }
 
-  componentDidMount() {
-    super.componentDidMount();
-    if (!this.haveRenderData) this.handlePreloaded();
+  childrenDiffer() {
+    this.sourcesChanged = true;
+    return true;
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    super.componentDidUpdate(prevProps, prevState);
-    const { src, children } = this.props;
-    let resetPreload = false;
-    let preloadDone = false;
+  shouldComponentUpdate({children: nextChildren, ...nextProps}, nextState) {
+    const { children, ...props } = this.props;
+    if (!compareFlatChildren(children, nextChildren)) return this.childrenDiffer();
+    if (!compareOwnProps(props, nextProps)) return true;
+    if (!compareOwnProps(this.state, nextState)) return true;
+    return false;
+  }
 
-    if (src !== prevProps.src) preloadDone = Boolean(src);
-
-    if (!src && children !== prevProps.children) {
-      if (this.haveRenderData && !this.audioIsReady)
-        resetPreload = true;
-      else
-        preloadDone = true;
-    }
-
-    if (resetPreload) this.handleResetPreload();
-    if (preloadDone) this.handlePreloaded();
+  componentDidUpdate() {
+    if (!this.sourcesChanged) return;
+    
+    // The sources have changed.  Reload the audio element; this should refire all our
+    // event handlers on the element.
+    this.sourcesChanged = false;
+    this.setState({ preloaded: false, error: null }, () => this.audioEl?.load());
   }
 
   render() {
     const {
       checkReadiness, onCanPlayThrough, onError,
-      props: { src, preloadSync, audioRef, children, ...audioProps }
+      state: { preloaded, error }
     } = this;
+    const { children, src, audioRef, audioProps } = this.decomposeProps(this.props);
 
-    if (src)
-      return <SoundMedia {...audioProps} preloadSync={preloadSync} audioRef={audioRef} src={src} />;
-    
-    const renderData = this.processChildren(src, children);
+    if (src) return <SoundMedia {...audioProps} audioRef={audioRef} src={src} />;
 
     return (
-      <audio
-        {...audioProps}
-        ref={checkReadiness}
-        onCanPlayThrough={onCanPlayThrough}
-        onError={onError}
-      >
-        {renderData}
-      </audio>
+      <Preloadable preloaded={preloaded} error={error}>
+        <audio
+          {...audioProps}
+          ref={checkReadiness}
+          onCanPlayThrough={onCanPlayThrough}
+          onError={onError}
+        >
+          {children}
+        </audio>
+      </Preloadable>
     );
   }
 
