@@ -3,6 +3,8 @@ import BadArgumentError from "lib/BadArgumentError";
 import { nil } from "tools/common";
 
 function isSimpleObject(obj) {
+  if (obj == null) return false;
+
   switch (Object.getPrototypeOf(obj)) {
     case Object.prototype: return true;
     case null: return true;
@@ -11,11 +13,13 @@ function isSimpleObject(obj) {
 }
 
 function newObjectBasedOn(original) {
-  switch (Object.getPrototypeOf(original)) {
-    case Object.prototype: return {};
-    case null: return Object.create(null);
-    default: throw new BadArgumentError("must be a simple object", "original", original);
-  }
+  if (original::is.valueType())
+    throw new BadArgumentError("must not be a value-type", "original", original);
+  
+  if (Object.getPrototypeOf(original) === null)
+    return Object.create(null);
+
+  return {};
 }
 
 const referenceTypes = ["object", "function"];
@@ -42,79 +46,118 @@ export function isEmpty() {
  * @template T
  * @this {Object.<string, T>} This object.
  * @param {function(T, string): void} fn A function applied to each property key-value-pair.
+ * @throws When this object is a value-type.
  */
 export function forOwnProps(fn) {
-  'use strict'; // Allows binding to `null`.
-  if (this == null) return;
+  "use strict"; // Allows binding to `null`.
+
+  if (this == null)
+    return;
+  if (this::is.valueType())
+    throw new BadBindingError("must not be a value-type", this);
+  
   Object.keys(this).forEach(k => fn(this[k], k));
 }
 
 /**
- * Uses a function to filter a simple object's own-properties into a new object.  If the function returns
- * `true`, that property will be added to the result object.  A "simple object" is one that has a prototype
- * that is `Object.prototype` or `null`.
+ * Uses a function to filter an object's own-properties into a new object.  If the function returns `true`,
+ * then that property will be added to the result object.
  *
  * @export
  * @template T,U
  * @this {Object.<string, T>} The object to collect the properties from.
  * @param {function(string, T): boolean} fn The filter function.
  * @returns {Object.<string, T>} A new object.
- * @throws When this object is not a simple object.
+ * @throws When this object is a value-type.
  */
 export function filterProps(fn) {
-  'use strict'; // Allows binding to `null`.
+  "use strict"; // Allows binding to `null`.
+
   if (this == null) return this;
+
   const result = newObjectBasedOn(this);
+
   Object.keys(this).forEach(k => {
     const val = this[k];
     if (fn(k, val) !== true) return;
     result[k] = val;
   });
+
   return result;
 }
 
 /**
- * Uses a function to filter and map a simple object's own-properties into a new object.  If the function
- * returns `undefined`, then that property will be dropped from the result.  A "simple object" is one that
- * has a prototype that is `Object.prototype` or `null`.
+ * Applies the given `partialFn` to each key-value-pair of the object's own-properties and returns a new
+ * object whose keys correspond to the result of `partialFn`, except where it returned `undefined`. 
  *
  * @export
  * @template T,U
  * @this {Object.<string, T>} The object to collect the properties from.
- * @param {function(string, T): (U|undefined)} fn The collector function.
+ * @param {function(string, T): (U | void)} partialFn The partial-function.
  * @returns {Object.<string, U>} A new object.
- * @throws When this object is not a simple object.
+ * @throws When this object is a value-type.
  */
-export function collectProps(fn) {
-  'use strict'; // Allows binding to `null`.
+export function collectProps(partialFn) {
+  "use strict"; // Allows binding to `null`.
+
   if (this == null) return this;
+
   const result = newObjectBasedOn(this);
+
   Object.keys(this).forEach(k => {
-    const val = fn(k, this[k]);
+    const val = partialFn(k, this[k]);
     if (typeof val === "undefined") return;
     result[k] = val;
   });
+
   return result;
 }
 
 /**
- * Creates a shallow copy of this simple object, where a "simple object" is one that has a prototype that is
- * `Object.prototype` or `null`.  If the value does not qualify as a simple object, an error is thrown.
+ * Applies the given `partialFn` to each key-value-pair of the object's own-properties and returns the first
+ * result for which `partialFn` does not to return `undefined`.  If all key-value-pairs return `undefined`,
+ * the result will be `undefined`.
+ *
+ * @export
+ * @template T,U
+ * @this {Object.<string, T>} The object to collect the properties from.
+ * @param {function(string, T): (U | void)} partialFn The partial-function.
+ * @returns {(U | void)}
+ * @throws When this object is a value-type.
+ */
+export function collectFirstProp(partialFn) {
+  "use strict"; // Allows binding to `null`.
+
+  if (this == null)
+    return void 0;
+  if (this::is.valueType())
+    throw new BadBindingError("must not be a value-type", this);
+
+  for (const k of Object.keys(this)) {
+    const val = partialFn(k, this[k]);
+    if (typeof val !== "undefined") return val;
+  }
+
+  return void 0;
+}
+
+/**
+ * Creates a shallow copy of this object's own-properties.
  *
  * @export
  * @template T
  * @this {T} The object to copy.
  * @returns {T} A shallow copy of the own-properties of the bound object.
- * @throws When this object is not an object.
- * @throws When this object is not a simple object.
+ * @throws When this object is a value-type.
  */
 export function copyOwn() {
-  'use strict'; // Allows binding to `null`.
-  if (typeof this !== "object")
-    throw new BadBindingError("must be an object reference", this);
-  
+  "use strict"; // Allows binding to `null`.
+
   if (this == null) return this;
-  return Object.assign(newObjectBasedOn(this), this);
+  return Object.keys(this).reduce(
+    (result, k) => (result[k] = this[k], result),
+    newObjectBasedOn(this)
+  );
 }
 
 /**
@@ -153,9 +196,14 @@ export function map(transformationFn) {
  * @this {Object} The object to match `obj` to.
  * @param {Object} obj The object whose own-properties to match.
  * @returns {boolean}
+ * @throws When this object is a value-type.
  */
 export function verifyProps(obj) {
-  if (Object.is(this, obj)) return true;
+  if (this::is.valueType())
+    throw new BadBindingError("must not be a value-type", this);
+  if (Object.is(this, obj))
+    return true;
+  
   return Object.keys(obj).every(k => Object.is(this[k], obj[k]));
 }
 
