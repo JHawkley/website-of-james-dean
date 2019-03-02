@@ -78,7 +78,7 @@ export function shuffle() {
  * @export
  * @template T
  * @this {T[]} This array.
- * @returns {T | undefined} A random element of this array.
+ * @returns {(T | void)} A random element of this array.
  */
 export function randomElement() {
   const length = this.length;
@@ -92,7 +92,7 @@ export function randomElement() {
  * @export
  * @template T
  * @this {T[]} This array.
- * @returns {T | undefined} The first element of the array.
+ * @returns {(T | void)} The first element of the array.
  */
 export function head() {
   return this.length > 0 ? this[0] : void 0;
@@ -130,7 +130,7 @@ export function init() {
  * @export
  * @template T
  * @this {T[]} This array.
- * @returns {T | undefined} The last element of the array.
+ * @returns {(T | void)} The last element of the array.
  */
 export function last() {
   const length = this.length;
@@ -161,14 +161,14 @@ export function collect(partialFn) {
 }
 
 /**
- * Finds the first element in the array that does not cause the given `partialFn` to return `undefined`.
- * If all elements return `undefined`, the result will be `undefined`.
+ * Applies the given `partialFn` to each element of this array and returns the first result for which `partialFn`
+ * does not to return `undefined`.  If all elements return `undefined`, the result will be `undefined`.
  *
  * @export
  * @template T,U
  * @this {T[]} This array.
  * @param {PartialFunction<T, U>} partialFn The partial-function.
- * @returns {U | undefined} 
+ * @returns {(U | void)} 
  */
 export function collectFirst(partialFn) {
   const length = this.length;
@@ -394,7 +394,7 @@ const arrayFlatMap = Array.prototype.flatMap ?? dew(() => {
  * @param {T} value The current value.
  * @param {number} index The current index into the array.
  * @param {T[]} arr The array being iterated.
- * @returns {U|void} A new value or `undefined` in the case the function could not be applied to the value.
+ * @returns {(U | void)} A new value or `undefined` in the case the function could not be applied to the value.
  */
 
 /**
@@ -422,5 +422,5 @@ const arrayFlatMap = Array.prototype.flatMap ?? dew(() => {
  * @param {T} value The current value.
  * @param {number} index The current index.
  * @param {T[]} arr The array being iterated.
- * @return {U|U[]} The transformed value.
+ * @return {(U | U[])} The transformed value.
  */
