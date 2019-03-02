@@ -1,5 +1,5 @@
 import BadArgumentError from "lib/BadArgumentError";
-import { is } from "tools/extensions/common";
+import { is, copyOwn } from "tools/extensions/common";
 
 // Re-export extension methods.
 export * as extensions from "tools/extensions/common";
@@ -19,6 +19,8 @@ export const global = Function('return this')();
  */
 export const nil = Object.freeze({});
 
+const hasOwn = Object.prototype.hasOwnProperty;
+
 /**
  * Compares the own-properties of two objects.
  *
@@ -26,22 +28,53 @@ export const nil = Object.freeze({});
  * @param {!Object} left The first object.
  * @param {!Object} right The second object.
  * @returns {boolean} Whether the objects have equivalent own-properties.
- * @throws When any argument provided is not an object.
- * @throws When any argument provided was `null`.
  */
 export function compareOwnProps(left, right) {
-  if (!left::is.object())
-    throw new BadArgumentError("must be an object reference", "left", left);
-  if (!right::is.object())
-    throw new BadArgumentError("must be an object reference", "right", right);
-  
+  if (left === null || !left::is.refType()) return false;
+  if (right === null || !right::is.refType()) return false;
   if (left === right) return true;
 
-  const keys = new Set([...Object.keys(left), ...Object.keys(right)]);
-  for (const key of keys)
-    if (!Object.is(left[key], right[key]))
-      return false;
+  const leftKeys = Object.keys(left);
+  const rightKeys = Object.keys(right);
+
+  if (leftKeys.length !== rightKeys.length) return false;
+
+  for (let i = 0, len = leftKeys.length; i < len; i++) {
+    const key = leftKeys[i];
+    if (!right::hasOwn(key)) return false;
+    if (!Object.is(left[key], right[key])) return false;
+  }
+
   return true;
+}
+
+/**
+ * Calculates the disjunctive-union of the two given object's own-properties; that is, it produces an
+ * object that contains only the own-properties that are unique between each of the given objects.
+ *
+ * @export
+ * @param {Object.<string, any>} left The first object.
+ * @param {Object.<string, any>} right The second object.
+ * @returns {Object.<string, any>} 
+ */
+export function disjunctiveUnion(left, right) {
+  if (left === null || !left::is.refType()) return copyOf(right);
+  if (right === null || !right::is.refType()) return left::copyOwn();
+  if (left === right) return {};
+
+  const result = {};
+  const leftKeys = Object.keys(left);
+  const rightKeys = Object.keys(right);
+
+  addDifference(result, left, leftKeys, new Set(rightKeys));
+  addDifference(result, right, rightKeys, new Set(leftKeys));
+
+  return result;
+}
+
+function copyOf(obj) {
+  if (obj === null || !obj::is.refType()) return {};
+  return obj::copyOwn();
 }
 
 function addDifference(target, source, sourceKeys, rejectSet) {
@@ -51,24 +84,6 @@ function addDifference(target, source, sourceKeys, rejectSet) {
     target[k] = source[k];
   }
   return target;
-}
-
-/**
- * Calculates the disjunctive-union of the two given objects; that is, it produces an object that contains only
- * the properties that are unique between each of the given objects.
- *
- * @export
- * @param {Object.<string, any>} left The first object.
- * @param {Object.<string, any>} right The second object.
- * @returns {Object.<string, any>} 
- */
-export function disjunctiveUnion(left, right) {
-  const result = {};
-  const leftKeys = Object.keys(left);
-  const rightKeys = Object.keys(right);
-  addDifference(result, left, leftKeys, new Set(rightKeys));
-  addDifference(result, right, rightKeys, new Set(leftKeys));
-  return result;
 }
 
 /**
