@@ -125,8 +125,8 @@ export function identityFn(v) { return v; }
  * @returns {function(): T} A function that produces the singleton value returned from `factory`.
  */
 export function singleton(factory) {
-  let instance = void 0, doOnce = true;
-  return () => doOnce ? instance : (doOnce = true, instance = factory());
+  let instance = void 0, doOnce = false;
+  return () => doOnce ? instance : (doOnce = true, instance = factory(), instance);
 }
 
 /**
