@@ -38,9 +38,14 @@ export function makeValidator(validationFn, requirement) {
     "must be `null`, `undefined`, a boolean, or a function", "requirement", requirement
   );
 
-  const validator = (...args) => {
-    const [propValue, key, componentName, location, propFullName] = args;
+  const validator = (propValue, key, componentName, location, propFullName, ...rest) => {
+    // Massage some of the arguments a little.
+    componentName = componentName ?? "(anonymous component)";
+    propFullName = propFullName ?? key;
 
+    // The `rest` arg likely contains the super-secret-do-not-expose-or-be-fired argument.
+    // They use this argument to enforce proper calling of validators.
+    const validatorArgs = [propValue, key, componentName, location, propFullName, ...rest];
     const value = propValue[key];
     const valueIsMissing = value == null;
 
@@ -50,18 +55,18 @@ export function makeValidator(validationFn, requirement) {
         break;
       // `validationFn` always requires the value be present.
       case requirement === true && valueIsMissing:
-        return ValidationError.required(componentName, location, propFullName ?? key, value);
+        return ValidationError.required(componentName, location, propFullName, value);
       default:
         // Defer to the `requirement` function.
         if (requirement::is.func()) {
-          const result = requirement(...args);
+          const result = requirement(...validatorArgs);
           if (result != null) return result;
         }
         if (valueIsMissing) return;
     }
 
     try {
-      const result = validationFn(value, key, propValue, args);
+      const result = validationFn(value, key, propValue, validatorArgs);
 
       switch (true) {
         case result == null:
@@ -70,9 +75,9 @@ export function makeValidator(validationFn, requirement) {
           return result;
         case result::is.string():
         case result::is.array():
-          return new ValidationError(componentName, location, propFullName ?? key, result);
+          return new ValidationError(componentName, location, propFullName, result);
         default:
-          return new ValidationError(componentName, location, propFullName ?? key, [
+          return new ValidationError(componentName, location, propFullName, [
             "expected the validation function to return `undefined`, `null`, an Error instance, a string, or an array",
             `got \`${result}\``
           ]);
@@ -80,7 +85,7 @@ export function makeValidator(validationFn, requirement) {
     }
     catch (ex) {
       return new ValidationError(
-        componentName, location, propFullName ?? key,
+        componentName, location, propFullName,
         ["the validation function threw an error while running", "check `innerError` for more information"],
         ex
       );
