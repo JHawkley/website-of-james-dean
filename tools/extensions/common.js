@@ -18,6 +18,8 @@ function newObjectBasedOn(original) {
   }
 }
 
+const referenceTypes = ["object", "function"];
+
 /**
  * Determines if this is an empty simple object.  A "simple object" is one that has a prototype that
  * is `Object.prototype` or `null`.
@@ -175,6 +177,9 @@ export const is = {
   object() { "use strict"; return this != null && typeof this === "object"; },
   dict() { "use strict"; return this != null && isSimpleObject(this); },
   error() { "use strict"; return this instanceof Error },
+  refType() { "useStrict"; return referenceTypes.includes(typeof this); },
+  valueType() { "useStrict"; return !referenceTypes.includes(typeof this); },
   instanceOf(klass) { "use strict"; return this instanceof klass; },
-  that(other) { "use strict"; return Object.is(this, other); }
+  that(other) { "use strict"; return Object.is(this, other); },
+  in(values) { "use strict"; return values.includes(this); }
 };
