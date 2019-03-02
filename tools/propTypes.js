@@ -1,7 +1,11 @@
-import OriginalPropTypes from "prop-types";
+import React from "react";
+import PropTypes from "prop-types";
+import flattenChildren from "react-flatten-children";
 import BadArgumentError from "lib/BadArgumentError";
 import InnerError from "lib/InnerError";
 import { is } from "tools/common";
+import { collectFirstProp } from "tools/extensions/common";
+import { collectFirst } from "tools/extensions/array";
 
 /** @module tools/propTypes */
 
@@ -139,7 +143,29 @@ export class ValidationError extends InnerError {
  * An augmented version of the prop-types provided by the `prop-types` module.
  */
 export default Object.assign(
-  {}, OriginalPropTypes, {
+  {}, PropTypes, {
+    /**
+     * Almost identical to `PropTypes.shape` except that it does not test the prop's value to see
+     * if it is an `Object`.  This allows you test function types with it as well.
+     * 
+     * It will still reject if the given object is any value-type, however.
+     * 
+     * @param {Object.<string, Validator>} shapeDef An object where property-keys map to validators.
+     * @returns {Validator}
+     */
+    anyShape(shapeDef) {
+      return makeValidator(
+        (value, key, props, validatorArgs) => {
+          if (value::is.valueType())
+            return "cannot be a value-type";
+          
+          return shapeDef::collectFirstProp((keyName, validator) => {
+            return applyValidator(validator, validatorArgs, value, keyName, `.${keyName}`) ?? void 0;
+          });
+        },
+        false
+      )
+    },
     /**
      * A prop-type that asserts that the property must not be set to anything; only accepts `null`
      * and `undefined`.  Handy when extending a component and you want to make clear the property
@@ -168,22 +194,85 @@ export default Object.assign(
      * A prop-type that asserts that a property is set to an exact value.  Best used with value-types
      * and `Symbol`.  The comparison is carried out with `Object.is`.
      * 
+     * If `value` happens to be `undefined` or `null`, then use of `isRequired` will have no effect.
+     * 
      * @param {*} value The value required.
      * @returns {Validator}
-     * @throws When no arguments were provided.
-     * @throws When more than one argument was provided.
      */
     exactly(value) {
-      if (arguments.length !== 1)
-        throw new BadArgumentError("must provide exactly one argument", "value", void 0);
-      
       return makeValidator(
         (propValue) => Object.is(value, propValue) ? null : `must be the exact value: \`${value}\``,
+        value::is.undefined() || value::is.null()
+      )
+    },
+    /**
+     * A prop-type for validating the shape of the React element of a component's children.  If `childTypes`
+     * is not provided, the prop-type will act as `PropTypes.node`.
+     * 
+     * Unlike `PropTypes.node`, both the `type` and `props` of the child element may be tested through a
+     * `PropTypes.shape` validator.
+     * 
+     * @param {Validator[]} [childTypes] An array of validators to apply to each child React element.
+     * @returns {Validator}
+     */
+    children(childTypes) {
+      return makeValidator(
+        (value, key, props, validatorArgs) => {
+          if (key !== "children")
+            return "improper usage of prop-type; only supports checking the `children` property";
+          
+          if (!childTypes)
+            return PropTypes.node(...validatorArgs);
+          
+          const children = React.Children.toArray(value);
+          const childValidator = PropTypes.oneOfType(childTypes);
+          return iterChildren(children, childValidator, validatorArgs);
+        },
+        false
+      )
+    },
+    /**
+     * A prop-type for validating the shape of the React element of a component's children.  If `childTypes`
+     * is not provided, the prop-type will act as `PropTypes.node`.
+     * 
+     * Unlike `PropTypes.node`, both the `type` and `props` of the child element may be tested through a
+     * `PropTypes.shape` validator.
+     * 
+     * This variation flattens `React.Fragment` children before validating.
+     * 
+     * @param {Validator[]} [childTypes] An array of validators to apply to each child React element.
+     * @returns {Validator}
+     */
+    flatChildren(childTypes) {
+      return makeValidator(
+        (value, key, props, validatorArgs) => {
+          if (key !== "children")
+            return "improper usage of prop-type; only supports checking the `children` property";
+          
+          if (!childTypes)
+            return PropTypes.node(...validatorArgs);
+          
+          const children = flattenChildren(value);
+          const childValidator = PropTypes.oneOfType(childTypes);
+          return iterChildren(children, childValidator, validatorArgs);
+        },
         false
       )
     }
   }
 );
+
+const iterChildren = (children, childValidator, validatorArgs) => {
+  return children::collectFirst((child, i) => {
+    return applyValidator(childValidator, validatorArgs, children, i, `[${i}]`) ?? void 0;
+  });
+};
+
+const applyValidator = (validator, validatorArgs, value, key, propNamePostfix = null) => {
+  const [,, componentName, location, propFullName, ...restArgs] = validatorArgs;
+  const newFullName = propNamePostfix ? `${propFullName}${propNamePostfix}` : propFullName;
+  return validator(value, key, componentName, location, newFullName, ...restArgs);
+};
 
 /**
  * @callback Validator

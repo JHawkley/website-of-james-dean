@@ -29,6 +29,7 @@
     "next": "8.0.x",
     "react": "16.8.x",
     "react-dom": "16.8.x",
+    "react-flatten-children": "1.x",
     "react-image-lightbox": "5.1.x",
     "react-modal": "3.8.x",
     "uri-js": "4.2.2",
