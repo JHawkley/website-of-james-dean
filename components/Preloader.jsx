@@ -98,7 +98,7 @@ class Preloader extends React.PureComponent {
     this.setState(newState);
   }
 
-  attachToPreloadSync() {
+  attachToPreloadSync = () => {
     const { preloadSync, preloadSyncUpdated, cancelAsync } = this;
     preloadSync.updates::asyncIterEx.forEach(preloadSyncUpdated, cancelAsync.sync).catch((error) => {
       if (error instanceof AbortedError) return;
@@ -107,89 +107,119 @@ class Preloader extends React.PureComponent {
     preloadSync.rendered();
   }
 
-  handleBeginPreload(didAnnounce) {
+  announceBeginPreload() {
     const { promise: promiseFn, onPreload } = this.props;
+
     promiseFn?.(this.promise);
-    if (!didAnnounce) onPreload?.();
+    onPreload?.();
   }
 
-  handleEndPreload(didAnnounce, success) {
+  announceEndPreload(success) {
+    const { onLoad } = this.props;
+
     if (this.preloadedFuture) {
       this.preloadedFuture.resolve(success);
       this.preloadedFuture = null;
       this.props.promise?.(null);
     }
 
-    if (!didAnnounce && success) this.props.onLoad?.();
+    if (success) onLoad?.();
   }
 
-  handlePreloadError(error) {
+  tryAnnounceError(error, forceOnError) {
     const { onError } = this.props;
-
-    // If an `onError` is defined, the error was already announced.
-    let didAnnounce = Boolean(onError);
+    const errorForced = forceOnError && onError;
+    const didAnnounce = errorForced || this.preloadedFuture;
 
     if (this.preloadedFuture) {
       this.preloadedFuture.reject(error);
       this.preloadedFuture = null;
       this.props.promise?.(null);
-      didAnnounce = true;
     }
+
+    if (errorForced) onError(error, true);
     
-    if (!didAnnounce) throw error;
+    return Boolean(didAnnounce);
+  }
+
+  tryAnnounceUpdate(prevState, curState) {
+    if (prevState === curState)
+      return false;
+
+    if (curState === $$fresh)
+      return false;
+
+    const skippedPreloading = prevState === $$fresh && curState == $$preloaded;
+
+    if (curState === $$preloading || skippedPreloading)
+      this.announceBeginPreload();
+
+    if (curState === $$preloaded)
+      this.announceEndPreload(true);
+
+    return true;
   }
 
   componentDidMount() {
-    this.attachToPreloadSync();
+    if (this.state.mustRender)
+      this.attachToPreloadSync();
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const {
-      preloadSync,
-      props: { promise: promiseFn, onPreload, onLoad, onError, once },
-      state: { error, preloadState }
-    } = this;
+    const { props: { promise: promiseFn }, state: { error } } = this;
 
     if (promiseFn !== prevProps.promise) {
       prevProps.promise?.(null);
       promiseFn?.(this.promise);
     }
 
-    if (error) {
-      if (onError !== prevProps.onError)
-        onError?.(error, true);
-      if (error !== prevState.error)
-        this.handlePreloadError(error);
-      return;
+    if (!error) this.componentDidUpdateNormally(prevProps, prevState);
+    else this.componentDidUpdateWithError(prevProps, prevState);
+  }
+
+  componentDidUpdateNormally(prevProps, prevState) {
+    const {
+      preloadSync,
+      props: { wait, once },
+      state: { preloadState, mustRender }
+    } = this;
+    const didAnnounce = this.tryAnnounceUpdate(prevState.preloadState, preloadState);
+
+    if (!didAnnounce) {
+      const { onLoad, onPreload } = this.props;
+
+      if (onLoad !== prevProps.onLoad)
+        preloadState === $$preloaded && onLoad?.();
+      else if (onPreload !== prevProps.onPreload)
+        preloadState === $$preloading && onPreload?.();
     }
 
-    let didOnPreload = false;
-    let didOnLoad = false;
-
-    if (onPreload !== prevProps.onPreload && preloadState !== $$preloaded) {
-      onPreload?.();
-      didOnPreload = true;
-    }
-
-    if (onLoad !== prevProps.onLoad && preloadState === $$preloaded) {
-      onLoad?.();
-      didOnLoad = true;
-    }
-    
-    if (preloadState !== prevState.preloadState) {
-      if (preloadState === $$preloading) this.handleBeginPreload(didOnPreload);
-      else if (preloadState === $$preloaded) this.handleEndPreload(didOnLoad, true);
-    }
+    if (!wait && !mustRender)
+      this.setState({ mustRender: true }, this.attachToPreloadSync);
 
     if (once !== prevProps.once && !once)
       if (preloadSync.state !== preloadState)
         this.preloadSyncUpdated(preloadSync.state);
   }
 
+  componentDidUpdateWithError(prevProps, prevState) {
+    const { props: { onError }, state: { error } } = this;
+
+    const onErrorUpdated = onError !== prevProps.onError;
+    const needAnnounce = error !== prevState.error || onErrorUpdated;
+
+    if (needAnnounce) {
+      const didAnnounce = this.tryAnnounceError(error, onErrorUpdated);
+      if (!didAnnounce) throw error;
+    }
+  }
+
   componentWillUnmount() {
-    const { preloadSync, state: { preloadState } } = this;
-    if (preloadState !== $$preloaded)
-      this.handleEndPreload(false, false);
+    const { preloadSync, state: { error, preloadState } } = this;
+
+    if (!error && preloadState !== $$preloaded)
+      this.announceEndPreload(false);
+    
     preloadSync.done();
     this.cancelAsync.resolve();
   }
