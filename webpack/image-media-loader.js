@@ -12,11 +12,10 @@ function imageToModule(src, width, height, type) {
   if (typeof type === "string") args.push(quote(type));
 
   return `
-    var importWrapper = require("components/ImageMedia").importWrapper;
-    module.exports.__esModule = true;
-    module.exports.default = importWrapper(${args.join(", ")});
-    module.exports.src = ${qSrc};
-    module.exports.toString = function toString() { return ${qSrc}; };
+    import { importWrapper } from "components/ImageMedia";
+    export default importWrapper(${args.join(", ")});
+    export const src = ${qSrc};
+    export const toString = () => ${qSrc};
   `;
 }
 

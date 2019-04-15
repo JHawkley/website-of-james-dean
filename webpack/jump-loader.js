@@ -14,11 +14,10 @@ function routeToModule(routeObj) {
   const asPath = quote(routeObj.asPath);
 
   return `
-    var importWrapper = require("components/Jump").importWrapper;
-    module.exports.__esModule = true;
-    module.exports.default = importWrapper(${route}, ${asPath});
-    module.exports.route = ${route};
-    module.exports.asPath = ${asPath};
+    import { importWrapper } from "components/Jump";
+    export default importWrapper(${route}, ${asPath});
+    export const route = ${route};
+    export const asPath = ${asPath};
   `;
 }
 

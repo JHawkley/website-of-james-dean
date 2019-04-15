@@ -14,12 +14,11 @@ function soundToModule(src, mimeType, codec) {
   const args = [qSrc, qType];
 
   return `
-    var importWrapper = require("components/SoundMedia").importWrapper;
-    module.exports.__esModule = true;
-    module.exports.default = importWrapper(${args.join(", ")});
-    module.exports.src = ${qSrc};
-    module.exports.type = ${qType};
-    module.exports.toString = function toString() { return ${qSrc}; };
+    import { importWrapper } from "components/SoundMedia";
+    export default importWrapper(${args.join(", ")});
+    export const src = ${qSrc};
+    export const type = ${qType};
+    export const toString = () => ${qSrc};
   `;
 }
 
