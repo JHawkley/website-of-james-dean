@@ -1,5 +1,6 @@
 import BadArgumentError from "lib/BadArgumentError";
-import { is, copyOwn } from "tools/extensions/common";
+import { copyOwn } from "tools/extensions/common";
+import * as is from "tools/extensions/common/is";
 
 // Re-export extension methods.
 export * as extensions from "tools/extensions/common";

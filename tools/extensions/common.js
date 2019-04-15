@@ -1,16 +1,10 @@
 import BadBindingError from "lib/BadBindingError";
 import BadArgumentError from "lib/BadArgumentError";
+import isSimpleObject from "tools/extensions/common/isSimpleObject";
+import * as is from "tools/extensions/common/is";
 import { nil } from "tools/common";
 
-function isSimpleObject(obj) {
-  if (obj == null) return false;
-
-  switch (Object.getPrototypeOf(obj)) {
-    case Object.prototype: return true;
-    case null: return true;
-    default: return false;
-  }
-}
+export { is };
 
 function newObjectBasedOn(original) {
   if (original::is.valueType())
@@ -21,8 +15,6 @@ function newObjectBasedOn(original) {
 
   return {};
 }
-
-const referenceTypes = ["object", "function"];
 
 /**
  * Determines if this is an empty simple object.  A "simple object" is one that has a prototype that
@@ -206,28 +198,3 @@ export function verifyProps(obj) {
   
   return Object.keys(obj).every(k => Object.is(this[k], obj[k]));
 }
-
-/**
- * Contains several extension methods for matching based on type.
-*/
-export const is = {
-  string() { "use strict"; return typeof this === "string"; },
-  array() { "use strict"; return Array.isArray(this); },
-  number() { "use strict"; return typeof this === "number"; },
-  func() { "use strict"; return typeof this === "function"; },
-  symbol() { "use strict"; return typeof this === "symbol"; },
-  boolean() { "use strict"; return typeof this === "boolean"; },
-  defined() { "use strict"; return this != null; },
-  undefined() { "use strict"; return typeof this === "undefined"; },
-  null() { "use strict"; return this === null; },
-  finite() { "use strict"; return Number.isFinite(this); },
-  NaN() { "use strict"; return typeof this !== "number" || Number.isNaN(this); },
-  object() { "use strict"; return this != null && typeof this === "object"; },
-  dict() { "use strict"; return this != null && isSimpleObject(this); },
-  error() { "use strict"; return this instanceof Error },
-  refType() { "useStrict"; return referenceTypes.includes(typeof this); },
-  valueType() { "useStrict"; return !referenceTypes.includes(typeof this); },
-  instanceOf(klass) { "use strict"; return this instanceof klass; },
-  that(other) { "use strict"; return Object.is(this, other); },
-  in(values) { "use strict"; return values.includes(this); }
-};
