@@ -18,5 +18,5 @@ export const interpolate = (parser) => {
 }
 
 export class AppliedInterpolation {
-  constructor(parser) { this.parser = parser; Object.lock(this); }
+  constructor(parser) { this.parser = parser; Object.freeze(this); }
 }
