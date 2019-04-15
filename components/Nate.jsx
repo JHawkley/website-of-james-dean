@@ -245,7 +245,7 @@ class Nate extends React.PureComponent {
       } = nate;
 
       if (el) {
-        el.className = [nateSpriteCss.className, main, shoot].flatten().join(" ");
+        el.className = [nateSpriteCss.className, main, shoot].flat().join(" ");
         el.style.left = (x | 0) + "px";
         el.style.bottom = (y | 0) + "px";
       }
