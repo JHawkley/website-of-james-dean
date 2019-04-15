@@ -1,5 +1,5 @@
-import atob from "babel-loader?{'presets':['next/babel']}!abab/lib/atob";
-import btoa from "babel-loader?{'presets':['next/babel']}!abab/lib/btoa";
+import atob from "abab/lib/atob";
+import btoa from "abab/lib/btoa";
 
 // Re-export extension methods.
 export * as extensions from "tools/extensions/strings";
