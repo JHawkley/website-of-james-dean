@@ -2,21 +2,20 @@
 
 import BadArgumentError from "lib/BadArgumentError";
 import AbortedError from "tools/async/AbortedError";
+import Future from "tools/async/Future";
 import { is, nil } from "tools/common";
 import { orUndefined, whenAborted } from "tools/extensions/async";
-import Future from "tools/async/Future";
 
 // Re-export extension methods.
 export * as extensions from "tools/extensions/async";
 export * as iterExtensions from "tools/extensions/asyncIterables";
 
 // Re-export classes.
+export { Future, AbortedError };
 export Task from "tools/async/Task";
-export Future from "tools/async/Future";
 export CallSync from "tools/async/CallSync";
 export Stream from "tools/async/Stream";
 export BufferedStream from "tools/async/BufferedStream";
-export AbortedError from "tools/async/AbortedError";
 
 /**
  * Awaits for all promises to complete.  Unlike `Promise.all`, this will actually wait for all promises to resolve
