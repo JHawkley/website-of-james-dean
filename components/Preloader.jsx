@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import PreloadContext from "lib/PreloadContext";
 import PreloadSync from "components/Preloader/PreloadSync";
-import { is, dew } from "tools/common";
+import { is } from "tools/common";
 import { Future, CallSync, AbortedError } from "tools/async";
 import { predicate } from "tools/extensions/propTypes";
 import { extensions as asyncIterEx } from "tools/asyncIterables";
@@ -149,7 +149,7 @@ class Preloader extends React.PureComponent {
     if (curState === $$fresh)
       return false;
 
-    const skippedPreloading = prevState === $$fresh && curState == $$preloaded;
+    const skippedPreloading = prevState === $$fresh && curState === $$preloaded;
 
     if (curState === $$preloading || skippedPreloading)
       this.announceBeginPreload();
@@ -242,15 +242,12 @@ class Preloader extends React.PureComponent {
       );
     }
 
-    const hide = dew(() => {
-      switch (display) {
-        case $always: return false;
-        case $never: return true;
-        default: return preloadState !== $$preloaded;
-      }
-    });
-
-    const style = Object.assign({}, customStyle, hide ? { display: "none" } : null);
+    const hide
+      = display === $always ? false
+      : display === $never ? true
+      : preloadState !== $$preloaded;
+    
+    const style = hide ? { ...customStyle, display: "none" } : customStyle;
 
     return (
       <PreloadContext.Provider value={preloadSync}>
