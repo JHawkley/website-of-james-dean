@@ -5,4 +5,4 @@ out/
 node_modules
 yarn.lock
 package-lock.json
-bundle-report.html
+bundle-report*.html
