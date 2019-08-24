@@ -208,8 +208,8 @@ class ScrollRestoringApp extends App {
   }
 
   updateScrollPosition() {
-    const scrollX = window.scrollX | 0;
-    const scrollY = window.scrollY | 0;
+    const scrollX = window.pageXOffset | 0;
+    const scrollY = window.pageYOffset | 0;
     this.scrollRestoreData[this.scrollRestoreEntry] = [scrollX, scrollY];
   }
 

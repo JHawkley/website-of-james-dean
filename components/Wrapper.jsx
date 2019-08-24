@@ -25,7 +25,7 @@ class Wrapper extends React.PureComponent {
     };
 
     const _getScroll = memoize((preventScroll) => {
-      current = preventScroll ? { x: window.scrollX, y: window.scrollY } : null;
+      current = preventScroll ? { x: window.pageXOffset, y: window.pageYOffset } : null;
       if (current) previous = current;
       const { className, styles } = resolveScrollCss(current);
       return { restore, className, styles };
