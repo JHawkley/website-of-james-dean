@@ -1,6 +1,6 @@
 /* global module, __dirname */
 
-const path = require('path');
+const ospath = require('path');
 const glob = require('glob');
 const jsonImporter = require('node-sass-json-importer');
 const jumpLoader = require('./webpack/jump-loader');
@@ -9,7 +9,7 @@ const soundMediaLoader = require('./webpack/sound-media-loader');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const DefinePlugin = require('webpack/lib/DefinePlugin');
 
-const jsconfig = require('./jsconfig.json');
+const jsConfig = require('./jsconfig.json');
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -17,7 +17,7 @@ module.exports = {
   webpack(config, { dir, isServer }) {
 
     // Resolver settings.
-    mapAliases(jsconfig.compilerOptions.paths, config, dir);
+    mapAliases(jsConfig.compilerOptions.paths, config, dir);
     config.resolveLoader.modules.unshift('webpack');
 
     // Module rules.
@@ -41,7 +41,7 @@ module.exports = {
               importer: jsonImporter(),
               outputStyle: 'compressed', // These options are from node-sass: https://github.com/sass/node-sass
               includePaths: ['styles', 'node_modules']
-                .map((d) => path.join(dir, d))
+                .map((d) => ospath.join(dir, d))
                 .map((g) => glob.sync(g))
                 .reduce((a, c) => a.concat(c), [])
             }
@@ -75,8 +75,8 @@ module.exports = {
       'process.module.name': DefinePlugin.runtimeValue(({ module }) => {
         if (!module) return undefined;
         if (!module.resource) return undefined;
-        const ext = path.extname(module.resource);
-        const name = path.basename(module.resource, ext);
+        const ext = ospath.extname(module.resource);
+        const name = ospath.basename(module.resource, ext);
         return JSON.stringify(name);
       })
     }));
@@ -84,7 +84,7 @@ module.exports = {
     if (!isServer && isProduction) {
       plugins.push(new BundleAnalyzerPlugin({
         analyzerMode: 'static',
-        reportFilename: path.join(__dirname, './bundle-report.html'),
+        reportFilename: ospath.join(__dirname, './bundle-report.html'),
         openAnalyzer: false
       }));
     }
@@ -96,7 +96,7 @@ module.exports = {
     return jumpLoader.derivePathMap(dir, this.pageExtensions);
   },
   pageExtensions: ['jsx', 'js']
-}
+};
 
 function patchMain(patches, webkitConfig) {
   if (patches.length === 0) return;
@@ -113,15 +113,15 @@ function patchMain(patches, webkitConfig) {
   };
 }
 
-function mapAliases(jsPaths, webkitConfig, dir) {
-  const wkResolve = webkitConfig.resolve;
+function mapAliases(jsPaths, webpackConfig, dir) {
+  const wpResolve = webpackConfig.resolve;
   for (const jsAlias of Object.keys(jsPaths)) {
     const jsTargets = jsPaths[jsAlias];
     if (jsTargets.length !== 1)
       throw new Error(`expected key \`${jsAlias}\` in \`paths\` entry of \`jsconfig.json\` to have 1 entry`);
     const [jsTarget] = jsTargets;
-    const wkAlias = jsAlias.endsWith('/*') ? jsAlias.slice(0, -2) : jsAlias;
-    const wkTarget = jsTarget.endsWith('/*') ? jsTarget.slice(0, -2) : jsTarget;
-    wkResolve.alias[wkAlias] = path.join(dir, wkTarget);
+    const wpAlias = jsAlias.endsWith('/*') ? jsAlias.slice(0, -2) : jsAlias;
+    const wpTarget = jsTarget.endsWith('/*') ? jsTarget.slice(0, -2) : jsTarget;
+    wpResolve.alias[wpAlias] = ospath.join(dir, wpTarget);
   }
 }
