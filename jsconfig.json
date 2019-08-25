@@ -1,20 +1,22 @@
 {
   "compilerOptions": {
-      "jsx": "react",
-      "target": "ES6",
-      "allowSyntheticDefaultImports": true,
-      "baseUrl": "./",
-      "paths": {
-          "lib/*": ["./lib/*"],
-          "components/*": ["./components/*"],
-          "pages/*": ["./pages/*"],
-          "tools/*": ["./tools/*"],
-          "styles/*": ["./styles/*"],
-          "static/*": ["./static/*"],
-          "~/*": ["./*"]
-      }
+    "jsx": "react",
+    "target": "ES6",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": "./",
+    "paths": {
+      "lib/*": ["./lib/*"],
+      "components/*": ["./components/*"],
+      "pages/*": ["./pages/*"],
+      "patch/*": ["./patch/*"],
+      "tools/*": ["./tools/*"],
+      "styles/*": ["./styles/*"],
+      "static/*": ["./static/*"],
+      "~/*": ["./*"]
+    }
   },
   "exclude": [
-      "node_modules"
+    "node_modules"
   ]
 }
