@@ -25,6 +25,12 @@ module.exports = {
 
     /* == Module Rules == */
     config.module.rules = [
+      {
+        test: /\.mjs$/i,
+        include: /node_modules/,
+        type: 'javascript/auto'
+      },
+
       ...config.module.rules,
 
       {
