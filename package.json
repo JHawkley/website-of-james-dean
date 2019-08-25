@@ -59,6 +59,7 @@
     "mime-types": "2.x",
     "node-sass": "4.x",
     "node-sass-json-importer": "4.x",
+    "postcss-clean": "1.x",
     "postcss-easy-import": "3.x",
     "postcss-loader": "3.x",
     "preact": "8.x",
