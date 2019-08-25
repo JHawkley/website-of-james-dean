@@ -2,7 +2,6 @@
 
 const ospath = require('path');
 const glob = require('glob');
-const jsonImporter = require('node-sass-json-importer');
 const jumpLoader = require('./webpack/jump-loader');
 const imageMediaLoader = require('./webpack/image-media-loader');
 const soundMediaLoader = require('./webpack/sound-media-loader');
@@ -24,6 +23,18 @@ module.exports = {
     config.resolveLoader.modules.unshift('webpack');
 
     /* == Module Rules == */
+    const useBabelCommonJS = {
+      loader: 'babel-loader',
+      options: {
+        overrides: [{
+          plugins: ['add-module-exports'],
+          presets: [['next/babel', {
+            'preset-env': { modules: 'commonjs' }
+          }]]
+        }]
+      }
+    };
+
     config.module.rules = [
       {
         test: /\.mjs$/i,
@@ -33,34 +44,35 @@ module.exports = {
 
       ...config.module.rules,
 
-      {
-        test: /\.(css|scss)$/,
-        loader: 'emit-file-loader',
-        options: {
-          name: 'dist/[path][name].[ext]'
-        }
-      },
-
-      {
-        test: /\.css$/,
-        use: ['babel-loader', 'raw-loader', 'postcss-loader']
-      },
-
-      {
-        test: /\.s(a|c)ss$/,
-        use: ['babel-loader', 'raw-loader', 'postcss-loader',
-          { loader: 'sass-loader',
+      cssRule('normal-css', {
+        test: /\.(css|scss|sass)$/i,
+        rules: [{
+          test: /\.sass|scss$/i,
+          use: {
+            loader: 'sass-loader',
             options: {
-              importer: jsonImporter(),
-              outputStyle: 'compressed', // These options are from node-sass: https://github.com/sass/node-sass
+              importer: require('node-sass-json-importer')(),
+              // These options are from node-sass: https://github.com/sass/node-sass
+              outputStyle: 'compressed',
               includePaths: ['styles', 'node_modules']
                 .map((d) => ospath.join(dir, d))
                 .map((g) => glob.sync(g))
                 .reduce((a, c) => a.concat(c), [])
             }
           }
-        ]
-      },
+        }],
+
+        optimize: isProduction
+      }),
+
+      cssRule('js-as-css', {
+        test: /\.(js|mjs)$/i,
+        resourceQuery: /(\?|&)as-css(&|$)/,
+
+        exec: true,
+        optimize: isProduction,
+        before: useBabelCommonJS
+      }),
 
       {
         test: new RegExp(`\\.(${imageMediaLoader.supportedTypes.join('|')})$`, 'i'),
@@ -126,6 +138,39 @@ function patchMain(patches, webkitConfig) {
 
     return entries;
   };
+}
+
+function cssRule(ident, config) {
+  let { exec, optimize, before, after } = config;
+  before = Array.isArray(before) ? before : [before].filter(Boolean);
+  after = Array.isArray(after) ? after : [after].filter(Boolean);
+
+  delete config.exec;
+  delete config.optimize;
+  delete config.before;
+  delete config.after;
+
+  const cleanOptions = optimize ? { level: 2 } : { format: 'beautify' };
+
+  return Object.assign(config, {
+    use: [
+      ...after,
+      'raw-loader',
+      {
+        loader: 'postcss-loader',
+        options: {
+          ident: ident,
+          exec: Boolean(exec),
+          plugins: [
+            require('postcss-easy-import')({prefix: '_'}),
+            require('autoprefixer')(),
+            require('postcss-clean')(cleanOptions)
+          ].filter(Boolean)
+        }
+      },
+      ...before
+    ]
+  });
 }
 
 function mapAliases(jsPaths, webpackConfig, dir) {
