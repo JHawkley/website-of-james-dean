@@ -57,6 +57,7 @@
     "image-size": "0.7.x",
     "loader-utils": "1.x",
     "mime-types": "2.x",
+    "next-progressbar": "1.x",
     "node-sass": "4.x",
     "node-sass-json-importer": "4.x",
     "postcss-clean": "1.x",
@@ -65,6 +66,7 @@
     "preact": "8.x",
     "raw-loader": "2.x",
     "sass-loader": "7.x",
+    "stats-webpack-plugin": "0.7.x",
     "webpack": "4.x",
     "webpack-bundle-analyzer": "3.x"
   }

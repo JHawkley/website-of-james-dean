@@ -6,7 +6,7 @@ const jumpLoader = require('./webpack/jump-loader');
 const imageMediaLoader = require('./webpack/image-media-loader');
 const soundMediaLoader = require('./webpack/sound-media-loader');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
-const DefinePlugin = require('webpack/lib/DefinePlugin');
+const WebpackBarPlugin = require('webpackbar');
 
 const jsConfig = require('./jsconfig.json');
 
@@ -96,32 +96,41 @@ module.exports = {
     if (!isServer) patchMain(['./patch/client-router.js'], config);
 
     /* == Plugins == */
-    const plugins = config.plugins || [];
+    config.plugins = [
+      ...config.plugins,
 
-    plugins.push(new DefinePlugin({
-      'process.module.name': DefinePlugin.runtimeValue(({ module }) => {
-        if (!module) return undefined;
-        if (!module.resource) return undefined;
-        const ext = ospath.extname(module.resource);
-        const name = ospath.basename(module.resource, ext);
-        return JSON.stringify(name);
-      })
-    }));
+      new WebpackBarPlugin({
+        name: isServer ? 'server' : 'client',
+        fancy: true
+      }),
 
-    if (!isServer && isProduction) {
-      plugins.push(new BundleAnalyzerPlugin({
+      isProduction && !isServer && new BundleAnalyzerPlugin({
         analyzerMode: 'static',
         reportFilename: ospath.join(__dirname, './bundle-report.html'),
-        openAnalyzer: false
-      }));
-    }
+        openAnalyzer: false,
+        generateStatsFile: true,
+        statsFilename: 'webpack-stats.json',
+        statsOptions: {
+          moduleSort: 'issuerId',
+          excludeModules: [
+            /node_modules(?:\\|\/)core-js(?:\\|\/)/
+          ],
+          maxModules: Infinity,
+          providedExports: true,
+          usedExports: true,
+          optimizationBailout: true,
+          source: false
+        }
+      })
+    ].filter(Boolean);
 
-    config.plugins = plugins;
     return config;
   },
+
   async exportPathMap(defaultPathMap, {dir}) {
     return jumpLoader.derivePathMap(dir, this.pageExtensions);
   },
+
   pageExtensions: ['jsx', 'js']
 };
 
