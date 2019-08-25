@@ -8,6 +8,10 @@
     "url": "https://github.com/JHawkley"
   },
   "main": "index.jsx",
+  "browserslist": [
+    "> 0.5%, not dead",
+    "ie > 10"
+  ],
   "sideEffects": [
     "./patch/*.js"
   ],
@@ -20,6 +24,7 @@
     "@vx/text": "0.0.x",
     "abab": "2.x",
     "acorn": "6.x",
+    "core-js": "3.x",
     "lodash": "4.x",
     "next": "8.x",
     "react": "16.x",
@@ -40,7 +45,7 @@
     "@babel/plugin-proposal-optional-chaining": "7.x",
     "@babel/plugin-proposal-throw-expressions": "7.x",
     "@babel/plugin-transform-react-constant-elements": "7.x",
-    "@babel/register": "7.x",
+    "@babel/runtime-corejs3": "7.x",
     "autoprefixer": "9.x",
     "babel-eslint": "10.x",
     "babel-plugin-closure-elimination": "1.x",
@@ -65,6 +70,17 @@
     "stats-webpack-plugin": "0.7.x",
     "webpack": "4.x",
     "webpack-bundle-analyzer": "3.x"
+  },
+  "resolutions": {
+    "@babel/core": "7.x",
+    "@babel/plugin-proposal-class-properties": "7.x",
+    "@babel/plugin-proposal-object-rest-spread": "7.x",
+    "@babel/plugin-syntax-dynamic-import": "7.x",
+    "@babel/plugin-transform-modules-commonjs": "7.x",
+    "@babel/plugin-transform-runtime": "7.x",
+    "@babel/preset-env": "7.x",
+    "babel-plugin-transform-react-remove-prop-types": "0.4.x",
+    "webpack": "4.x"
   },
   "scripts": {
     "dev": "next --hostname 0.0.0.0",

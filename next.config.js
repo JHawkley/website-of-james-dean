@@ -19,8 +19,27 @@ module.exports = {
     // Map `.jsconfig.json` aliases.
     mapAliases(jsConfig.compilerOptions.paths, config, dir);
 
+    // Force modules to use CoreJS 3.
+    config.resolve.alias = Object.assign(config.resolve.alias, {
+      'core-js-pure': 'core-js',
+      '@babel/runtime-corejs2/core-js': ospath.resolve(dir, './node_modules/core-js/stable'),
+      '@babel/runtime-corejs2': ospath.resolve(dir, './node_modules/@babel/runtime-corejs3'),
+      'object-assign': ospath.resolve(dir, './node_modules/core-js/stable/object/assign.js')
+    });
+
     // Add custom Webpack loaders to resolver.
     config.resolveLoader.modules.unshift('webpack');
+
+    /* == Externals Settings == */
+    // Remove `@babel/runtime-corejs3` from externals.
+    config.externals = (config.externals || []).map((ext) => {
+      if (typeof ext !== 'function') return ext;
+      return (context, request, callback) => {
+        if (/@babel(?:\\|\/)runtime-corejs3(?:\\|\/)/.test(request))
+          return callback();
+        return ext(context, request, callback);
+      };
+    });
 
     /* == Module Rules == */
     const useBabelCommonJS = {
@@ -123,6 +142,12 @@ module.exports = {
         }
       })
     ].filter(Boolean);
+
+    /* == Optimization == */
+    if (!isServer) {
+      // Prevent Webpack's `setImmediate` polyfill.
+      config.node = Object.assign(config.node || {}, { setImmediate: false });
+    }
 
     return config;
   },
