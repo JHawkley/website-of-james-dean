@@ -2,20 +2,15 @@
   "name": "website-of-james-dean",
   "version": "1.0.0",
   "description": "",
-  "main": "index.jsx",
-  "scripts": {
-    "dev": "next --hostname 0.0.0.0",
-    "build": "next build",
-    "start": "next start --hostname 0.0.0.0",
-    "export": "next build && next export"
-  },
-  "optimization": {
-    "sideEffects": [
-      "./patch/*.js"
-    ]
-  },
   "keywords": [],
-  "author": "James Dean",
+  "author": {
+    "name": "James Dean",
+    "url": "https://github.com/JHawkley"
+  },
+  "main": "index.jsx",
+  "sideEffects": [
+    "./patch/*.js"
+  ],
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "1.x",
     "@fortawesome/free-brands-svg-icons": "5.x",
@@ -70,5 +65,11 @@
     "stats-webpack-plugin": "0.7.x",
     "webpack": "4.x",
     "webpack-bundle-analyzer": "3.x"
+  },
+  "scripts": {
+    "dev": "next --hostname 0.0.0.0",
+    "build": "next build",
+    "start": "next start --hostname 0.0.0.0",
+    "export": "next build && next export"
   }
 }
