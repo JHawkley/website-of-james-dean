@@ -16,12 +16,17 @@ const isProduction = process.env.NODE_ENV === 'production';
 module.exports = {
   webpack(config, { dir, isServer }) {
 
-    // Resolver settings.
+    /* == Resolver Settings == */
+    // Map `.jsconfig.json` aliases.
     mapAliases(jsConfig.compilerOptions.paths, config, dir);
+
+    // Add custom Webpack loaders to resolver.
     config.resolveLoader.modules.unshift('webpack');
 
-    // Module rules.
-    config.module.rules.push(
+    /* == Module Rules == */
+    config.module.rules = [
+      ...config.module.rules,
+
       {
         test: /\.(css|scss)$/,
         loader: 'emit-file-loader',
@@ -29,10 +34,12 @@ module.exports = {
           name: 'dist/[path][name].[ext]'
         }
       },
+
       {
         test: /\.css$/,
         use: ['babel-loader', 'raw-loader', 'postcss-loader']
       },
+
       {
         test: /\.s(a|c)ss$/,
         use: ['babel-loader', 'raw-loader', 'postcss-loader',
@@ -48,27 +55,29 @@ module.exports = {
           }
         ]
       },
+
       {
         test: new RegExp(`\\.(${imageMediaLoader.supportedTypes.join('|')})$`, 'i'),
         loader: 'image-media-loader'
       },
+
       {
         test: new RegExp(`\\.(${soundMediaLoader.supportedTypes.join('|')})$`, 'i'),
         loader: 'sound-media-loader'
       },
+
       {
-        enforce: 'post',
-        resourceQuery: /^\?jump$/,
+        resourceQuery: /(\?|&)jump(&|$)/,
         loader: 'jump-loader',
         options: { extensions: this.pageExtensions }
       }
-    );
+    ].filter(Boolean);
 
-    // Main.js patches.
+    /* == Patches == */
     patchMain(['./patch/polyfills.js'], config);
     if (!isServer) patchMain(['./patch/client-router.js'], config);
 
-    // Webpack plugins.
+    /* == Plugins == */
     const plugins = config.plugins || [];
 
     plugins.push(new DefinePlugin({
