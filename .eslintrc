@@ -1,33 +1,67 @@
 {
-    "env": {
-        "browser": true,
-        "es6": true
+  "env": {
+    "browser": true,
+    "es6": true
+  },
+  "globals": { "require": false, "setImmediate": false, "process": false },
+  "parser": "babel-eslint",
+  "parserOptions": {
+    "ecmaVersion": 6,
+    "sourceType": "unambiguous",
+    "ecmaFeatures": {
+      "jsx": true,
+      "experimentalObjectRestSpread": true
+    }
+  },
+  "plugins": [
+    "react",
+    "compat"
+  ],
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:compat/recommended"
+  ],
+  "rules": {
+    "strict": 0,
+    "no-console": "warn",
+    "react/react-in-jsx-scope": 0,
+    "react/no-unescaped-entities": 0
+  },
+  "settings": {
+    "react": {
+      "createClass": "createReactClass",
+      "pragma": "React",
+      "version": "16.0"
     },
-    "globals": { "require": false, "setImmediate": false, "process": false },
-    "parser": "babel-eslint",
-    "parserOptions": {
-        "ecmaVersion": 6,
-        "sourceType": "module",
-        "ecmaFeatures": {
-            "jsx": true,
-            "experimentalObjectRestSpread": true
-        }
-    },
-    "plugins": [
-        "react"
-    ],
-    "extends": ["eslint:recommended", "plugin:react/recommended"],
-    "rules": {
-        "strict": 0,
-        "no-console": "warn",
-        "react/react-in-jsx-scope": 0,
-        "react/no-unescaped-entities": 0
-    },
-    "settings": {
-        "react": {
-          "createClass": "createReactClass",
-          "pragma": "React",
-          "version": "16.0"
-        }
-      }
+    "polyfills": [
+      "Array.from",
+      "Array.of",
+      "Array.prototype.find",
+      "Array.prototype.flat",
+      "Array.prototype.flatMap",
+      "Array.prototype.includes",
+      "Number.isFinite",
+      "Number.isNaN",
+      "Number.prototype.toFixed",
+      "Object.assign",
+      "Object.create",
+      "Object.getPrototypeOf",
+      "Object.is",
+      "Object.freeze",
+      "Object.keys",
+      "Object.values",
+      "Promise",
+      "String.prototype.endsWith",
+      "String.prototype.includes",
+      "String.prototype.startsWith",
+      "String.prototype.trim",
+      "Symbol",
+      "clearImmediate",
+      "parseFloat",
+      "parseInt",
+      "performance.now",
+      "setImmediate"
+    ]
+  }
 }

@@ -52,6 +52,7 @@
     "babel-plugin-module-resolver": "3.x",
     "babel-plugin-wrap-in-js": "1.x",
     "eslint": "5.x",
+    "eslint-plugin-compat": "3.x",
     "eslint-plugin-react": "7.x",
     "glob": "7.x",
     "image-size": "0.7.x",
