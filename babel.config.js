@@ -25,7 +25,10 @@ const presetNextBabel = [
   'next/babel',
   {
     // 'preset-env': { 'useBuiltIns': 'usage' },
-    'transform-runtime': { corejs: 3, absoluteRuntime }
+    'transform-runtime': {
+      corejs: { version: 3, proposals: true },
+      absoluteRuntime
+    }
   }
 ];
 

@@ -21,10 +21,8 @@ module.exports = {
 
     // Force modules to use CoreJS 3.
     config.resolve.alias = Object.assign(config.resolve.alias, {
-      'core-js-pure': 'core-js',
-      '@babel/runtime-corejs2/core-js': ospath.resolve(dir, './node_modules/core-js/stable'),
       '@babel/runtime-corejs2': ospath.resolve(dir, './node_modules/@babel/runtime-corejs3'),
-      'object-assign': ospath.resolve(dir, './node_modules/core-js/stable/object/assign.js')
+      'object-assign': ospath.resolve(dir, './node_modules/core-js-pure/stable/object/assign.js')
     });
 
     // Add custom Webpack loaders to resolver.
@@ -111,7 +109,6 @@ module.exports = {
     ].filter(Boolean);
 
     /* == Patches == */
-    patchMain(['./patch/polyfills.js'], config);
     if (!isServer) patchMain(['./patch/client-router.js'], config);
 
     /* == Plugins == */
@@ -131,14 +128,17 @@ module.exports = {
         statsFilename: 'webpack-stats.json',
         statsOptions: {
           moduleSort: 'issuerId',
-          excludeModules: [
-            /node_modules(?:\\|\/)core-js(?:\\|\/)/
-          ],
           maxModules: Infinity,
-          providedExports: true,
-          usedExports: true,
+          excludeModules: [
+            /node_modules(?:\\|\/)@babel(?:\\|\/)runtime-corejs3(?:\\|\/)/,
+            /node_modules(?:\\|\/)core-js-pure(?:\\|\/)/
+          ],
+          depth: true,
+          entrypoints: true,
           optimizationBailout: true,
-          source: false
+          providedExports: true,
+          source: false,
+          usedExports: true
         }
       })
     ].filter(Boolean);
