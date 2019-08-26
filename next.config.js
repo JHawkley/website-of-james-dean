@@ -7,6 +7,8 @@ const imageMediaLoader = require('./webpack/image-media-loader');
 const soundMediaLoader = require('./webpack/sound-media-loader');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const WebpackBarPlugin = require('webpackbar');
+const ShakePlugin = require('webpack-common-shake').Plugin;
+const WebpackDeepScopeAnalysisPlugin = require('webpack-deep-scope-plugin').default;
 
 const jsConfig = require('./jsconfig.json');
 
@@ -115,10 +117,14 @@ module.exports = {
     config.plugins = [
       ...config.plugins,
 
-      new WebpackBarPlugin({
+      !isProduction && new WebpackBarPlugin({
         name: isServer ? 'server' : 'client',
         fancy: true
       }),
+
+      isProduction && !isServer && new ShakePlugin(),
+
+      isProduction && !isServer && new WebpackDeepScopeAnalysisPlugin(),
 
       isProduction && !isServer && new BundleAnalyzerPlugin({
         analyzerMode: 'static',
