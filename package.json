@@ -59,6 +59,7 @@
     "glob": "7.x",
     "image-size": "0.7.x",
     "loader-utils": "1.x",
+    "micromatch": "4.x",
     "mime-types": "2.x",
     "next-progressbar": "1.x",
     "node-sass": "4.x",

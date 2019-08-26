@@ -2,6 +2,7 @@
 
 const ospath = require('path');
 const glob = require('glob');
+const mm = require('micromatch');
 const jumpLoader = require('./webpack/jump-loader');
 const imageMediaLoader = require('./webpack/image-media-loader');
 const soundMediaLoader = require('./webpack/sound-media-loader');
@@ -15,7 +16,7 @@ const jsConfig = require('./jsconfig.json');
 const isProduction = process.env.NODE_ENV === 'production';
 
 module.exports = {
-  webpack(config, { dir, isServer }) {
+  webpack(config, { dir, isServer, totalPages }) {
 
     /* == Resolver Settings == */
     // Map `.jsconfig.json` aliases.
@@ -153,6 +154,130 @@ module.exports = {
     if (!isServer) {
       // Prevent Webpack's `setImmediate` polyfill.
       config.node = Object.assign(config.node || {}, { setImmediate: false });
+    }
+
+    if (isProduction && !isServer) {
+      // Customize chunk splitting.
+      const splitChunks = config.optimization.splitChunks;
+
+      const matcherFor = (pattern) => {
+        const matcher = typeof pattern === 'function' ? pattern : mm.matcher(pattern);
+        return (module) => !module.resource ? false : matcher(module.resource);
+      };
+
+      const matchNodeModules = mm.matcher(ospath.resolve(dir, './node_modules/**'));
+      const reNameData = /(?:\\|\/)(pages|runtime)(?:\\|\/)(.*)\.js/;
+
+      const testReact = matcherFor('**/node_modules/(react|react-dom)/**');
+      const testCoreJS = matcherFor('**/node_modules/(core-js|@babel/runtime-corejs3)/**');
+
+      const isAppEntry = (nameData) => {
+        if (!nameData) return false;
+        if (nameData.dir !== 'pages') return true;
+        if (nameData.name === '_app') return true;
+        return false;
+      };
+
+      const isPageEntry = (nameData) =>
+        Boolean(nameData) && !isAppEntry(nameData);
+
+      const getPageEntries = (nameData) =>
+        nameData.filter(isPageEntry);
+
+      const isModuleVendor = ({context}) =>
+        context && matchNodeModules(context);
+
+      const getNameData = ({name}) => {
+        if (!name) return null;
+
+        const nameData = reNameData.exec(name);
+        if (!nameData) return null;
+
+        const baseName = ospath.basename(nameData[2]);
+        return { dir: nameData[1], name: nameData[2], baseName };
+      };
+
+      const dedupeNameData = (nameDataArr) => {
+        const len = nameDataArr.length;
+        const namesSet = new Set();
+
+        for (let i = 0; i < len; i++) {
+          const data = nameDataArr[i];
+          const { name, baseName } = data;
+
+          if (name === baseName)
+            namesSet.add(name);
+          else if (namesSet.has(baseName))
+            namesSet.add(name);
+          else {
+            const dupe = nameDataArr.some(d => data !== d && baseName === d.baseName);
+            namesSet.add(dupe ? name : baseName);
+          }
+        }
+
+        return Array.from(namesSet);
+      };
+
+      const minShared = 2;
+      const minCommon = Math.max(minShared + 1, Math.round(totalPages * 0.5));
+
+      const pageShared = {
+        name: (module, chunks) => {
+          const pageNames = dedupeNameData(getPageEntries(chunks.map(getNameData)));
+          if (pageNames.length >= minShared * 2) return 'page-shared';
+          return `page-shared~${pageNames.sort().join('+')}`;
+        },
+        test: (module, chunks) => getPageEntries(chunks.map(getNameData)).length >= 2,
+        chunks: 'all',
+        minChunks: minShared,
+        minSize: 2000,
+        priority: 0
+      };
+
+      const appShared = {
+        name: 'app-shared',
+        test: (module, chunks) => chunks.map(getNameData).some(isAppEntry),
+        chunks: 'all',
+        minChunks: minShared,
+        priority: 100
+      };
+
+      const commons = {
+        name: 'commons',
+        test: isModuleVendor,
+        chunks: 'all',
+        minChunks: minCommon,
+        priority: 200
+      };
+
+      // Place React into commons.
+      const react = {
+        name: 'commons',
+        test: testReact,
+        enforce: true,
+        chunks: 'all',
+        priority: 1000
+      };//testCoreJS
+
+      // Place CoreJS into commons.
+      const corejs = {
+        name: 'commons',
+        test: testCoreJS,
+        enforce: true,
+        chunks: 'all',
+        priority: 1000
+      };
+
+      const cacheGroups = {
+        default: false,
+        vendors: false,
+        appShared, pageShared,
+        commons, react, corejs
+      };
+
+      splitChunks.maxInitialRequests = Infinity;
+      splitChunks.maxAsyncRequests = Infinity;
+      splitChunks.cacheGroups = cacheGroups;
     }
 
     return config;
