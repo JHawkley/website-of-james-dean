@@ -1,10 +1,25 @@
-import Page from "components/Page";
+import React from "react";
+import ErrorPage from "pages/_error";
+import { route as $404 } from "pages/404?jump";
 
-const FourOhFourPage = (props) => (
-  <Page {...props}>
-    <h2 className="major">404 - Route Missing</h2>
-    <p>There is no page associated with this route.  Please press the close button in the upper-right to return to the site's index.</p>
-  </Page>
-);
+const data = { statusCode: 404, type: "http-error" };
+
+class FourOhFourPage extends React.PureComponent {
+
+  // Start with an empty `asPath` so rehydration does not throw any warning.
+  state = { asPath: null };
+
+  componentDidMount() {
+    if (!process.browser) return;
+    this.setState({ asPath: location.pathname });
+  }
+
+  render() {
+    const { asPath } = this.state;
+    if (!asPath) return null;
+    return <ErrorPage {...this.props} route={$404} asPath={asPath} data={data} />;
+  }
+
+}
 
 export default FourOhFourPage;
