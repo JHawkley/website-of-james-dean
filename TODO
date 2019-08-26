@@ -1,2 +1,9 @@
-* Make a loading throbber for before the page has displayed.
 * Add more accessible `alt` descriptions for images.
+* Redesign `Preloader` and classes that extend it to use composition
+  instead of inheritance.
+* Provide our own `_error` page; create a route to it for `404.html` and
+  specially handle the 404 status code.  `getInitialProps` should expect
+  a special query from the route to know its a `404.html` hit, specifically.
+* Related: check out React error-boundaries.
+* Go through and refactor types in documentation.
+  Make sure they follow these guidelines: http://usejsdoc.org/tags-type.html
