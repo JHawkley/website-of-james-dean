@@ -46,6 +46,7 @@ module.exports = {
     pluginWrapInJs,
     isProduction && 'closure-elimination',
     isProduction && '@babel/plugin-transform-react-constant-elements',
+    isProduction && 'transform-resolve-wildcard-import'
   ].filter(Boolean),
   presets: [
     presetNextBabel

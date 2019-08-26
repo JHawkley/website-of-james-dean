@@ -51,6 +51,7 @@
     "babel-plugin-add-module-exports": ">=1.0.2 <2.0",
     "babel-plugin-closure-elimination": "1.x",
     "babel-plugin-module-resolver": "3.x",
+    "babel-plugin-transform-resolve-wildcard-import": "JHawkley/babel-plugin-transform-resolve-wildcard-import",
     "babel-plugin-wrap-in-js": "1.x",
     "eslint": "5.x",
     "eslint-plugin-compat": "3.x",
