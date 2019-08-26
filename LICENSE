@@ -1,0 +1,37 @@
+Special Notice:
+The license below applies only to the software portion of this repo and only
+to code written by James Dean for the sole-purpose of controlling the layout
+and presentation of the final product.
+
+Other media in this repo including, but not limited to, text written to be
+displayed by this product, images and video, certain style-sheets and programs,
+and other resources that originated from third-parties and licensed for use
+only by this specific product MAY fall under a different license and MAY NOT
+be available for open-source use.
+
+If you have questions regarding what can and cannot be used in your own
+project, free of charge, please feel free to open an issue here.
+
+I'll be very happy to advise you.
+
+MIT License
+
+Copyright (c) 2019 James Dean
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
