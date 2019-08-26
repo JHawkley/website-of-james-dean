@@ -48,7 +48,7 @@
     "@babel/runtime-corejs3": "7.x",
     "autoprefixer": "9.x",
     "babel-eslint": "10.x",
-    "babel-plugin-add-module-exports": ">1.0.1",
+    "babel-plugin-add-module-exports": ">=1.0.2 <2.0",
     "babel-plugin-closure-elimination": "1.x",
     "babel-plugin-module-resolver": "3.x",
     "babel-plugin-wrap-in-js": "1.x",
