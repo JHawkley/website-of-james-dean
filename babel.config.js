@@ -24,7 +24,10 @@ const pluginWrapInJs = [
 const presetNextBabel = [
   'next/babel',
   {
-    // 'preset-env': { 'useBuiltIns': 'usage' },
+    'preset-env': {
+      include: ['transform-arrow-functions'],
+      corejs: { version: 3, proposals: true },
+    },
     'transform-runtime': {
       corejs: { version: 3, proposals: true },
       absoluteRuntime

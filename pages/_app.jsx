@@ -17,7 +17,7 @@ import { timespan } from "tools/css";
 import { Task, wait } from "tools/async";
 import { extensions as maybe } from "tools/maybe";
 import { memoize } from "tools/functions";
-import { canScrollRestore as transitionsSupported } from "tools/scrollRestoration";
+import { canScrollRestore as hostCanScrollRestore } from "tools/scrollRestoration";
 import styleVars from "styles/vars.json";
 
 import Preloader from "components/Preloader";
@@ -30,7 +30,8 @@ import Background from "components/Background";
 
 faConfig.autoAddCss = false;
 
-const scrollRestoreSupported = process.browser && transitionsSupported;
+// Only controls the behavior of the component; not used for rendering.
+const scrollRestoreSupported = process.browser && hostCanScrollRestore;
 
 class ScrollRestoringApp extends App {
 
@@ -39,7 +40,8 @@ class ScrollRestoringApp extends App {
   state = {
     loading: true,
     routeChanging: false,
-    pageHidden: transitionsSupported,
+    transitionsSupported: true,
+    pageHidden: true,
     bgClassName: null
   };
 
@@ -86,7 +88,7 @@ class ScrollRestoringApp extends App {
     if (!Component)
       throw new BadArgumentError("a page-component was not provided to the app", "Component", Component);
 
-    if (transitionsSupported && routeChanging)
+    if (hostCanScrollRestore && routeChanging)
       return null;
   
     return {
@@ -230,6 +232,14 @@ class ScrollRestoringApp extends App {
     // Do not run this method on the server.
     if (!process.browser) return;
 
+    // If the host does not support scroll-restore, this will force a re-render
+    // to swap-in the transition-less version of the site after rehydration.
+    // Related: https://github.com/facebook/react/issues/13260
+    if (!hostCanScrollRestore) this.setState({
+      transitionsSupported: false,
+      pageHidden: false
+    });
+
     const { router } = this.props;
     
     this.hashBlockID = hashScroll.block();
@@ -343,6 +353,8 @@ class ScrollRestoringApp extends App {
   }
 
   render() {
+    const { transitionsSupported } = this.state;
+
     return (
       <Fragment>
         <Head><title>A Programmer's Place</title></Head>

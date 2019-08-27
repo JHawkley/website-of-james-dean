@@ -43,23 +43,21 @@ module.exports = {
     });
 
     /* == Module Rules == */
-    const useBabelCommonJS = {
-      loader: 'babel-loader',
-      options: {
-        overrides: [{
-          plugins: ['add-module-exports'],
-          presets: [['next/babel', {
-            'preset-env': { modules: 'commonjs' }
-          }]]
-        }]
-      }
-    };
+    const prefabs = getPrefabs();
 
     config.module.rules = [
       {
         test: /\.mjs$/i,
         include: /node_modules/,
         type: 'javascript/auto'
+      },
+
+      {
+        // Fix for missing polyfills in `node_modules`.
+        // Without this, IE11 cannot be supported.
+        test: /\.(mjs|es\.js)$/i,
+        include: /node_modules/,
+        use: prefabs.use.babelTransformRuntime
       },
 
       ...config.module.rules,
@@ -91,17 +89,17 @@ module.exports = {
 
         exec: true,
         optimize: isProduction,
-        before: useBabelCommonJS
+        before: prefabs.use.babelCommonJS
       }),
 
       {
         test: new RegExp(`\\.(${imageMediaLoader.supportedTypes.join('|')})$`, 'i'),
-        loader: 'image-media-loader'
+        use: [prefabs.use.babelTransformRuntime, 'image-media-loader']
       },
 
       {
         test: new RegExp(`\\.(${soundMediaLoader.supportedTypes.join('|')})$`, 'i'),
-        loader: 'sound-media-loader'
+        loader: [prefabs.use.babelTransformRuntime, 'sound-media-loader']
       },
 
       {
@@ -289,6 +287,54 @@ module.exports = {
 
   pageExtensions: ['jsx', 'js']
 };
+
+function getPrefabs() {
+  const plugins = {
+    transformRuntime: [
+      '@babel/plugin-transform-runtime',
+      {
+        corejs: { version: 3, proposals: true },
+        helpers: true,
+        regenerator: true,
+      }
+    ]
+  };
+
+  const presets = {
+    env: [
+      '@babel/preset-env', {
+        include: ['transform-arrow-functions'],
+        corejs: { version: 3, proposals: true },
+        modules: 'auto'
+      }
+    ]
+  };
+
+  const use = {
+    babelTransformRuntime: {
+      loader: 'babel-loader',
+      options: {
+        configFile: false,
+        plugins: [plugins.transformRuntime],
+        presets: [presets.env]
+      }
+    },
+
+    babelCommonJS: {
+      loader: 'babel-loader',
+      options: {
+        overrides: [{
+          plugins: ['add-module-exports'],
+          presets: [['next/babel', {
+            'preset-env': { modules: 'commonjs' }
+          }]]
+        }]
+      }
+    }
+  };
+
+  return { presets, plugins, use };
+}
 
 function patchMain(patches, webkitConfig) {
   if (patches.length === 0) return;
