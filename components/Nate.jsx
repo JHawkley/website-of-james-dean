@@ -324,9 +324,8 @@ class Nate extends React.PureComponent {
   }
 
   renderContainer(preloaded) {
-    const { nate: { ref: nateRef }, bounds: { ref: groundRef } } = this.world;
+    const { ref } = this.world.bounds;
     const { className: containerClass } = containerCss;
-    const { className: nateClass } = nateSpriteCss;
 
     const attachGame = preloaded ? this.attachGame : null;
     const className = [containerClass, !preloaded && "loading"].filter(Boolean).join(" ");
@@ -334,12 +333,18 @@ class Nate extends React.PureComponent {
     return (
       <div ref={attachGame} className={className}>
         <div className="buffer top" />
-        <div ref={groundRef} className="ground-plane" />
+        <div ref={ref} className="ground-plane" />
         <div className="buffer bottom" />
-        <div ref={nateRef} className={`${nateClass} despawned`} />
+        {this.renderNate()}
         {this.renderBullets()}
       </div>
     );
+  }
+
+  renderNate() {
+    const { ref } = this.world.nate;
+    const { className } = nateSpriteCss;
+    return <div ref={ref} className={`${className} despawned`} />;
   }
 
   renderBullets() {
