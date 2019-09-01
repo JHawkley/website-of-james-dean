@@ -332,9 +332,7 @@ class Nate extends React.PureComponent {
     
     return (
       <div ref={attachGame} className={className}>
-        <div className="buffer top" />
         <div ref={ref} className="ground-plane" />
-        <div className="buffer bottom" />
         {this.renderNate()}
         {this.renderBullets()}
       </div>

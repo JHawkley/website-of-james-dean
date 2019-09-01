@@ -9,6 +9,7 @@ import ImgBulletBurst from "static/images/nate-game/bullet_burst_sprite.png";
 // The amount of time in milliseconds to fade in/out when transitioning to/from loaded states.
 const fadeTime = 325;
 
+const groundThickness = 24;
 const nateSize = [52, 52];
 const nateOffset = [-26, 5];
 const bulletSize = [9, 9];
@@ -59,28 +60,24 @@ const componentCss = css.resolve`
 
 const containerCss = css.resolve`
   * {
+    box-sizing: content-box !important;
     overflow: visible !important;
     position: relative;
     z-index: 0;
     opacity: 1;
     transition: opacity ${fadeTime}ms ease-in-out;
-  }
 
-  *.loading {
-    opacity: 0;
-  }
-
-  * > :global(.buffer) {
-    visibility: hidden;
     width: 100%;
+    height: ${groundThickness}px;
+    padding-top: ${3 * margin}${marginUnit};
+    padding-bottom: ${margin}${marginUnit};
   }
 
-  * > :global(.buffer.top) { height: ${3 * margin}${marginUnit}; }
-  * > :global(.buffer.bottom) { height: ${margin}${marginUnit}; }
+  *.loading { opacity: 0; }
 
   * > :global(.ground-plane) {
     width: 100%;
-    height: 24px;
+    height: 100%;
 
     z-index: 0;
     border: 1px solid #004A7F;
