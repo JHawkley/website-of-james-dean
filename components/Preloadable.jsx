@@ -180,7 +180,7 @@ const promised = (promise, options) => {
 
     handlePromiseResolved = (promiseValue) => {
       if (this.didUnmount) return;
-      this.setState({ promiseValue, promiseCompleted: true });
+      this.setState({ promiseCompleted: true, promiseValue });
     };
 
     handlePromiseRejected = (reason) => {
