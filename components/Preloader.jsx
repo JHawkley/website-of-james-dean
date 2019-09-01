@@ -24,6 +24,14 @@ const notNaked = (value, key, props) => {
   return `${key} must be unset when \`display\` is set to "naked"`;
 };
 
+/**
+ * Creates and provides feedback for a preload context.  Any descendant
+ * `Preloadable` components will mount the `PreloadSync` exposed by this
+ * component to announce changes to their loading state.
+ *
+ * @class Preloader
+ * @extends {React.PureComponent}
+ */
 class Preloader extends React.PureComponent {
 
   static propTypes = {

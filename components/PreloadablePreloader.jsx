@@ -3,6 +3,15 @@ import Preloader from "components/Preloader";
 import Preloadable from "components/Preloadable";
 import { memoize } from "tools/functions";
 
+/**
+ * A `Preloadable` that has its own `PreloadSync` context, isolating its
+ * descendants from an ancestor preload context.  This type of preloadable
+ * will only enter a "loaded" state once all `Preloadable` descendants are
+ * also in a "loaded" state.
+ *
+ * @class PreloadablePreloader
+ * @extends {React.PureComponent}
+ */
 class PreloadablePreloader extends React.PureComponent {
 
   static propTypes = Preloader.propTypes;

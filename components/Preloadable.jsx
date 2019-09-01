@@ -11,6 +11,14 @@ const $badFunction = "must be a function";
 const $notDefined = "must be defined";
 const $badProp = "when provided, must be a non-empty string";
 
+/**
+ * Represents and manages the preload state of some child component.
+ * Needs to be a descendant of a `Preloader`, which provides the
+ * `PreloadSync` context to which it must mount to be useful.
+ *
+ * @class Preloadable
+ * @extends {React.PureComponent}
+ */
 class Preloadable extends React.PureComponent {
 
   static propTypes = {
@@ -60,6 +68,39 @@ class Preloadable extends React.PureComponent {
   
 }
 
+/**
+ * Wraps a component in a `Preloadable`.
+ * 
+ * The component must provide properties that take functions to provide
+ * progress updates to the `Preloadable`.  The names of these properties
+ * can be provided with the `options` object.
+ * 
+ * Any properties applied to this component that are unknown to it will
+ * be automatically forwarded to the wrapped component.
+ *
+ * @param {*} Component
+ *   The component to wrap.
+ * @param {Object} [options]
+ *   The options object.
+ * @param {string} [options.name = "[anonymous component]"]
+ *   A friendly name to use for the component; mostly for debugging.
+ *   The `displayName` or `name` of the component will be used as a default
+ *   instead, if they exist.
+ * @param {Object} [options.initialProps]
+ *   An object that contains initial properties to be forwarded to the wrapped
+ *   component.  These properties will be overridden by forwarded properties.
+ * @param {string} [options.onPreloadProp = "onPreload"]
+ *   The key for the property that will indicate when loading has started.
+ *   This can be used to let the `Preloadable` know to reset its state if
+ *   the component suddenly has more loading to do after finishing its last
+ *   round of loading.
+ * @param {string} [options.onLoadProp = "onLoad"]
+ *   The key for the property that will indicate when loading has finished.
+ * @param {string} [options.onErrorProp = "onError"]
+ *   The key for the property that will indicate when a loading error has occurred.
+ * @returns
+ *   A new component with preloading capabilities.
+ */
 const wrapped = (Component, options) => {
   if (!Component::is.func())
     throw new BadArgumentError($badFunction, "Component", Component);
@@ -142,6 +183,29 @@ const wrapped = (Component, options) => {
   };
 };
 
+/**
+ * Wraps a promise in a `Preloadable`.  The preload is considered complete
+ * when the promise completes.
+ * 
+ * When the promise completes, the `render` prop will be utilized to
+ * render the result.  The `render` prop can either be a function or an
+ * object with methods that specially handle rendering for different
+ * loading states.
+ *
+ * @param {Promise<*>|function(): Promise<*>} promise
+ *   A promise or a function that returns a promise, which is to be wrapped.
+ * @param {Object} [options]
+ *   The options object.
+ * @param {string} [options.name = "[unnamed]"]
+ *   A friendly name to use for the component; mostly for debugging.
+ *   If `promise` is a function, the `name` property of this function may be
+ *   used as a default instead, if it exists.
+ * @param {Object} [options.initialProps]
+ *   An object that contains the initial properties intended to be consumed
+ *   by the function provided as the `render` property.
+ * @returns
+ *   A new component with preloading capabilities.
+ */
 const promised = (promise, options) => {
   if (!promise::is.defined())
     throw new BadArgumentError($notDefined, "promise", promise);
