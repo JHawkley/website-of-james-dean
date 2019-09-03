@@ -19,7 +19,7 @@ module.exports = {
   webpack(config, { dir, isServer, totalPages }) {
 
     /* == Resolver Settings == */
-    // Map `.jsconfig.json` aliases.
+    // Map `jsconfig.json` aliases.
     mapAliases(jsConfig.compilerOptions.paths, config, dir);
 
     // Force modules to use CoreJS 3.
@@ -110,7 +110,10 @@ module.exports = {
     ].filter(Boolean);
 
     /* == Patches == */
-    if (!isServer) patchMain(['./patch/client-router.js'], config);
+    patchMain(config, [
+      './patch/font-awesome.js',
+      !isServer && './patch/client-router.js'
+    ].filter(Boolean));
 
     /* == Plugins == */
     config.plugins = [
@@ -340,7 +343,7 @@ function getPrefabs() {
 }
 
 // Patches the main chunk, adding specific modules.
-function patchMain(patches, webkitConfig) {
+function patchMain(webkitConfig, patches) {
   if (patches.length === 0) return;
 
   const originalEntry = webkitConfig.entry;

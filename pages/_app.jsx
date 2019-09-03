@@ -5,7 +5,6 @@ import App, { createUrl } from "next/app";
 import Head from "next/head";
 import { getUrl } from "next-server/dist/lib/utils";
 import { css } from "styled-jsx/css";
-import { config as faConfig } from "@fortawesome/fontawesome-svg-core";
 
 import ImagePreloadError from "components/ImageMedia/ImagePreloadError";
 import BadArgumentError from "lib/BadArgumentError";
@@ -27,8 +26,6 @@ import Wrapper from "components/Wrapper";
 import LoadingSpinner from "components/LoadingSpinner";
 import Page from "components/Page";
 import Background from "components/Background";
-
-faConfig.autoAddCss = false;
 
 // Only controls the behavior of the component; not used for rendering.
 const scrollRestoreSupported = process.browser && hostCanScrollRestore;
