@@ -47,7 +47,8 @@ const determineRel = ({target, rel, opener}) => {
   return [...relSet].join(" ");
 };
 
-const isAbsolute = (href, as) => Boolean(!as && href && url.parse(href).host);
+const isExternal = (href, as, target) =>
+  Boolean(!as && target !== "_blank" && href && url.parse(href).host);
 
 const decomposeProps = (props) => {
   const { children, target, rel, opener, scroll, icon, ...restProps } = props;
@@ -74,9 +75,10 @@ const renderAsLink = (jumpProps, linkProps, anchorProps) => (
 
 const Jump = (props) => {
   const { jumpProps, linkProps, anchorProps } = decomposeProps(props);
+  const { target } = jumpProps;
   const { href, as } = linkProps;
 
-  if (isAbsolute(href, as))
+  if (isExternal(href, as, target))
     return renderAsAnchor(jumpProps, { href, ...anchorProps });
   else
     return renderAsLink(jumpProps, linkProps, anchorProps);
