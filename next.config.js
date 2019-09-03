@@ -24,8 +24,8 @@ module.exports = {
 
     // Force modules to use CoreJS 3.
     config.resolve.alias = Object.assign(config.resolve.alias, {
-      '@babel/runtime-corejs2': ospath.resolve(dir, './node_modules/@babel/runtime-corejs3'),
-      'object-assign': ospath.resolve(dir, './node_modules/core-js-pure/stable/object/assign.js')
+      '@babel/runtime-corejs2': '@babel/runtime-corejs3',
+      'object-assign': 'core-js-pure/stable/object/assign.js'
     });
 
     // Add custom Webpack loaders to resolver.
