@@ -57,7 +57,7 @@ module.exports = {
         // Without this, IE11 cannot be supported.
         test: /\.(mjs|es\.js)$/i,
         include: /node_modules/,
-        use: prefabs.use.babelTransformRuntime
+        use: prefabs.use.transformForESM
       },
 
       ...config.module.rules,
@@ -94,12 +94,12 @@ module.exports = {
 
       {
         test: new RegExp(`\\.(${imageMediaLoader.supportedTypes.join('|')})$`, 'i'),
-        use: [prefabs.use.babelTransformRuntime, 'image-media-loader']
+        use: [prefabs.use.transformForESM, 'image-media-loader']
       },
 
       {
         test: new RegExp(`\\.(${soundMediaLoader.supportedTypes.join('|')})$`, 'i'),
-        loader: [prefabs.use.babelTransformRuntime, 'sound-media-loader']
+        loader: [prefabs.use.transformForESM, 'sound-media-loader']
       },
 
       {
@@ -289,6 +289,8 @@ module.exports = {
 };
 
 function getPrefabs() {
+  const absoluteRuntime = ospath.resolve(__dirname, './node_modules/@babel/runtime-corejs3');
+
   const plugins = {
     transformRuntime: [
       '@babel/plugin-transform-runtime',
@@ -296,6 +298,7 @@ function getPrefabs() {
         corejs: { version: 3, proposals: true },
         helpers: true,
         regenerator: true,
+        absoluteRuntime
       }
     ]
   };
@@ -304,14 +307,13 @@ function getPrefabs() {
     env: [
       '@babel/preset-env', {
         include: ['transform-arrow-functions'],
-        corejs: { version: 3, proposals: true },
         modules: 'auto'
       }
     ]
   };
 
   const use = {
-    babelTransformRuntime: {
+    transformForESM: {
       loader: 'babel-loader',
       options: {
         configFile: false,

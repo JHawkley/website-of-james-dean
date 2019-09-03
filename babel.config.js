@@ -9,8 +9,7 @@ const presetNextBabel = [
   'next/babel',
   {
     'preset-env': {
-      include: ['transform-arrow-functions'],
-      corejs: { version: 3, proposals: true },
+      include: ['transform-arrow-functions']
     },
     'transform-runtime': {
       corejs: { version: 3, proposals: true },
