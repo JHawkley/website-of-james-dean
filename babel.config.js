@@ -5,6 +5,14 @@ const ospath = require('path');
 const isProduction = process.env.NODE_ENV === 'production';
 const absoluteRuntime = ospath.resolve(__dirname, './node_modules/@babel/runtime-corejs3');
 
+const removePropTypes = [
+  'transform-react-remove-prop-types',
+  {
+    removeImport: true,
+    additionalLibraries: ['tools/propTypes', 'tools/extensions/propTypes']
+  }
+];
+
 const presetNextBabel = [
   'next/babel',
   {
@@ -34,5 +42,10 @@ module.exports = {
   ].filter(Boolean),
   presets: [
     presetNextBabel
-  ]
+  ],
+  overrides: [{
+    plugins: [
+      isProduction && removePropTypes
+    ].filter(Boolean)
+  }]
 };

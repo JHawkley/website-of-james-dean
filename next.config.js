@@ -114,16 +114,16 @@ module.exports = {
 
     /* == Plugins == */
     config.plugins = [
+      isProduction && !isServer && new ShakePlugin(),
+
+      isProduction && !isServer && new WebpackDeepScopeAnalysisPlugin(),
+
       ...config.plugins,
 
       !isProduction && new WebpackBarPlugin({
         name: isServer ? 'server' : 'client',
         fancy: true
       }),
-
-      isProduction && !isServer && new ShakePlugin(),
-
-      isProduction && !isServer && new WebpackDeepScopeAnalysisPlugin(),
 
       isProduction && !isServer && new BundleAnalyzerPlugin({
         analyzerMode: 'static',
@@ -135,8 +135,9 @@ module.exports = {
           moduleSort: 'issuerId',
           maxModules: Infinity,
           excludeModules: [
-            /node_modules(?:\\|\/)@babel(?:\\|\/)runtime-corejs3(?:\\|\/)/i,
-            /node_modules(?:\\|\/)core-js-pure(?:\\|\/)/i
+            matchExclude('**/node_modules/next?(-server)/**'),
+            matchExclude('**/node_modules/@babel/runtime-corejs3/**'),
+            matchExclude('**/node_modules/core-js?(-pure)/**')
           ],
           depth: true,
           entrypoints: true,
@@ -158,16 +159,8 @@ module.exports = {
       // Customize chunk splitting.
       const splitChunks = config.optimization.splitChunks;
 
-      const matcherFor = (pattern) => {
-        const matcher = typeof pattern === 'function' ? pattern : mm.matcher(pattern);
-        return (module) => !module.resource ? false : matcher(module.resource);
-      };
-
-      const matchNodeModules = mm.matcher(ospath.resolve(dir, './node_modules/**'));
+      const matcherNodeModules = matchString('**/node_modules/**');
       const reNameData = /(?:\\|\/)(pages|runtime)(?:\\|\/)(.*)\.js/;
-
-      const testReact = matcherFor('**/node_modules/(react|react-dom)/**');
-      const testCoreJS = matcherFor('**/node_modules/(core-js|@babel/runtime-corejs3)/**');
 
       const isAppEntry = (nameData) => {
         if (!nameData) return false;
@@ -177,13 +170,13 @@ module.exports = {
       };
 
       const isPageEntry = (nameData) =>
-        Boolean(nameData) && !isAppEntry(nameData);
+        Boolean(nameData && !isAppEntry(nameData));
 
       const getPageEntries = (nameData) =>
         nameData.filter(isPageEntry);
 
       const isModuleVendor = ({context}) =>
-        context && matchNodeModules(context);
+        matcherNodeModules(context);
 
       const getNameData = ({name}) => {
         if (!name) return null;
@@ -196,11 +189,9 @@ module.exports = {
       };
 
       const dedupeNameData = (nameDataArr) => {
-        const len = nameDataArr.length;
         const namesSet = new Set();
 
-        for (let i = 0; i < len; i++) {
-          const data = nameDataArr[i];
+        for (const data of nameDataArr) {
           const { name, baseName } = data;
 
           if (name === baseName)
@@ -251,16 +242,7 @@ module.exports = {
       // Place React into commons.
       const react = {
         name: 'commons',
-        test: testReact,
-        enforce: true,
-        chunks: 'all',
-        priority: 1000
-      };//testCoreJS
-
-      // Place CoreJS into commons.
-      const corejs = {
-        name: 'commons',
-        test: testCoreJS,
+        test: matchModule('**/node_modules/(react|react-dom)/**'),
         enforce: true,
         chunks: 'all',
         priority: 1000
@@ -270,7 +252,7 @@ module.exports = {
         default: false,
         vendors: false,
         appShared, pageShared,
-        commons, react, corejs
+        commons, react
       };
 
       splitChunks.maxInitialRequests = Infinity;
@@ -288,6 +270,25 @@ module.exports = {
   pageExtensions: ['jsx', 'js']
 };
 
+// Makes matchers for basic strings.
+function matchString(pattern) {
+  const matcher = typeof pattern === 'function' ? pattern : mm.matcher(pattern);
+  return (s) => typeof s === 'string' && matcher(s);
+}
+
+// Makes matchers for module objects.
+function matchModule(pattern) {
+  const matcher = typeof pattern === 'function' ? pattern : matchString(pattern);
+  return (module) => Boolean(module && module.resource && matcher(module.resource));
+}
+
+// Makes matchers for stats exclusions.
+function matchExclude(pattern) {
+  const matcher = typeof pattern === 'function' ? pattern : matchModule(pattern);
+  return (id, module) => matcher(module);
+}
+
+// Creates various prefabs for Webpack rules.
 function getPrefabs() {
   const absoluteRuntime = ospath.resolve(__dirname, './node_modules/@babel/runtime-corejs3');
 
@@ -338,6 +339,7 @@ function getPrefabs() {
   return { presets, plugins, use };
 }
 
+// Patches the main chunk, adding specific modules.
 function patchMain(patches, webkitConfig) {
   if (patches.length === 0) return;
 
@@ -353,6 +355,7 @@ function patchMain(patches, webkitConfig) {
   };
 }
 
+// A helper for creating CSS-related rules.
 function cssRule(ident, config) {
   let { exec, optimize, before, after } = config;
   before = Array.isArray(before) ? before : [before].filter(Boolean);
@@ -386,6 +389,7 @@ function cssRule(ident, config) {
   });
 }
 
+// Maps module aliases defined in `jsconfig.json` into Webpack.
 function mapAliases(jsPaths, webpackConfig, dir) {
   const wpResolve = webpackConfig.resolve;
   for (const jsAlias of Object.keys(jsPaths)) {
