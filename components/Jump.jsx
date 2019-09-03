@@ -1,11 +1,11 @@
 import PropTypes from "prop-types";
 import Link from "next/link";
+import url from "url";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faImage } from "@fortawesome/free-regular-svg-icons/faImage";
 import { faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons/faExternalLinkAlt";
 import { faFilm } from "@fortawesome/free-solid-svg-icons/faFilm";
 import { faImages } from "@fortawesome/free-solid-svg-icons/faImages";
-import { extensions as objEx } from "tools/common";
 import iconLinksCss from "styles/jsx/lib/iconLinks";
 
 const $none = "none";
@@ -47,26 +47,39 @@ const determineRel = ({target, rel, opener}) => {
   return [...relSet].join(" ");
 };
 
-const ownPropKeys = new Set(["children", "target", "rel", "opener", "scroll", "icon"]);
-const linkPropKeys = new Set(["href", "as", "prefetch", "replace", "shallow", "passHref"]);
+const isAbsolute = (href, as) => Boolean(!as && href && url.parse(href).host);
+
+const decomposeProps = (props) => {
+  const { children, target, rel, opener, scroll, icon, ...restProps } = props;
+  const jumpProps = { children, target, rel, opener, scroll, icon };
+
+  const { href, as, prefetch, replace, shallow, passHref, ...anchorProps } = restProps;
+  const linkProps = { href, as, prefetch, replace, shallow, passHref };
+
+  return { jumpProps, linkProps, anchorProps };
+};
+
+const renderAsAnchor = (jumpProps, anchorProps) => (
+  <a {...anchorProps} target={jumpProps.target} rel={determineRel(jumpProps)}>
+    {jumpProps.children}
+    {buildIcon(jumpProps)}
+  </a>
+);
+
+const renderAsLink = (jumpProps, linkProps, anchorProps) => (
+  <Link {...linkProps} scroll={jumpProps.scroll}>
+    {renderAsAnchor(jumpProps, anchorProps)}
+  </Link>
+);
 
 const Jump = (props) => {
-  const linkProps = {};
-  const anchorProps = {};
-  props::objEx.forOwnProps((value, key) => {
-    if (ownPropKeys.has(key)) return;
-    const pool = linkPropKeys.has(key) ? linkProps : anchorProps;
-    pool[key] = value;
-  });
+  const { jumpProps, linkProps, anchorProps } = decomposeProps(props);
+  const { href, as } = linkProps;
 
-  return (
-    <Link {...linkProps} scroll={props.scroll}>
-      <a {...anchorProps} target={props.target} rel={determineRel(props)}>
-        {props.children}
-        {buildIcon(props)}
-      </a>
-    </Link>
-  );
+  if (isAbsolute(href, as))
+    return renderAsAnchor(jumpProps, { href, ...anchorProps });
+  else
+    return renderAsLink(jumpProps, linkProps, anchorProps);
 };
 
 Jump.propTypes = {
