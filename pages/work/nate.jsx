@@ -1,5 +1,6 @@
 import React, { Fragment } from "react";
 import { dew } from "tools/common";
+import { extensions as errorEx } from "tools/errors";
 import GalleryContext from "lib/GalleryContext";
 import Gallery from "components/Gallery";
 import Page from "components/Page";
@@ -46,6 +47,8 @@ class NatePage extends React.PureComponent {
   }
 
   renderError(error) {
+    error = error::errorEx.asError();
+
     const message = dew(() => {
       switch (true) {
         case error instanceof BrowserUnsupportedError: return (
