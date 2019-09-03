@@ -10,7 +10,6 @@ import BadBindingError from "lib/BadBindingError";
  */
 export function isNullishOrEmpty() {
   'use strict'; // Allows binding to `null`.
-
   if (this == null) return true;
   if (this === "") return true;
   if (this::is.string()) return false;
