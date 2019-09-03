@@ -135,8 +135,8 @@ module.exports = {
           moduleSort: 'issuerId',
           maxModules: Infinity,
           excludeModules: [
-            /node_modules(?:\\|\/)@babel(?:\\|\/)runtime-corejs3(?:\\|\/)/,
-            /node_modules(?:\\|\/)core-js-pure(?:\\|\/)/
+            /node_modules(?:\\|\/)@babel(?:\\|\/)runtime-corejs3(?:\\|\/)/i,
+            /node_modules(?:\\|\/)core-js-pure(?:\\|\/)/i
           ],
           depth: true,
           entrypoints: true,
