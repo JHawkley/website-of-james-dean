@@ -5,22 +5,6 @@ const ospath = require('path');
 const isProduction = process.env.NODE_ENV === 'production';
 const absoluteRuntime = ospath.resolve(__dirname, './node_modules/@babel/runtime-corejs3');
 
-const pluginModuleResolver = [
-  'module-resolver',
-  {
-    root: ['.'],
-    alias: { styles: './styles' },
-    cwd: 'babelrc'
-  }
-];
-
-const pluginWrapInJs = [
-  'wrap-in-js',
-  {
-    extensions: ['css$', 'scss$']
-  }
-];
-
 const presetNextBabel = [
   'next/babel',
   {
@@ -45,8 +29,6 @@ module.exports = {
     '@babel/plugin-proposal-function-bind',
     '@babel/plugin-proposal-throw-expressions',
     '@babel/plugin-proposal-async-generator-functions',
-    pluginModuleResolver,
-    pluginWrapInJs,
     isProduction && 'closure-elimination',
     isProduction && '@babel/plugin-transform-react-constant-elements',
     isProduction && 'transform-resolve-wildcard-import'
