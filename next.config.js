@@ -158,6 +158,15 @@ module.exports = {
       config.node = Object.assign(config.node || {}, { setImmediate: false });
     }
 
+    if (isProduction) {
+      // Disable the `parallel` options for the Terser plugin.
+      // This option seems to have a lot of instability associated with it.
+      const { TerserPlugin } = require('next/dist/build/webpack/plugins/terser-webpack-plugin/src/index');
+      for (const minimizer of config.optimization.minimizer)
+        if (minimizer instanceof TerserPlugin)
+          minimizer.options.parallel = false;
+    }
+
     if (isProduction && !isServer) {
       // Customize chunk splitting.
       const splitChunks = config.optimization.splitChunks;
