@@ -23,9 +23,11 @@ module.exports = {
     mapAliases(jsConfig.compilerOptions.paths, config, dir);
 
     // Force modules to use CoreJS 3.
+    // Also map various similar modules to reduce package size.
     config.resolve.alias = Object.assign(config.resolve.alias, {
       '@babel/runtime-corejs2': '@babel/runtime-corejs3',
-      'object-assign': 'core-js-pure/stable/object/assign.js'
+      'object-assign': 'core-js-pure/stable/object/assign.js',
+      'querystring': 'querystring-es3'
     });
 
     // Add custom Webpack loaders to resolver.
@@ -47,17 +49,12 @@ module.exports = {
 
     config.module.rules = [
       {
-        test: /\.mjs$/i,
-        include: /node_modules/,
-        type: 'javascript/auto'
-      },
-
-      {
         // Fix for missing polyfills in `node_modules`.
         // Without this, IE11 cannot be supported.
         test: /\.(mjs|es\.js)$/i,
         include: /node_modules/,
-        use: prefabs.use.transformForESM
+        use: [prefabs.use.transformForESM],
+        type: 'javascript/auto'
       },
 
       ...config.module.rules,
