@@ -21,8 +21,9 @@ As a general rule, the following fall under the included open-source license:
 * The `pages\_error.jsx` file.
 * The `pages\404.jsx` file.
 * The `patch` folder.
-* The `styles\jsx` folder.
+* The `styles` folder.
 * The `tools` folder.
 * The `webpack` folder.
+* Anything else that was included in the [original template](https://github.com/codebushi/nextjs-starter-dimension).
 
 Other portions of this repo may still be open-source or could be modified to remove the personalized or licensed content, making them suitable for use in other projects.  If you would like to use portions of this repo as a basis for your own site, feel free to open an issue and request clarification or assistance.
