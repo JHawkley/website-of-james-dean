@@ -1,10 +1,4 @@
-* Fix IE support; scroll-to-top was broken at some point.
 * Add more accessible `alt` descriptions for images.
-* Provide our own `_error` page; create a route to it for `404.html` and
-  specially handle the 404 status code.  `getInitialProps` should expect
-  a special query from the route to know its a `404.html` hit, specifically.
-  (Much of this is now complete, but I still want to run through it.)
-* Related: check out React error-boundaries.
 * Go through and refactor types in documentation.
   Make sure they follow these guidelines: http://usejsdoc.org/tags-type.html
 * Try and kill off prop-types.
