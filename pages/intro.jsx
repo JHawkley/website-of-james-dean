@@ -1,7 +1,7 @@
 import Page from "components/Page";
 import Jump from "components/Jump";
 
-import ImgPlaceholderPhoto from "static/images/placeholder_photo.jpg";
+import ImgJamesPhoto from "static/images/james_photo.jpg";
 
 import ToWork from "pages/work/index?jump";
 
@@ -9,7 +9,7 @@ const IntroPage = (props) => (
   <Page {...props}>
     <h2 className="major">Intro</h2>
     <span className="image right">
-      <ImgPlaceholderPhoto alt="A Photo of James Dean" fluid />
+      <ImgJamesPhoto alt="A Photo of James Dean" fluid />
     </span>
     <p>Welcome!  I'm James!  I'm a software developer from Texas, USA.</p>
     <p>I have been working professionally since 2002.  In that time, I've put together and maintained three big applications for my former employer.  You can read all about it in the <ToWork>work section of the site</ToWork>.</p>
