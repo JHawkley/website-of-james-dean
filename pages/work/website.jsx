@@ -7,8 +7,6 @@ import ImgHeader from "static/images/website/header.png";
 
 import ToWork from "pages/work/index?jump";
 
-const Break = () => <Fragment><br /><br /></Fragment>;
-
 const MiscProgrammingPage = (props) => (
   <Page {...props} navLeft={ToWork}>
     <h2 className="major">This Website</h2>
@@ -21,14 +19,14 @@ const MiscProgrammingPage = (props) => (
     <p>In pursuit of that goal, I also contributed to or forked a couple of projects.  These projects are listed below:</p>
     <dl>
       <dt><Jump href="https://github.com/JHawkley/babel-plugin-transform-resolve-wildcard-import">babel-plugin-transform-resolve-wildcard-import</Jump></dt>
-      <dd>Attempts to aid Webpack's tree-shaking by converting wildcard imports into named imports.  Webpack is already pretty good at this, but this plugin can shake out or split a little more in certain edge-cases.<Break />
-      My contributions remove the need for a surrogate object and also provides support for destructuring assignments.</dd>
+      <dd><p>Attempts to aid Webpack's tree-shaking by converting wildcard imports into named imports.  Webpack is already pretty good at this, but this plugin can shake out or split a little more in certain edge-cases.</p>
+      <p>My contributions remove the need for a surrogate object and also provides support for destructuring assignments.</p></dd>
     </dl>
     <dl>
       <dt><Jump href="https://github.com/JHawkley/resolve-imports-loader">resolve-imports-loader</Jump></dt>
-      <dd>An adaptation of SectorLabs' <Jump href="https://github.com/SectorLabs/babel-plugin-transform-named-imports">babel-plugin-transform-named-imports</Jump> as a Webpack Loader.<Break />
-      Because the Babel plugin required Webpack's configuration to work properly and some of the transformations it was attempting were incompatible with some of the loaders I was using, it made more sense to turn it into a Webpack loader.<Break />
-      This website has not yet been built using this loader, however.  Due to the complexity of the transformations and how difficult it is to perform them without asynchronous support from Babel, I've begun to re-write this into a full-fledged Webpack plugin instead.  A later release of this website will likely make use of it, once I have time to finish it.
+      <dd><p>An adaptation of SectorLabs' <Jump href="https://github.com/SectorLabs/babel-plugin-transform-named-imports">babel-plugin-transform-named-imports</Jump> as a Webpack Loader.</p>
+      <p>Because the Babel plugin required Webpack's configuration to work properly and some of the transformations it was attempting were incompatible with some of the loaders I was using, it made more sense to turn it into a Webpack loader.</p>
+      <p>This website has not yet been built using this loader, however.  Due to the complexity of the transformations and how difficult it is to perform them without asynchronous support from Babel, I've begun to re-write this into a full-fledged Webpack plugin instead.  A later release of this website will likely make use of it, once I have time to finish it.</p>
       </dd>
     </dl>
     <p>This site's code is available on <Jump href="https://github.com/JHawkley/website-of-james-dean">GitHub for viewing</Jump>.  Large portions of the code-base have been made available for use under an open-source license, as well.</p>
