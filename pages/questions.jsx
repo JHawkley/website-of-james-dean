@@ -8,7 +8,7 @@ const QuestionsPage = (props) => (
     <p>Below I'll answer some questions that I suspect might be pretty common.</p>
     <dl>
       <dt>Are you able to move?</dt>
-      <dd>I currently have a house and three roommates.  Moving would be a significant inconvenience for a lot of people.  I would be resistant to the idea of moving, but with the right offer and support during the move, I could be persuaded.</dd>
+      <dd>I just moved into the Seattle area and currently have two roommates.  I currently have no desire to move again, unless the move is local and very beneficial to my situation.</dd>
       <dd>Telepresence would be a much more agreeable solution, though, if you can support it.</dd>
 
       <dt>Are you willing to learn a programming language?</dt>
@@ -29,8 +29,7 @@ const QuestionsPage = (props) => (
 
       <dt>Do you have Unity experience?</dt>
       <dd>Very little direct experience.  I've been keeping tabs on it and ran through a few of the tutorials, but I have yet to build anything in it.  Most of my experience has been related to creating source-level mods for Unity-powered games using the <Jump href="https://github.com/pardeike/Harmony">Harmony library</Jump>, which isn't the best experience, but it's something!</dd>
-      <dd>I suppose I haven't started with it yet because I'm waiting for <Jump href="https://docs.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-7">C# 7</Jump> support, which is slated to come in <Jump href="https://blogs.unity3d.com/2018/09/13/unity-2018-3-beta-get-early-access-now/">Unity 2018.3</Jump>.  After my time with Scala, working in C# 6 and lower just seems like a chore by comparison.</dd>
-      <dd>But, if you need a Unity dev, I can likely manage it.  I will just be a little sad without my pattern-matching and out-variables is all  ...for a few months anyways.  They do have the open beta out now; surely it won't be too much longer!</dd>
+      <dd>If you need a Unity dev, I can likely manage it.  Just be patient as I settle in and learn the ropes.</dd>
     </dl>
     <style jsx>{`dl dd { margin-bottom: ${styleVars["size"]["element-margin"]}; }`}</style>
   </Page>
