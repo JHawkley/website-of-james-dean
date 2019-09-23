@@ -154,7 +154,11 @@ class ScrollRestoringApp extends App {
   }
 
   onAfterMajorChange = () => {
-    if (!scrollRestoreSupported) return;
+    if (!scrollRestoreSupported) {
+      this.restoreScrollPosition();
+      return;
+    }
+
     updateHistoryState(this.optionsForEntryId);
     this.persistScrollRestoreData();
   }
