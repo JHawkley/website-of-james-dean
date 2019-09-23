@@ -2,7 +2,7 @@
   "misc": {
     "z-index-base": 10000,
     "img-overlay": "'/static/images/overlay.png'",
-    "bg-image": "'/static/images/placeholder_bg.jpg'"
+    "bg-image": "'/static/images/fox_background.jpg'"
   },
   "duration": {
     "transition": "0.2s",
