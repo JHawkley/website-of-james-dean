@@ -1,5 +1,3 @@
-import { Fragment } from "react";
-
 import Page from "components/Page";
 import Jump from "components/Jump";
 
