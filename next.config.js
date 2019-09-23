@@ -53,8 +53,7 @@ module.exports = {
         // Without this, IE11 cannot be supported.
         test: /\.(mjs|es\.js)$/i,
         include: /node_modules/,
-        use: [prefabs.use.transformForESM],
-        type: 'javascript/auto'
+        use: [prefabs.use.transformForESM]
       },
 
       ...config.module.rules,
@@ -63,17 +62,15 @@ module.exports = {
         test: /\.(css|scss|sass)$/i,
         rules: [{
           test: /\.sass|scss$/i,
-          use: {
-            loader: 'sass-loader',
-            options: {
-              importer: require('node-sass-json-importer')(),
-              // These options are from node-sass: https://github.com/sass/node-sass
-              outputStyle: 'compressed',
-              includePaths: ['styles', 'node_modules']
-                .map((d) => ospath.join(dir, d))
-                .map((g) => glob.sync(g))
-                .reduce((a, c) => a.concat(c), [])
-            }
+          loader: 'sass-loader',
+          options: {
+            importer: require('node-sass-json-importer')(),
+            // These options are from node-sass: https://github.com/sass/node-sass
+            outputStyle: 'compressed',
+            includePaths: ['styles', 'node_modules']
+              .map((d) => ospath.join(dir, d))
+              .map((g) => glob.sync(g))
+              .reduce((a, c) => a.concat(c), [])
           }
         }],
 
@@ -96,7 +93,7 @@ module.exports = {
 
       {
         test: new RegExp(`\\.(${soundMediaLoader.supportedTypes.join('|')})$`, 'i'),
-        loader: [prefabs.use.transformForESM, 'sound-media-loader']
+        use: [prefabs.use.transformForESM, 'sound-media-loader']
       },
 
       {
