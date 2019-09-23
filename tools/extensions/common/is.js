@@ -16,7 +16,7 @@ function _boolean() { "use strict"; return typeof this === "boolean"; }
 
 function _defined() { "use strict"; return this != null; }
 
-function _undefined() { "use strict"; return typeof this === "undefined"; }
+function _undefined() { "use strict"; return this === void 0; }
 
 function _null() { "use strict"; return this === null; }
 
