@@ -4,7 +4,7 @@ import { Fragment } from "react";
 import App, { createUrl } from "next/app";
 import Head from "next/head";
 import { getUrl } from "next-server/dist/lib/utils";
-import { css } from "styled-jsx/css";
+import css from "styled-jsx/css";
 
 import ImagePreloadError from "components/ImageMedia/ImagePreloadError";
 import BadArgumentError from "lib/BadArgumentError";

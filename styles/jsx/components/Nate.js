@@ -1,4 +1,4 @@
-import { css } from "styled-jsx/css";
+import css from "styled-jsx/css";
 import { numeric } from "tools/css";
 import styleVars from "styles/vars.json";
 

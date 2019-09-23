@@ -1,4 +1,4 @@
-import { css } from "styled-jsx/css";
+import css from "styled-jsx/css";
 
 import ImgNate from "static/images/nate-game/nate_sprite.png";
 import ImgBullet from "static/images/nate-game/bullet_sprite.png";

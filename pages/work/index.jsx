@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import Page from "components/Page";
 import Jump from "components/Jump";
-import { css } from "styled-jsx/css";
+import css from "styled-jsx/css";
 import styleVars from "styles/vars.json";
 
 import ImgHeader from "static/images/pic_work.png";

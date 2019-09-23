@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 import PropTypes from "prop-types";
-import { css } from "styled-jsx/css";
+import css from "styled-jsx/css";
 import { numeric } from "tools/css";
 import Page from "components/Page";
 import styleVars from "styles/vars.json";

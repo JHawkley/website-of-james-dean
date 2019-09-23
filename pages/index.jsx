@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import { Fragment } from "react";
-import { css } from "styled-jsx/css";
+import css from "styled-jsx/css";
 import { memoize } from "tools/functions";
 import { color } from "tools/css";
 import { faCode } from "@fortawesome/free-solid-svg-icons/faCode";

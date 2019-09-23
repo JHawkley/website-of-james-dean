@@ -1,4 +1,4 @@
-import { css } from "styled-jsx/css";
+import css from "styled-jsx/css";
 
 const errorBlockQuote = css.resolve`
   blockquote { border-left-color: red; font-style: normal; }

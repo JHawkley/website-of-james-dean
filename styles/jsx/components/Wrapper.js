@@ -1,4 +1,4 @@
-import { css } from "styled-jsx/css";
+import css from "styled-jsx/css";
 import resolvedEmpty from "styles/jsx/lib/resolvedEmpty";
 
 const resolveScrollCss = (scroll) => {

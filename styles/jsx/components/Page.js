@@ -1,4 +1,4 @@
-import { css } from "styled-jsx/css";
+import css from "styled-jsx/css";
 import { memoize } from "tools/functions";
 import { timespan } from "tools/css";
 import resolvedEmpty from "styles/jsx/lib/resolvedEmpty";
