@@ -13,6 +13,7 @@ import ToLithPhoto from "pages/work/lithphoto?jump";
 import ToSolar from "pages/work/solar?jump";
 import ToThreeDee from "pages/work/threedee?jump";
 import ToNate from "pages/work/nate?jump";
+import ToWebsite from "pages/work/website?jump";
 import ToMiscProgramming from "pages/work/miscprogramming?jump";
 
 const WorkItem = ({title, desc, jump: ToPage}) => (
@@ -45,6 +46,7 @@ const WorkPage = (props) => (
     <p>I also enjoy taking on <strong>personal projects</strong>, usually to help me learn new things and expand my horizons.  A selection of my more worth-while projects, largely centered around game development, appear below:</p>
 
     <WorkItem title="Nate Game" desc="Abducted Dog Adventure" jump={ToNate} />
+    <WorkItem title="This Website" desc="You Are Here" jump={ToWebsite} />
     <WorkItem title="Misc Programming" desc="My Time Invested" jump={ToMiscProgramming} />
     {workItemCss.styles}
   </Page>
