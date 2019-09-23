@@ -22,7 +22,7 @@ import { src as $gallery$4 } from "static/images/nate-game/4.jpg";
 import ToWork from "pages/work/index?jump";
 import ToMiscProgramming from "pages/work/miscprogramming?jump";
 
-const isDev = process.env.NODE_ENV !== 'production';
+const isDev = process.env.NODE_ENV !== "production";
 
 const gallery = [
   { i: $gallery$1, d: "Nate jumps about in the test level.  Unfortunately, the build I have right now has shooting disabled; I believe I was reworking it at the time.  The gnarly design of the final room was intended to help work out issues with auto-tiling." },

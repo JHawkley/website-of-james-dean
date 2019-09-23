@@ -3,9 +3,9 @@ import { extensions as numEx, randomBetween } from "tools/numbers";
 import { extensions as arrEx } from "tools/array";
 import { extensions as vecEx } from "tools/vectorMath";
 import { extensions as maybe, nothing } from "tools/maybe";
-import { behaviorModes, aimings, facings, movings, jumps, tracks } from './core';
-import { randomTime, decrementTime } from './core';
-import { isTargetReachable } from './nateCommon';
+import { behaviorModes, aimings, facings, movings, jumps, tracks } from "./core";
+import { randomTime, decrementTime } from "./core";
+import { isTargetReachable } from "./nateCommon";
 import chaseBehavior from "./nateBehavior_Chase";
 import * as nc from "./nateConfig";
 

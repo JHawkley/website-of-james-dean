@@ -2,7 +2,7 @@ import { extensions as objEx, dew } from "tools/common";
 import { extensions as numEx } from "tools/numbers";
 import { extensions as vecEx } from "tools/vectorMath";
 import { behaviorModes, facings, aimings, decrementTime, subList, tracks } from "./core";
-import { isTargetReachable } from './nateCommon';
+import { isTargetReachable } from "./nateCommon";
 import * as actions from "./nateActions_Debug";
 import * as nc from "./nateConfig";
 

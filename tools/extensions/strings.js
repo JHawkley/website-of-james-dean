@@ -9,7 +9,7 @@ import BadBindingError from "lib/BadBindingError";
  * @returns {boolean} Whether this string is `null`, `undefined`, or empty-string.
  */
 export function isNullishOrEmpty() {
-  'use strict'; // Allows binding to `null`.
+  "use strict"; // Allows binding to `null`.
   if (this == null) return true;
   if (this === "") return true;
   if (this::is.string()) return false;
@@ -24,7 +24,7 @@ export function isNullishOrEmpty() {
  * @returns {?string}
  */
 export function orNull() {
-  'use strict'; // Allows binding to `null`.
+  "use strict"; // Allows binding to `null`.
   if (this == null) return null;
   if (this === "") return null;
   if (this::is.string()) return this;

@@ -463,7 +463,7 @@ const supported = dew(() => {
   let supported = undefined;
 
   const detectAnimation = () => {
-    const elem = global.document.createElement('div');
+    const elem = global.document.createElement("div");
     const prefixes = "animationName WebkitAnimationName MozAnimationName OAnimationName msAnimationName KhtmlAnimationName".split(" ");
     
     for(let i = 0; i < prefixes.length; i++)
@@ -474,7 +474,7 @@ const supported = dew(() => {
   }
 
   const detectTransform = () => {
-    const elem = global.document.createElement('div');
+    const elem = global.document.createElement("div");
     const prefixes = "transform WebkitTransform MozTransform OTransform msTransform".split(" ");
 
     for(let i = 0; i < prefixes.length; i++)

@@ -1,7 +1,7 @@
 import BadArgumentError from "lib/BadArgumentError";
 import { dew } from "tools/common";
 
-const isIterable = (obj) => typeof obj[Symbol.iterator] === 'function';
+const isIterable = (obj) => typeof obj[Symbol.iterator] === "function";
 
 export const CoercionMethods = {
   arrayLike(obj) {

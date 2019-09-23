@@ -13,7 +13,7 @@ export Composition from "tools/common/Composition";
 /**
  * The global object.
  */
-export const global = Function('return this')();
+export const global = Function("return this")();
 
 /**
  * An empty, immutable object.  Useful as `options` defaults.

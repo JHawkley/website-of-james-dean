@@ -1,9 +1,9 @@
 /* global module */
 
-const path = require('path');
-const glob = require('glob');
-const startsWith = require('lodash/startsWith');
-const fromPairs = require('lodash/fromPairs');
+const path = require("path");
+const glob = require("glob");
+const startsWith = require("lodash/startsWith");
+const fromPairs = require("lodash/fromPairs");
 const loaderUtils = require("loader-utils");
 
 const isNotFalse = (v) => v !== false;
@@ -34,14 +34,14 @@ function routingLoader() {
     throw new Error([
       "could not derive a resource path",
       `resource=\`${String(resource)}\``
-    ].join('; '));
+    ].join("; "));
   }
 
   if (!Array.isArray(extensions)) {
     throw new Error([
       "the `extensions` option was not an array",
       `extensions=\`${String(extensions)}\``
-    ].join('; '));
+    ].join("; "));
   }
 
   const extExp = new RegExp(`^\\.(${extensions.join("|")})$`, "i");
@@ -51,7 +51,7 @@ function routingLoader() {
     throw new Error([
       "the module's resource path did not have the expected extension for a page",
       `resource=\`${String(resource)}\``
-    ].join('; '));
+    ].join("; "));
   }
 
   const routeObj = toRouteObject(pagesDir, resource);
@@ -69,7 +69,7 @@ function toRouteObject(pagesDir, resource) {
       "the module's resource path did not appear to be in the `pages` directory",
       `resource=\`${String(resource)}\``,
       `pagesDir=\`${String(pagesDir)}\``
-    ].join('; '));
+    ].join("; "));
   }
 
   if (startsWith(name, "_")) {
@@ -77,14 +77,14 @@ function toRouteObject(pagesDir, resource) {
       "the module's name starts with an underscore",
       "these pages are explicitly excluded from routing",
       `resource=\`${String(resource)}\``
-    ].join('; '));
+    ].join("; "));
   }
 
   const maybeDir = dir || false;
-  const maybeName = name !== 'index' ? name : false;
-  const route = ['', maybeDir, maybeName].filter(isNotFalse).join('/') || '/';
-  const exportPath = ['', maybeDir, `${name}.html`].filter(isNotFalse).join('/');
-  const asPath = name === 'index' ? route : exportPath;
+  const maybeName = name !== "index" ? name : false;
+  const route = ["", maybeDir, maybeName].filter(isNotFalse).join("/") || "/";
+  const exportPath = ["", maybeDir, `${name}.html`].filter(isNotFalse).join("/");
+  const asPath = name === "index" ? route : exportPath;
 
   return { route, exportPath, asPath };
 }
