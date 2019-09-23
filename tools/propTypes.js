@@ -202,7 +202,7 @@ export default Object.assign(
     exactly(value) {
       return makeValidator(
         (propValue) => Object.is(value, propValue) ? null : `must be the exact value: \`${value}\``,
-        value::is.undefined() || value::is.null()
+        !value::is.defined()
       )
     },
     /**
