@@ -10,7 +10,7 @@ const IntroPage = (props) => (
     <span className="image right">
       <ImgJamesPhoto alt="A Photo of James Dean" fluid />
     </span>
-    <p>Welcome!  I'm James!  I'm a software developer from Texas, USA.</p>
+    <p>Welcome!  I'm James!  I'm a software developer in the greater Seattle area of Washington, USA.  I'm originally from Texas.</p>
     <p>I have been working professionally since 2002.  In that time, I've put together and maintained three big applications for my former employer.  You can read all about it in the <ToWork>work section of the site</ToWork>.</p>
     <p>My first serious programming was in C#, which I primarily used until 2010, when I decided to shift much of my focus on to JavaScript and related technologies.  I consider web services and applications to pretty much be the future of end-user software, a universal platform that spans all devices across the planet.</p>
     <p>While it probably won't realize that potential for a while longer, it will some day and in some form; I want to be a part of making it happen.</p>
