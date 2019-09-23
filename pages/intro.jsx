@@ -1,5 +1,4 @@
 import Page from "components/Page";
-import Jump from "components/Jump";
 
 import ImgJamesPhoto from "static/images/james_photo.jpg";
 
@@ -14,7 +13,7 @@ const IntroPage = (props) => (
     <p>Welcome!  I'm James!  I'm a software developer from Texas, USA.</p>
     <p>I have been working professionally since 2002.  In that time, I've put together and maintained three big applications for my former employer.  You can read all about it in the <ToWork>work section of the site</ToWork>.</p>
     <p>My first serious programming was in C#, which I primarily used until 2010, when I decided to shift much of my focus on to JavaScript and related technologies.  I consider web services and applications to pretty much be the future of end-user software, a universal platform that spans all devices across the planet.</p>
-    <p>Though, it probably won't realize that potential for a while longer.  Nevertheless, it surely will be some day and in some form and I intend to help make it happen.</p>
+    <p>While it probably won't realize that potential for a while longer, it will some day and in some form; I want to be a part of making it happen.</p>
     <p>I primarily consider myself a front-end and application developer; it's certainly where I've had most of my success.  User experiences that I design tend to be highly contextual and minimally cluttered.  If it isn't important to the user at the time, it should be given little to no screen space.  I also like to keep things clear, so one part of the UI is easily distinguishable from another part.</p>
     <p>I've also always had the dream to create games since I was in high school, which is where most of my spare time goes.  I have mostly been studying the technical aspects of game development, rather than building complete games.  The systems and algorithms that drive games fascinate me.</p>
     <p>I just have not yet gotten together with like-minded individuals who can handle the more artistic side of things and tough it out with me until the end.</p>
