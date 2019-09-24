@@ -1,6 +1,6 @@
 import React from "react";
 import NextErrorPage from "next/error";
-import { is, compareOwnProps } from "tools/common";
+import { is, dew, global, compareOwnProps } from "tools/common";
 import { memoize } from "tools/functions";
 import { extensions as errorEx } from "tools/errors";
 import PropTypes from "tools/propTypes";
@@ -13,7 +13,18 @@ const $httpError = "http-error";
 class ErrorPage extends React.PureComponent {
 
   static async getInitialProps(ctx) {
-    const { pathname: route, asPath, err } = ctx;
+    const { pathname: route, asPath: ctxAsPath, err } = ctx;
+    const asPath = dew(() => {
+      switch (true) {
+        case ctxAsPath::is.string() && ctxAsPath !== "/404.html":
+          return ctxAsPath;
+        case Boolean(global.location?.pathname):
+          return global.location.pathname;
+        default:
+          return "(unknown)";
+      }
+    });
+
     const props = { route, asPath };
 
     if (err)
@@ -42,8 +53,6 @@ class ErrorPage extends React.PureComponent {
     asPath: PropTypes.string.isRequired
   };
 
-  state = { asPath: void 0 };
-
   decomposeProps = memoize((props) => {
     const { data, route, asPath, ...pageProps } = props;
     return { ownProps: { data, route, asPath }, pageProps };
@@ -61,36 +70,21 @@ class ErrorPage extends React.PureComponent {
 
   logError = () => {
     try {
-      const { data, route } = this.props;
-      const { asPath } = this.state;
+      const { data, route, asPath } = this.props;
       const error = convertToError(data, route, asPath);
       if (!error) return;
+
       // eslint-disable-next-line no-console
       error::errorEx.foreach(e => console.error(e));
     }
     catch { void 0; }
   }
 
-  componentDidMount() {
-    const asPath = this.props.asPath ?? location?.pathname ?? null;
-    this.setState({ asPath }, this.logError);
-  }
-
   componentDidUpdate(prevProps) {
-    if (this.props === prevProps) return;
-
     const { ownProps } = this.decomposeProps(this.props);
     const { ownProps: prevOwnProps } = this.decomposeProps(prevProps);
 
-    if (!compareOwnProps(prevOwnProps, ownProps)) {
-      const { asPath: prevAsPath } = this.state;
-      const asPath = ownProps.asPath ?? prevAsPath;
-
-      if (Object.is(asPath, prevAsPath))
-        this.logError();
-      else
-        this.setState({ asPath }, this.logError);
-    }
+    if (!compareOwnProps(prevOwnProps, ownProps)) this.logError();
   }
 
   renderErrors(formattedError, route, asPath, className) {
@@ -137,25 +131,40 @@ class ErrorPage extends React.PureComponent {
     );
   }
 
-  renderPage({data, route}, {asPath}, pageProps) {
-    switch (true) {
-      case asPath::is.undefined():
-        // Awaiting a proper `asPath` before rendering.
-        return null;
-      case !data::is.defined():
-        return this.renderNoError(pageProps);
-      case Object.is(data.type, $appError):
-        return this.renderAppError(data.error::errorEx.asError(), route, asPath, pageProps);
-      case Object.is(data.type, $httpError):
-        return this.renderHttpError(data.statusCode, asPath, pageProps);
-      default:
-        return this.renderAppError(data::errorEx.asError(), route, asPath, pageProps);
-    }
+  renderFailure(e, pageProps) {
+    // eslint-disable-next-line no-console
+    console.error(e);
+
+    return (
+      <Page {...pageProps} navLeft="none">
+        <h2 className="major">Error in Error</h2>
+        <p>An error occurred while trying to render an error; this should not happen.</p>
+        <p>In order to prevent an infinite error loop, this simple page is being rendered instead.  Many apologies for this issue.  The error that was thrown during the render has been logged to the browser console.</p>
+      </Page>
+    );
   }
 
   render() {
-    const { ownProps, pageProps } = this.decomposeProps(this.props);
-    return this.renderPage(ownProps, this.state, pageProps);
+    const {
+      ownProps: { data, route, asPath },
+      pageProps
+    } = this.decomposeProps(this.props);
+
+    try {
+      switch (true) {
+        case !data::is.defined():
+          return this.renderNoError(pageProps);
+        case Object.is(data.type, $appError):
+          return this.renderAppError(data.error::errorEx.asError(), route, asPath, pageProps);
+        case Object.is(data.type, $httpError):
+          return this.renderHttpError(data.statusCode, asPath, pageProps);
+        default:
+          return this.renderAppError(data::errorEx.asError(), route, asPath, pageProps);
+      }
+    }
+    catch (e) {
+      return this.renderFailure(e, pageProps);
+    }
   }
 
 }
