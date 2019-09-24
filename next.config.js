@@ -3,6 +3,7 @@
 const ospath = require("path");
 const glob = require("glob");
 const mm = require("micromatch");
+const nextResolve = require("next/dist/compiled/resolve");
 const jumpLoader = require("./webpack/jump-loader");
 const imageMediaLoader = require("./webpack/image-media-loader");
 const soundMediaLoader = require("./webpack/sound-media-loader");
@@ -37,10 +38,14 @@ module.exports = {
     // Remove `@babel/runtime-corejs3` from externals.
     config.externals = (config.externals || []).map((ext) => {
       if (typeof ext !== "function") return ext;
+      if (!isServer) return ext;
+
       return (context, request, callback) => {
-        if (/@babel(?:\\|\/)runtime-corejs3(?:\\|\/)/.test(request))
-          return callback();
-        return ext(context, request, callback);
+        nextResolve(request, { basedir: dir, preserveSymlinks: true }, (err, res) => {
+          if (err) return callback();
+          if (mm.isMatch(res, "**/@babel/runtime-corejs3/**")) return callback();
+          return ext(context, request, callback);
+        });
       };
     });
 
