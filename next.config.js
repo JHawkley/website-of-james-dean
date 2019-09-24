@@ -14,6 +14,7 @@ const ShakePlugin = require("webpack-common-shake").Plugin;
 const jsConfig = require("./jsconfig.json");
 
 const isProduction = process.env.NODE_ENV === "production";
+const debugProduction = false;
 
 module.exports = {
   webpack(config, { dir, isServer, totalPages }) {
@@ -161,6 +162,16 @@ module.exports = {
       for (const minimizer of config.optimization.minimizer)
         if (minimizer instanceof TerserPlugin)
           minimizer.options.parallel = false;
+    }
+
+    if (isProduction && debugProduction) {
+      config.optimization = Object.assign(config.optimization || {}, {
+        minimize: false,
+        namedModules: true,
+        namedChunks: true,
+        moduleIds: "named",
+        chunkIds: "named"
+      });
     }
 
     if (isProduction && !isServer) {
