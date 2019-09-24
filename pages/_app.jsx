@@ -3,7 +3,7 @@ import { hashScroll } from "patch/client-router";
 import { Fragment } from "react";
 import App, { createUrl } from "next/app";
 import Head from "next/head";
-import { getUrl } from "next-server/dist/lib/utils";
+import { getUrl } from "next/dist/next-server/lib/utils";
 import css from "styled-jsx/css";
 
 import ImagePreloadError from "components/ImageMedia/ImagePreloadError";

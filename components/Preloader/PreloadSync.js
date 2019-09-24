@@ -1,4 +1,4 @@
-import mitt from "next-server/dist/lib/mitt";
+import mitt from "next/dist/next-server/lib/mitt";
 import { is } from "tools/common";
 import { Stream, debounce } from "tools/async";
 import { extensions as asyncIterEx } from "tools/asyncIterables";
