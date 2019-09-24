@@ -25,6 +25,7 @@
   "rules": {
     "strict": 0,
     "no-console": "warn",
+    "no-unused-vars": ["error", { "ignoreRestSiblings": true }],
     "react/react-in-jsx-scope": 0,
     "react/no-unescaped-entities": 0
   },
