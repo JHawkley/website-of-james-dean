@@ -2,6 +2,7 @@
 
 const ospath = require("path");
 const glob = require("glob");
+const crypto = require("crypto");
 const mm = require("micromatch");
 const nextResolve = require("next/dist/compiled/resolve");
 const jumpLoader = require("./webpack/jump-loader");
@@ -207,35 +208,20 @@ module.exports = {
         return { dir: nameData[1], name: nameData[2], baseName };
       };
 
-      const dedupeNameData = (nameDataArr) => {
-        const namesSet = new Set();
-
-        for (const data of nameDataArr) {
-          const { name, baseName } = data;
-
-          if (name === baseName)
-            namesSet.add(name);
-          else if (namesSet.has(baseName))
-            namesSet.add(name);
-          else {
-            const dupe = nameDataArr.some(d => data !== d && baseName === d.baseName);
-            namesSet.add(dupe ? name : baseName);
-          }
-        }
-
-        return Array.from(namesSet);
-      };
-
       const minShared = 2;
       const minCommon = Math.max(minShared + 1, Math.round(totalPages * 0.5));
 
       const pageShared = {
         name: (module, chunks) => {
-          const pageNames = dedupeNameData(getPageEntries(chunks.map(getNameData)));
+          const pageNames = getPageEntries(chunks.map(getNameData));
           if (pageNames.length >= minShared * 2) return "page-shared";
-          return `page-shared~${pageNames.sort().join("+")}`;
+
+          const hasher = crypto.createHash("sha1");
+          pageNames.forEach(nd => hasher.update(nd.name));
+          const hash = hasher.digest("base64").replace(/\//g, "");
+          return `page-shared-${hash}`;
         },
-        test: (module, chunks) => getPageEntries(chunks.map(getNameData)).length >= 2,
+        test: (module, chunks) => getPageEntries(chunks.map(getNameData)).length > 1,
         chunks: "all",
         minChunks: minShared,
         minSize: 2000,
@@ -258,10 +244,10 @@ module.exports = {
         priority: 200
       };
 
-      // Place React into commons.
+      // Place React and related into commons.
       const react = {
         name: "commons",
-        test: matchModule("**/node_modules/(react|react-dom)/**"),
+        test: matchModule("**/node_modules/(react|react-dom|scheduler|prop-types)/**"),
         enforce: true,
         chunks: "all",
         priority: 1000
