@@ -88,11 +88,13 @@
     "webpack": "4.x"
   },
   "scripts": {
-    "dev": "next --hostname 0.0.0.0",
-    "build": "next build",
+    "build:clean": "rm -rf .next",
+    "build": "yarn run build:clean && next build",
     "start": "next start --hostname 0.0.0.0",
-    "export": "next build && next export",
-    "export-only": "next export",
-    "serve": "http-server ./out -p 3000"
+    "export:clean": "rm -rf out",
+    "export:only": "yarn run export:clean && next export",
+    "export": "yarn run build && yarn run export:only",
+    "serve": "http-server ./out -p 3000",
+    "dev": "yarn run build:clean && next --hostname 0.0.0.0"
   }
 }
