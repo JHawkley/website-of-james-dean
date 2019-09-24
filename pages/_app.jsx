@@ -284,6 +284,7 @@ class ScrollRestoringApp extends App {
       <Fragment>
         <Background className={bgClassName} />
         <LoadingSpinner
+          delay={false}
           fadeTime={throbberCss.fadeTime}
           size="3x"
           show={loading}
