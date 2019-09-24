@@ -1,6 +1,6 @@
 import React from "react";
 import NextErrorPage from "next/error";
-import { is, dew, global, compareOwnProps } from "tools/common";
+import { is, global } from "tools/common";
 import { memoize } from "tools/functions";
 import { extensions as errorEx } from "tools/errors";
 import PropTypes from "tools/propTypes";
@@ -13,18 +13,7 @@ const $httpError = "http-error";
 class ErrorPage extends React.PureComponent {
 
   static async getInitialProps(ctx) {
-    const { pathname: route, asPath: ctxAsPath, err } = ctx;
-    const asPath = dew(() => {
-      switch (true) {
-        case ctxAsPath::is.string() && ctxAsPath !== "/404.html":
-          return ctxAsPath;
-        case Boolean(global.location?.pathname):
-          return global.location.pathname;
-        default:
-          return "(unknown)";
-      }
-    });
-
+    const { pathname: route, asPath, err } = ctx;
     const props = { route, asPath };
 
     if (err)
@@ -53,10 +42,10 @@ class ErrorPage extends React.PureComponent {
     asPath: PropTypes.string.isRequired
   };
 
-  decomposeProps = memoize((props) => {
-    const { data, route, asPath, ...pageProps } = props;
-    return { ownProps: { data, route, asPath }, pageProps };
-  });
+  constructor(props) {
+    super(props);
+    this.state = { pathName: getPathName(props.asPath) };
+  }
 
   formatError = memoize((error) => {
     return error::errorEx.map((error) => {
@@ -70,8 +59,8 @@ class ErrorPage extends React.PureComponent {
 
   logError = () => {
     try {
-      const { data, route, asPath } = this.props;
-      const error = convertToError(data, route, asPath);
+      const { props: { data, route }, state: { pathName } } = this;
+      const error = convertToError(data, route, pathName);
       if (!error) return;
 
       // eslint-disable-next-line no-console
@@ -80,42 +69,54 @@ class ErrorPage extends React.PureComponent {
     catch { void 0; }
   }
 
-  componentDidUpdate(prevProps) {
-    const { ownProps } = this.decomposeProps(this.props);
-    const { ownProps: prevOwnProps } = this.decomposeProps(prevProps);
-
-    if (!compareOwnProps(prevOwnProps, ownProps)) this.logError();
+  componentDidMount() {
+    this.logError();
   }
 
-  renderErrors(formattedError, route, asPath, className) {
+  componentDidUpdate(prevProps) {
+    const { props: curProps } = this;
+    if (curProps === prevProps) return;
+
+    switch (true) {
+      case !Object.is(curProps.asPath, prevProps.asPath):
+        this.setState({ pathName: getPathName(curProps.asPath) }, this.logError);
+        break;
+      case !Object.is(curProps.data, prevProps.data):
+      case !Object.is(curProps.route, prevProps.route):
+        this.logError();
+        break;
+    }
+  }
+
+  renderErrors(formattedError, route, pathName, className) {
     return formattedError.map((errData, i) => (
       <blockquote key={i} className={className}>
         {i === 0 && <p>Current route: &#96;{route}&#96;</p>}
-        {i === 0 && <p>Current path: &#96;{asPath}&#96;</p>}
+        {i === 0 && <p>Current path: &#96;{pathName}&#96;</p>}
         <p>Error type: &#96;{errData.type}&#96;</p>
         <p>Error details: &#96;{errData.message}&#96;</p>
       </blockquote>
     ));
   }
 
-  renderAppError(error, route, asPath, pageProps) {
+  renderAppError(error, route, pathName, pageProps) {
     const formattedError = this.formatError(error);
     return (
       <Page {...pageProps} navLeft="reload">
         <h2 className="major">Application Error</h2>
         <p>The application threw an uncaught error.  Below are all the errors involved.</p>
-        {this.renderErrors(formattedError, route, asPath, errorBlockQuote.className)}
+        {this.renderErrors(formattedError, route, pathName, errorBlockQuote.className)}
         {/* TODO: Add error submission button. */}
         {errorBlockQuote.styles}
       </Page>
     );
   }
 
-  renderHttpError(statusCode, asPath, pageProps) {
+  renderHttpError(statusCode, pathName, pageProps) {
     return (
       <Page {...pageProps} navLeft="back">
         <h2 className="major">HTTP Error {statusCode}</h2>
-        <p>There is no page associated with the path <code>{asPath}</code>.</p>
+        <p>There is no page associated with the path <code>{pathName}</code>.</p>
         <p>Please press the close button in the upper-right to return to the site's index or navigate back to the page your came from.</p>
       </Page>
     );
@@ -146,20 +147,20 @@ class ErrorPage extends React.PureComponent {
 
   render() {
     const {
-      ownProps: { data, route, asPath },
-      pageProps
-    } = this.decomposeProps(this.props);
+      props: { data, route, asPath, ...pageProps },
+      state: { pathName }
+    } = this;
 
     try {
       switch (true) {
         case !data::is.defined():
           return this.renderNoError(pageProps);
         case Object.is(data.type, $appError):
-          return this.renderAppError(data.error::errorEx.asError(), route, asPath, pageProps);
+          return this.renderAppError(data.error::errorEx.asError(), route, pathName, pageProps);
         case Object.is(data.type, $httpError):
-          return this.renderHttpError(data.statusCode, asPath, pageProps);
+          return this.renderHttpError(data.statusCode, pathName, pageProps);
         default:
-          return this.renderAppError(data::errorEx.asError(), route, asPath, pageProps);
+          return this.renderAppError(data::errorEx.asError(), route, pathName, pageProps);
       }
     }
     catch (e) {
@@ -168,6 +169,20 @@ class ErrorPage extends React.PureComponent {
   }
 
 }
+
+const getPathName = (asPath) => {
+  switch (true) {
+    case !asPath::is.string():
+    case asPath === "/404.html":
+    case asPath === "(unknown)":
+      if (global.location?.pathname::is.string())
+        return global.location.pathname;
+      else
+        return "(unknown)";
+    default:
+      return asPath;
+  }
+};
 
 const errorType = (error) => {
   if (error::is.dict()) return "(anonymous object)";
@@ -184,20 +199,20 @@ const errorMessage = (error) => {
 
 const errorStack = (error) => (error::is.error() && error.stack) || "(no stack data)";
 
-const convertToError = (data, route, asPath) => {
+const convertToError = (data, route, pathName) => {
   switch (true) {
     case !data:
       return void 0;
     case Boolean(data.error):
       return data.error::errorEx.asError();
-    case data.type === $httpError && !asPath:
+    case data.type === $httpError && !pathName:
       return new Error([
         `HTTP error code \`${data.statusCode}\``,
         `route provided to error-page is \`${route}\``
       ].join("; "));
     case data.type === $httpError:
       return new Error([
-        `HTTP error code \`${data.statusCode}\` when accessing path \`${asPath}\``,
+        `HTTP error code \`${data.statusCode}\` when accessing path \`${pathName}\``,
         `route provided to error-page is \`${route}\``
       ].join("; "));
     default:
