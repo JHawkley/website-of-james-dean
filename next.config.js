@@ -10,7 +10,6 @@ const soundMediaLoader = require("./webpack/sound-media-loader");
 const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 const WebpackBarPlugin = require("webpackbar");
 const ShakePlugin = require("webpack-common-shake").Plugin;
-const WebpackDeepScopeAnalysisPlugin = require("webpack-deep-scope-plugin").default;
 
 const jsConfig = require("./jsconfig.json");
 
@@ -117,8 +116,6 @@ module.exports = {
     /* == Plugins == */
     config.plugins = [
       isProduction && !isServer && new ShakePlugin(),
-
-      isProduction && !isServer && new WebpackDeepScopeAnalysisPlugin(),
 
       ...config.plugins,
 
