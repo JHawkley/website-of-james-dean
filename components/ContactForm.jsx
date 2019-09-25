@@ -3,9 +3,8 @@ import ModalPopup from "./ModalPopup";
 import { extensions as arrEx } from "tools/array";
 import SpreeForm from "components/SpreeForm";
 
+import { formTarget as $target } from "tools/formSpree";
 import { asPath as $contacted } from "pages/contacted?jump";
-
-const $target = "NEQ2XkoymrJD+/q0L3rY6rbA0dT5lkbtghFe13NpRHSGd2plbsTfE0caNQA=";
 
 const emailValidator = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/g;
 
