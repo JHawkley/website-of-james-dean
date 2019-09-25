@@ -1,6 +1,6 @@
 import React from "react";
 import NextErrorPage from "next/error";
-import { is, global } from "tools/common";
+import { is } from "tools/common";
 import { memoize } from "tools/functions";
 import { extensions as errorEx } from "tools/errors";
 import PropTypes from "tools/propTypes";
@@ -186,13 +186,12 @@ class ErrorPage extends React.PureComponent {
 
 const getPathName = (asPath) => {
   switch (true) {
+    case !process.browser:
+      return "(unknown)";
     case !asPath::is.string():
     case asPath === "/404.html":
     case asPath === "(unknown)":
-      if (global.location?.pathname::is.string())
-        return global.location.pathname;
-      else
-        return "(unknown)";
+      return location.pathname || "(unknown)";
     default:
       return asPath;
   }
