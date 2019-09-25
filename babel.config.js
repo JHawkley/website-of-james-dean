@@ -21,6 +21,7 @@ const presetNextBabel = [
     },
     "transform-runtime": {
       corejs: { version: 3, proposals: true },
+      useESModules: true,
       absoluteRuntime
     }
   }

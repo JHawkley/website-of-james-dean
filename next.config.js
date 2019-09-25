@@ -216,6 +216,7 @@ function getPrefabs() {
       "@babel/plugin-transform-runtime",
       {
         corejs: { version: 3, proposals: true },
+        useESModules: true,
         helpers: true,
         regenerator: true,
         absoluteRuntime
@@ -237,6 +238,7 @@ function getPrefabs() {
       loader: "babel-loader",
       options: {
         configFile: false,
+        sourceType: "unambiguous",
         plugins: [plugins.transformRuntime],
         presets: [presets.env]
       }
