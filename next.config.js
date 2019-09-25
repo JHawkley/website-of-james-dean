@@ -2,7 +2,6 @@
 
 const ospath = require("path");
 const glob = require("glob");
-const crypto = require("crypto");
 const mm = require("micromatch");
 const nextResolve = require("next/dist/compiled/resolve");
 const jumpLoader = require("./webpack/jump-loader");
@@ -18,7 +17,7 @@ const isProduction = process.env.NODE_ENV === "production";
 const debugProduction = false;
 
 module.exports = {
-  webpack(config, { dir, isServer, totalPages }) {
+  webpack(config, { dir, isServer }) {
 
     /* == Resolver Settings == */
     // Map `jsconfig.json` aliases.
@@ -175,96 +174,6 @@ module.exports = {
       });
     }
 
-    if (isProduction && !isServer) {
-      // Customize chunk splitting.
-      const splitChunks = config.optimization.splitChunks;
-
-      const matcherNodeModules = matchString("**/node_modules/**");
-      const reNameData = /(?:\\|\/)(pages|runtime)(?:\\|\/)(.*)\.js/;
-
-      const isAppEntry = (nameData) => {
-        if (!nameData) return false;
-        if (nameData.dir !== "pages") return true;
-        if (nameData.name === "_app") return true;
-        return false;
-      };
-
-      const isPageEntry = (nameData) =>
-        Boolean(nameData && !isAppEntry(nameData));
-
-      const getPageEntries = (nameData) =>
-        nameData.filter(isPageEntry);
-
-      const isModuleVendor = ({context}) =>
-        matcherNodeModules(context);
-
-      const getNameData = ({name}) => {
-        if (!name) return null;
-
-        const nameData = reNameData.exec(name);
-        if (!nameData) return null;
-
-        const baseName = ospath.basename(nameData[2]);
-        return { dir: nameData[1], name: nameData[2], baseName };
-      };
-
-      const minShared = 2;
-      const minCommon = Math.max(minShared + 1, Math.round(totalPages * 0.5));
-
-      const pageShared = {
-        name: (module, chunks) => {
-          const pageNames = getPageEntries(chunks.map(getNameData));
-          if (pageNames.length >= minShared * 2) return "page-shared";
-
-          const hasher = crypto.createHash("sha1");
-          pageNames.forEach(nd => hasher.update(nd.name));
-          const hash = hasher.digest("base64").replace(/\//g, "");
-          return `page-shared-${hash}`;
-        },
-        test: (module, chunks) => getPageEntries(chunks.map(getNameData)).length > 1,
-        chunks: "all",
-        minChunks: minShared,
-        minSize: 2000,
-        priority: 0
-      };
-
-      const appShared = {
-        name: "app-shared",
-        test: (module, chunks) => chunks.map(getNameData).some(isAppEntry),
-        chunks: "all",
-        minChunks: minShared,
-        priority: 100
-      };
-
-      const commons = {
-        name: "commons",
-        test: isModuleVendor,
-        chunks: "all",
-        minChunks: minCommon,
-        priority: 200
-      };
-
-      // Place React and related into commons.
-      const react = {
-        name: "commons",
-        test: matchModule("**/node_modules/(react|react-dom|scheduler|prop-types)/**"),
-        enforce: true,
-        chunks: "all",
-        priority: 1000
-      };
-
-      const cacheGroups = {
-        default: false,
-        vendors: false,
-        appShared, pageShared,
-        commons, react
-      };
-
-      splitChunks.maxInitialRequests = Infinity;
-      splitChunks.maxAsyncRequests = Infinity;
-      splitChunks.cacheGroups = cacheGroups;
-    }
-
     return config;
   },
 
@@ -273,7 +182,11 @@ module.exports = {
   },
 
   exportTrailingSlash: true,
-  pageExtensions: ["jsx", "js"]
+  pageExtensions: ["jsx", "js"],
+
+  experimental: {
+    granularChunks: true
+  }
 };
 
 // Makes matchers for basic strings.
