@@ -1,5 +1,7 @@
-* Add more accessible `alt` descriptions for images.
 * Go through and refactor types in documentation.
   Make sure they follow these guidelines: http://usejsdoc.org/tags-type.html
 * Try and kill off prop-types.
   It seems some `node_modules` are still requiring it.
+* There are still some Babel helpers that are inlined in the code
+  of a few node_modules.  These could possibly be transformed into
+  imports.
