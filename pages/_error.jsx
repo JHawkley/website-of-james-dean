@@ -95,10 +95,8 @@ class ErrorPage extends React.PureComponent {
   renderErrors(formattedError, route, pathName, className) {
     return formattedError.map((errData, i) => (
       <blockquote key={i} className={className}>
-        {i === 0 && <p>Current route: &#96;{route}&#96;</p>}
-        {i === 0 && <p>Current path: &#96;{pathName}&#96;</p>}
-        <p>Error type: &#96;{errData.type}&#96;</p>
-        <p>Error details: &#96;{errData.message}&#96;</p>
+        Error type: {errData.type}<br />
+        Error message: {errData.message}
       </blockquote>
     ));
   }
