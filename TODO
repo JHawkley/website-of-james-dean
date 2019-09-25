@@ -3,4 +3,3 @@
   Make sure they follow these guidelines: http://usejsdoc.org/tags-type.html
 * Try and kill off prop-types.
   It seems some `node_modules` are still requiring it.
-* Add an error submission button to `_error`.
