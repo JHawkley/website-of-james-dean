@@ -40,6 +40,7 @@ class NatePage extends React.PureComponent {
     if (isDev) {
       let error = nateWidgetError;
       while (error != null) {
+        // eslint-disable-next-line no-console
         console.error(error);
         error = error.innerError;
       }
