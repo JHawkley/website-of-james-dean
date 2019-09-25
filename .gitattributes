@@ -1,0 +1,2 @@
+# Leave bash scripts in LF format.
+*.sh text eol=lf

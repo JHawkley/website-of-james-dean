@@ -88,12 +88,14 @@
   },
   "scripts": {
     "build:clean": "rm -rf .next",
-    "build": "yarn run build:clean && next build",
+    "build:only": "next build",
+    "build": "yarn run build:clean && yarn run build:only",
     "start": "next start --hostname 0.0.0.0",
-    "export:clean": "rm -rf out",
-    "export:only": "yarn run export:clean && next export",
-    "export": "yarn run build && yarn run export:only",
-    "serve": "http-server ./out -p 3000",
+    "export:clean": "rm -rf gh-pages",
+    "export:only": "next export -o gh-pages",
+    "export": "yarn run build && yarn run export:clean && yarn run export:only",
+    "serve": "http-server ./gh-pages -p 3000",
+    "deploy": "./gh-pages-deploy.sh",
     "dev": "yarn run build:clean && next --hostname 0.0.0.0"
   }
 }
