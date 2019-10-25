@@ -1,5 +1,5 @@
 # Website of James Dean
-A website for my own personal use.
+A website for my own personal use.  It is presently hosted [here, on Github Pages](https://jamesdean.me/).
 
 This site is based on the [Dimension site template](https://github.com/codebushi/nextjs-starter-dimension), designed by [HTML5 UP](https://html5up.net/dimension). Check out https://codebushi.com/nextjs-website-starters/ for more Next.js starters and templates.
 
