@@ -69,7 +69,7 @@ module.exports = {
           test: /\.sass|scss$/i,
           loader: "sass-loader",
           options: {
-            importer: require("node-sass-json-importer")(),
+            importer: require("sass-json-importer")(),
             // These options are from node-sass: https://github.com/sass/node-sass
             outputStyle: "compressed",
             includePaths: ["styles", "node_modules"]
@@ -158,7 +158,7 @@ module.exports = {
     if (isProduction) {
       // Disable the `parallel` options for the Terser plugin.
       // This option seems to have a lot of instability associated with it.
-      const { TerserPlugin } = require("next/dist/build/webpack/plugins/terser-webpack-plugin/src/index");
+      const TerserPlugin = require("terser-webpack-plugin");
       for (const minimizer of config.optimization.minimizer)
         if (minimizer instanceof TerserPlugin)
           minimizer.options.parallel = false;
