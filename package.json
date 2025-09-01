@@ -97,5 +97,6 @@
     "serve": "http-server ./gh-pages -p 3000",
     "deploy": "./gh-pages-deploy.sh",
     "dev": "yarn run build:clean && next --hostname 0.0.0.0"
-  }
+  },
+  "packageManager": "yarn@4.9.1"
 }
