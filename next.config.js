@@ -65,17 +65,27 @@ module.exports = {
 
       cssRule("normal-css", {
         test: /\.(css|scss|sass)$/i,
-        rules: [{
+        rules: [
+          {
+            test: /\.sass|scss$/i,
+            loader: "sass-loader",
+            options: {
+              // These options are from node-sass: https://github.com/sass/node-sass
+              outputStyle: "compressed",
+              includePaths: ["styles", "node_modules"]
+                .map((d) => ospath.join(dir, d))
+                .map((g) => glob.sync(g))
+                .reduce((a, c) => a.concat(c), [])
+          }
+        },
+        {
           test: /\.sass|scss$/i,
-          loader: "sass-loader",
+          loader: "@epegzz/sass-vars-loader",
           options: {
-            importer: require("sass-json-importer")(),
-            // These options are from node-sass: https://github.com/sass/node-sass
-            outputStyle: "compressed",
-            includePaths: ["styles", "node_modules"]
-              .map((d) => ospath.join(dir, d))
-              .map((g) => glob.sync(g))
-              .reduce((a, c) => a.concat(c), [])
+            syntax: "scss",
+            files: [
+              ospath.resolve(dir, 'styles/vars.json')
+            ]
           }
         }],
 
