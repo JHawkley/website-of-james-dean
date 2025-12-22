@@ -392,10 +392,12 @@ const throbberCss = dew(() => {
 });
 
 const updateHistoryState = (fn) => {
-  const { url = getUrl(), as = url, options: oldOptions = {} } = window.history.state ?? {};
+  // NextJS adds some kind of tamper-check property called `__N` to each state
+  // object.  We need to make sure any non-standard adornments get preserved.
+  const { url = getUrl(), as = url, options: oldOptions = {}, ...rest } = window.history.state ?? {};
   const newOptions = fn(oldOptions) ?? oldOptions;
   if (newOptions === oldOptions) return;
-  window.history.replaceState({ url, as, options: newOptions }, null, as);
+  window.history.replaceState({ url, as, options: newOptions, ...rest }, null, as);
 };
 
 const getHistoryState = (key) => window.history.state?.options?.[key];
