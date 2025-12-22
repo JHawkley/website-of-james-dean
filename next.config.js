@@ -191,7 +191,7 @@ module.exports = {
     return jumpLoader.derivePathMap(dir, this.pageExtensions);
   },
 
-  exportTrailingSlash: true,
+  trailingSlash: false,
   pageExtensions: ["jsx", "js"],
 
   experimental: {

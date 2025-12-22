@@ -15,7 +15,12 @@ function routeToModule(routeObj) {
 
   return `
     import { importWrapper } from "components/Jump";
-    export default importWrapper(${route}, ${asPath});
+    // In development, use clean route (without .html extension)
+    // In production/export, use the asPath with .html extension
+    const isDevelopment = process.env.NODE_ENV !== 'production';
+    const finalAsPath = isDevelopment ? ${route} : ${asPath};
+    const JumpComponent = importWrapper(${route}, finalAsPath);
+    export default JumpComponent;
     export const route = ${route};
     export const asPath = ${asPath};
   `;

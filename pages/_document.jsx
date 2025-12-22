@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import ReactDOMServer from "react-dom/server";
 import flushStyles from "styled-jsx/server";
-import Document, { Head, Main, NextScript } from "next/document";
+import Document, { Html, Head, Main, NextScript } from "next/document";
 import siteStyle from "styles/static/main.scss";
 import faStyle from "styles/font-awesome?as-css";
 import lightboxStyle from "react-image-lightbox/style.css";
@@ -40,7 +40,7 @@ export default class StyledDocument extends Document {
 
   render() {
     return (
-      <html>
+      <Html>
         <Head>
           <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,300i,600,600i" rel="stylesheet" />
           <style dangerouslySetInnerHTML={{ __html: siteStyle }} />
@@ -52,7 +52,7 @@ export default class StyledDocument extends Document {
           <Main />
           <NextScript />
         </body>
-      </html>
+      </Html>
     );
   }
 
