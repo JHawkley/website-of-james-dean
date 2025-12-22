@@ -10,6 +10,7 @@ import ImgHeader from "static/images/pic_work.png";
 import ToTerraVu from "pages/work/terravu?jump";
 import ToLithologic from "pages/work/lithologic?jump";
 import ToLithPhoto from "pages/work/lithphoto?jump";
+import ToTestInnovators from "pages/work/testinnovators?jump";
 import ToSolar from "pages/work/solar?jump";
 import ToThreeDee from "pages/work/threedee?jump";
 import ToNate from "pages/work/nate?jump";
@@ -37,6 +38,10 @@ const WorkPage = (props) => (
     <WorkItem title="TerraVu 2" desc="Enterprise Geosteering" jump={ToTerraVu} />
     <WorkItem title="Lithologic" desc="Mud-Logger's Tool" jump={ToLithologic} />
     <WorkItem title="Lithologic Photo" desc="Rock Photography Database" jump={ToLithPhoto} />
+
+    <p>My most recent employer was Test Innovators, a provider of test prep services:</p>
+
+    <WorkItem title="Test Innovators" desc="Provider of Test Prep Services" jump={ToTestInnovators} />
 
     <p>Along with software development, I've also done work in <strong>3D and animation</strong> for both personal and professional reasons.  I feel my ability here is still quite amateurish and isn't useful beyond architectural-style renders or placeholder assets, so I don't count it as one of my primary skills, but I suspect some of you would appreciate knowing I can handle myself in 3D modeling software.</p>
 
