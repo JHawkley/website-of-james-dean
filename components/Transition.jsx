@@ -86,6 +86,8 @@ class Transition extends React.PureComponent {
               outroPerformed = true;
               await asyncWaitFn(exiting.exitDelay, stopSignal);
               await this.promiseState({ contentShown: false }, stopSignal);
+              // Wait for the next frame to allow the content to update.
+              await frameSync(stopSignal);
               break;
             case Boolean(wait || !entering):
               // Hold up until we're no longer told to `wait` and we have some `entering` content.
@@ -175,7 +177,7 @@ class Transition extends React.PureComponent {
     if (error !== prevState.error && error)
       throw error;
     
-    if (content !== prevState.content) {
+    if (content !== prevProps.content) {
       const newState = determineNewState(exiting, entering, content);
       if (newState) this.setState(newState);
     }
