@@ -5,11 +5,7 @@ import { memoize } from "tools/functions";
 import { extensions as errorEx } from "tools/errors";
 import PropTypes from "tools/propTypes";
 import Page from "components/Page";
-import SpreeForm from "components/SpreeForm";
 import { errorBlockQuote } from "styles/jsx/lib/errorBlockQuote";
-
-import { formTarget as $target } from "tools/formSpree";
-import { asPath as $errorsubmitted } from "pages/errorsubmitted?jump";
 
 const $appError = "app-error";
 const $httpError = "http-error";
@@ -103,22 +99,11 @@ class ErrorPage extends React.PureComponent {
 
   renderAppError(error, route, pathName, pageProps) {
     const formattedError = this.formatError(error);
-    const forSubmission = errorForSubmission(formattedError);
     return (
       <Page {...pageProps} navLeft="reload">
         <h2 className="major">Application Error</h2>
         <p>The application threw an uncaught error.  Below are all the errors involved.</p>
         {this.renderErrors(formattedError, route, pathName, errorBlockQuote.className)}
-        {forSubmission && (
-          <SpreeForm validate={this.validate} method="post" action={$target} next={$errorsubmitted} hidden>
-            <input type="hidden" name="route" id="route" value={route} />
-            <input type="hidden" name="path" id="path" value={pathName} />
-            <input type="hidden" name="error" id="error" value={forSubmission} />
-            <ul className="actions">
-              <li><SpreeForm.SendButton value="Submit Error Report" className="special" /></li>
-            </ul>
-          </SpreeForm>
-        )}
         {errorBlockQuote.styles}
       </Page>
     );
@@ -192,24 +177,6 @@ const getPathName = (asPath) => {
       return location.pathname || "(unknown)";
     default:
       return asPath;
-  }
-};
-
-const errorForSubmission = (formattedError) => {
-  try {
-    const errDetails = [];
-
-    for (const errData of formattedError) {
-      if (errDetails.length > 0) errDetails.push("");
-      errDetails.push(`type: ${errData.type}`);
-      errDetails.push(`message: ${errData.message}`);
-      errDetails.push(`stack: ${errData.stack}`);
-    }
-    
-    return errDetails.join("\r\n");
-  }
-  catch {
-    return void 0;
   }
 };
 
