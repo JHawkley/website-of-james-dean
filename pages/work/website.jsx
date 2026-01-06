@@ -9,6 +9,12 @@ const MiscProgrammingPage = (props) => (
   <Page {...props} navLeft={ToWork}>
     <h2 className="major">This Website</h2>
     <span className="image main"><ImgHeader alt="This Website" fluid /></span>
+    <h3>2026 Update</h3>
+    <p>Things sure have changed since 2018, when I first started this project.  Back then, we were all still riding the high of ECMAScript 6 and the modernization of Javascript, using tools like Babel to keep pushing Javascript into the future.</p>
+    <p>Now I got a codebase that bet hard on the <Jump href="https://github.com/tc39/proposal-bind-operator">bind-operator</Jump> getting added to the spec and built a lot of support code around its use.  Sadly, it looks like a feud with the <Jump href="https://github.com/tc39/proposal-pipeline-operator">pipe-operator</Jump> guys ended up putting both proposals in a mire.  At least the pipe-operator might still come along some day.</p>
+    <p>Which is a bit of a shame, in my opinion.  The bind-operator felt like it paired well with Javascript and was like having C#'s extension methods in web development.  Maybe someday I'll get to refactor everything to use the pipe-operator (or have an AI do it for me; things really <em>HAVE</em> changed).</p>
+    <p>Regardless, I am still proud of this thing and I learned a lot from it.  Very nostalgic to come back and revive it.</p>
+    <h3>Original Content</h3>
     <p>This website was built using <Jump href="https://nextjs.org/">NextJS</Jump> and based on <Jump href="https://html5up.net/dimension">the Dimension template by HTML5 UP</Jump>.  NextJS produces a static website, without requirements for any complex server infrastructure, with the help of <Jump href="https://webpack.js.org/">Webpack</Jump>.</p>
     <p>While the template was a great start in regards to style-sheets and the overall look and feel of the site, it was otherwise quite bare-bones and needed a lot of work to flesh it out completely.</p>
     <p>The original <Jump href="https://sass-lang.com/">SASS style-sheets</Jump> were modified where needed to get better compatibility with Internet Explorer 11 and Edge.  Pretty much all other custom CSS was written in <Jump href="https://github.com/zeit/styled-jsx">styled-jsx</Jump>, which NextJS has strong support for.</p>
