@@ -8,7 +8,7 @@ const QuestionsPage = (props) => (
     <p>Below I'll answer some questions that I suspect might be pretty common.</p>
     <dl>
       <dt>Are you able to move?</dt>
-      <dd>I just moved into the Seattle area and currently have two roommates.  I currently have no desire to move again, unless the move is local and very beneficial to my situation.</dd>
+      <dd>I've been settled into the Seattle area for 5 years now and currently have two roommates.  Moving would be pretty disruptive, but not outside the realm of possibility.  It all depends on the economics of the situation and the housing market isn't what I would call &quot;healthy&quot; right now.</dd>
       <dd>Telepresence would be a much more agreeable solution, though, if you can support it.</dd>
 
       <dt>Are you willing to learn a programming language?</dt>
@@ -23,12 +23,11 @@ const QuestionsPage = (props) => (
       <dd>As long as you're not looking to use something exotic, like <Jump href="https://elm-lang.org/">Elm</Jump>, I should be able to manage.</dd>
 
       <dt>How is your experience with back-end development?</dt>
-      <dd>Not the greatest.  I've worked closely with a back-end developer before and am familiar with a lot of the technologies involved and a number of the security pitfalls to avoid, but aside from some of my own toy projects, I haven't done much back-end development or systems administration of server environments.</dd>
-      <dd>In a pinch, I feel like I could manage it, but I would be slower and more error-prone than someone with more focused experience, and this part of your web application infrastructure really does require the best talent.</dd>
-      <dd>I feel that I would be best suited in a support role with more veteran back-end developers, where I could work under their guidance and learn from them, while taking some of the less critical workloads off their shoulders.</dd>
+      <dd>My experience with backend development had grown significantly while working at Test Innovators.  While I still view front-end as my core strength, I know that I am more than capable of handling back-end development too.</dd>
+      <dd>Beyond simply building out RESTful APIs for client applications or running SQL migrations, I've also worked a little in AWS.  I haven't yet set up my own full-stack from the ground up with it, but I can find my way around and do useful work to support such a stack.  And if I had to set up a stack from scratch, I am pretty sure I'd manage, <em>eventually</em>.</dd>
 
       <dt>Do you have Unity experience?</dt>
-      <dd>Very little direct experience.  I've been keeping tabs on it and ran through a few of the tutorials, but I have yet to build anything in it.  Most of my experience has been related to creating source-level mods for Unity-powered games using the <Jump href="https://github.com/pardeike/Harmony">Harmony library</Jump>, which isn't the best experience, but it's something!</dd>
+      <dd>Very little direct experience.  I've been keeping tabs on it and ran through a few of the tutorials, but I have yet to build anything in it.  Most of my experience has been related to VRChat avatars and creating source-level mods for Unity-powered games using the <Jump href="https://github.com/pardeike/Harmony">Harmony library</Jump>, which isn't the best experience, but it's something!</dd>
       <dd>If you need a Unity dev, I can likely manage it.  Just be patient as I settle in and learn the ropes.</dd>
     </dl>
     <style jsx>{`dl dd { margin-bottom: ${styleVars["size"]["element-margin"]}; }`}</style>
