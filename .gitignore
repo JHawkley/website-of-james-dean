@@ -1,6 +1,7 @@
 .DS_Store
 .next
 .vscode
+.out
 node_modules
 package-lock.json
 bundle-report*.html
