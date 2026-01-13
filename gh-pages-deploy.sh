@@ -39,7 +39,7 @@ self::process_args() {
   done
 
   # If the build directory doesn't exist, we must do a build.
-  ! [ -d $BUILD_DIR ] && BUILD="EXEC"
+  ! [ -d "$BUILD_DIR" ] && BUILD="EXEC"
   DO_BUILD=${!BUILD}
   DO_PUSH=${!PUSH}
 
@@ -100,7 +100,7 @@ self::git_pull() {
   return $?
 }
 
-self::git_commit() {
+self::git_commit_pages() {
   self::log "Committing to deployment submodule..."
   cd "$SITE_DIR" &&
   # Add and commit.
@@ -109,7 +109,7 @@ self::git_commit() {
   return $?
 }
 
-self::git_push() {
+self::git_push_pages() {
   local EXIT_CODE=0
   if [ $DO_PUSH -eq 0 ]; then
     self::log "Pushing to submodule's $BRANCH branch..."
@@ -119,6 +119,18 @@ self::git_push() {
   fi
   return $EXIT_CODE
 }
+
+self::git_commit_project() {
+  self::log "Committing to root repo..."
+  cd "$SCRIPT_DIR" &&
+  # Add and commit.
+  git add gh-pages &&
+  git commit -m "GitHub Pages submodule sync of $COMMIT_DATE."
+  return $?
+}
+
+# We don't push the main repo intentionally, just in case there are
+# other changes we need to handle first.
 
 if ! self::process_args $@; then
   exit 1
@@ -130,8 +142,10 @@ elif ! self::site_build; then
   self::err "Failed to build site!"
 elif ! self::site_export; then
   self::err "Failed to export site!"
-elif ! self::git_commit; then
-  self::err "Failed to commit!"
-elif ! self::git_push; then
-  self::err "Failed to push!"
+elif ! self::git_commit_pages; then
+  self::err "Failed to commit GH Pages!"
+elif ! self::git_push_pages; then
+  self::err "Failed to push GH Pages!"
+elif ! self::git_commit_project; then
+  self::err "Failed to commit submodule to main repo!"
 fi
