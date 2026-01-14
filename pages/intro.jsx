@@ -11,7 +11,7 @@ const IntroPage = (props) => (
       <ImgJamesPhoto alt="A Photo of James Dean" fluid />
     </span>
     <p>Welcome!  I'm James!  I'm a software developer in the greater Seattle area of Washington, USA.  I'm originally from Texas.</p>
-    <p>I have been working professionally since 2003.  In that time, I've put together and maintained three big applications for my former employer.  You can read all about it in the <ToWork>work section of the site</ToWork>.</p>
+    <p>I have been working professionally since 2003.  In that time, I've put together and maintained three big applications for my former employer, though that isn't all.  You can read all about that and more in the <ToWork>work section of the site</ToWork>.</p>
     <p>My first serious programming was in C#, which I primarily used until 2010, when I decided to shift much of my focus on to JavaScript and related technologies.  I consider web services and applications to pretty much be the future of end-user software, a universal platform that spans all devices across the planet.</p>
     <p>While it probably won't realize that potential for a while longer, it will some day and in some form; I want to be a part of making it happen.</p>
     <p>I primarily consider myself a front-end developer with most of my experience being in desktop applications; it's certainly where I've had most of my success. User experiences that I design tend to be highly contextual and minimally cluttered. If it isn't important to the user at the time, it should be given little to no screen space. I also like to keep things clear, so one part of the UI is easily distinguishable from another part.</p>
@@ -29,7 +29,7 @@ const IntroPage = (props) => (
       <tbody>
         <tr>
           <td>Confident Programming Languages</td>
-          <td><strong>C#</strong>, <strong>Scala</strong> (ScalaJS), <strong>HTML</strong>, <strong>CSS</strong> (SASS, Stylus), <strong>JavaScript</strong> (CoffeeScript, TypeScript)</td>
+          <td><strong>C#</strong>, <strong>Scala</strong> (ScalaJS), <strong>HTML</strong>, <strong>CSS</strong> (SASS, LESS), <strong>JavaScript</strong> (CoffeeScript, TypeScript)</td>
         </tr>
         <tr>
           <td>Frameworks</td>
@@ -37,15 +37,15 @@ const IntroPage = (props) => (
         </tr>
         <tr>
           <td>Build Tools</td>
-          <td><strong>Visual Studio Projects</strong>, <strong>Grunt</strong>, <strong>Babel</strong>, basic competency with <strong>Scala Build Tool</strong></td>
+          <td><strong>Visual Studio Projects</strong>, <strong>Grunt</strong>, <strong>Gulp</strong>, <strong>Babel</strong>, basic competency with <strong>Scala Build Tool</strong></td>
         </tr>
         <tr>
           <td>Testing Frameworks</td>
-          <td><strong>Jasmine</strong></td>
+          <td><strong>Jasmine</strong>, <strong>Jest</strong></td>
         </tr>
         <tr>
           <td>Source Control</td>
-          <td>Basic competency with <strong>Git</strong>, <strong>GitHub</strong></td>
+          <td><strong>Git</strong>, <strong>GitHub</strong>, and <strong>GitKraken</strong> being my preferred GUI.</td>
         </tr>
         <tr>
           <td>IDEs</td>
@@ -53,7 +53,7 @@ const IntroPage = (props) => (
         </tr>
         <tr>
           <td>3D Modeling Software</td>
-          <td>Basic competency with <strong>Autodesk Inventor</strong>, formerly well-acquainted with <strong>3D Studio Max</strong></td>
+          <td>Basic competency with <strong>Autodesk Inventor</strong>, basic competency with <strong>Blender</strong>, formerly well-acquainted with <strong>3D Studio Max</strong></td>
         </tr>
         <tr>
           <td>Other Software</td>
