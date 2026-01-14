@@ -1,5 +1,5 @@
 # Website of James Dean
-A website for my own personal use.  It is presently hosted [here, on Github Pages](https://jamesdean.me/).
+A website for my own personal use.  It is presently hosted [here, on Github Pages](https://jamesdean.space/).
 
 This site is based on the [Dimension site template](https://github.com/codebushi/nextjs-starter-dimension), designed by [HTML5 UP](https://html5up.net/dimension). Check out https://codebushi.com/nextjs-website-starters/ for more Next.js starters and templates.
 
@@ -8,7 +8,7 @@ This site is built on an older stack, so it isn't quite just pull-down-and-go.
 
 Use the command `nvm use` to activate the version of NodeJS still compatible with NextJS v9.  Make sure Yarn is installed and configured to use Yarn v1.  The `package.json` file has many configured scripts, such as `yarn run dev`, which will start and serve the site with NextJS dynamically building it.
 
-The `gh-pages-deploy.sh` script will build and deploy the website to Github Pages.
+Running `bash ./gh-pages-deploy.sh --push` will build and deploy the website to Github Pages.
 
 ## Licensing
 The template has since been heavily modified, but most of these modifications are available for your own use.
